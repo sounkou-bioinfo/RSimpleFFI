@@ -7,7 +7,9 @@ ffi_fill_typed_buffer <- function(ptr, values, type) {
   .Call("R_fill_typed_buffer", ptr, values, type@ref)
 }
 # Register S7 classes for non-standard evaluation (R CMD check)
-if (getRversion() >= "2.15.1") utils::globalVariables("ArrayType")
+if (getRversion() >= "2.15.1") {
+  utils::globalVariables("ArrayType")
+}
 #' Allocate a raw memory buffer (external pointer, auto-finalized)
 #'
 #' Allocates a buffer of the given size (in bytes) and returns an external pointer.
@@ -20,7 +22,7 @@ ffi_alloc_buffer <- function(size) {
 }
 # RSimpleFFI Utilities
 
-#' @import S7  
+#' @import S7
 NULL
 
 #' Check if pointer is NULL
@@ -47,8 +49,15 @@ ffi_copy_array <- function(ptr, length, element_type) {
 #' @param array_type ArrayType object
 #' @export
 ffi_copy_array_type <- function(ptr, array_type) {
-  if (!S7::S7_inherits(array_type, ArrayType)) stop("array_type must be an ArrayType object")
-  .Call("R_copy_array", ptr, as.integer(array_type@length), array_type@element_type@ref)
+  if (!S7::S7_inherits(array_type, ArrayType)) {
+    stop("array_type must be an ArrayType object")
+  }
+  .Call(
+    "R_copy_array",
+    ptr,
+    as.integer(array_type@length),
+    array_type@element_type@ref
+  )
 }
 
 # Pretty printing methods
@@ -80,7 +89,7 @@ S7::method(format, NativeSymbol) <- function(x, ...) {
   paste0("NativeSymbol(", x@name, lib_part, ")")
 }
 
-# Print methods for proper output capture in tests  
+# Print methods for proper output capture in tests
 #' @export
 S7::method(print, FFIType) <- function(x, ...) {
   cat(format(x), "\n", sep = "")
@@ -91,7 +100,7 @@ S7::method(print, FFIType) <- function(x, ...) {
 S7::method(print, StructType) <- function(x, ...) {
   cat(format(x), "\n", sep = "")
   cat("Fields:", "\n", sep = "")
-  for(i in seq_along(x@fields)) {
+  for (i in seq_along(x@fields)) {
     cat("  ", x@fields[i], ": ", x@field_types[[i]]@name, "\n", sep = "")
   }
   invisible(x)
@@ -110,25 +119,27 @@ S7::method(print, NativeSymbol) <- function(x, ...) {
 }
 
 #' Convert pointer to string safely
-#' 
+#'
 #' Explicitly converts an external pointer to a character string.
 #' Use this instead of relying on automatic conversion heuristics.
-#' 
+#'
 #' @param ptr External pointer that points to a null-terminated string
 #' @return Character vector of length 1, or NULL if pointer is NULL
 #' @export
 pointer_to_string <- function(ptr) {
-  if (is.null(ptr)) return(NULL)
+  if (is.null(ptr)) {
+    return(NULL)
+  }
   .Call("R_pointer_to_string", ptr)
 }
 
 #' Create typed external pointer
-#' 
+#'
 #' Creates an external pointer with a specific type tag for better type safety,
 #' similar to Rffi's approach.
-#' 
+#'
 #' @param ptr External pointer
-#' @param type_name Character string describing the pointer type  
+#' @param type_name Character string describing the pointer type
 #' @return External pointer with type tag
 #' @export
 make_typed_pointer <- function(ptr, type_name) {
@@ -139,12 +150,12 @@ make_typed_pointer <- function(ptr, type_name) {
 }
 
 #' Get pointer type tag
-#' 
+#'
 #' Retrieves the type tag from an external pointer.
-#' 
+#'
 #' @param ptr External pointer
 #' @return Character string with the type name
-#' @export  
+#' @export
 get_pointer_type <- function(ptr) {
   .Call("R_get_pointer_type", ptr)
 }
@@ -160,7 +171,14 @@ S7::method(print, StructType) <- function(x, ...) {
   if (length(x@fields) > 0) {
     message("Fields:\n")
     for (i in seq_along(x@fields)) {
-      message("  ", x@fields[i], ": ", format(x@field_types[[i]]), "\n", sep = "")
+      message(
+        "  ",
+        x@fields[i],
+        ": ",
+        format(x@field_types[[i]]),
+        "\n",
+        sep = ""
+      )
     }
   }
   invisible(x)

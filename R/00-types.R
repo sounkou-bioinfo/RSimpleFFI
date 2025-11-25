@@ -6,21 +6,22 @@ NULL
 # Core FFI Type class
 #' FFI Type representation
 #' @param name Character name of the type
-#' @param size Integer size in bytes  
+#' @param size Integer size in bytes
 #' @param ref External pointer to ffi_type
 #' @export
-FFIType <- S7::new_class("FFIType",
+FFIType <- S7::new_class(
+  "FFIType",
   package = "RSimpleFFI",
   properties = list(
     name = S7::class_character,
-    size = S7::class_integer, 
+    size = S7::class_integer,
     ref = S7::class_any
   ),
   validator = function(self) {
     if (length(self@name) != 1) {
       "@name must be length 1"
     } else if (length(self@size) != 1) {
-      "@size must be length 1" 
+      "@size must be length 1"
     } else if (self@size <= 0) {
       "@size must be positive"
     }
@@ -32,8 +33,9 @@ FFIType <- S7::new_class("FFIType",
 #' @param fields Character vector of field names
 #' @param field_types List of FFIType objects for each field
 #' @export
-StructType <- S7::new_class("StructType",
-  package = "RSimpleFFI", 
+StructType <- S7::new_class(
+  "StructType",
+  package = "RSimpleFFI",
   parent = FFIType,
   properties = list(
     fields = S7::class_character,
@@ -42,7 +44,9 @@ StructType <- S7::new_class("StructType",
   validator = function(self) {
     if (length(self@fields) != length(self@field_types)) {
       "Number of field names must match number of field types"
-    } else if (!all(sapply(self@field_types, function(x) S7::S7_inherits(x, FFIType)))) {
+    } else if (
+      !all(sapply(self@field_types, function(x) S7::S7_inherits(x, FFIType)))
+    ) {
       "All field types must be FFIType objects"
     }
   }
@@ -53,7 +57,8 @@ StructType <- S7::new_class("StructType",
 #' @param element_type FFIType of array elements
 #' @param length Integer length of array
 #' @export
-ArrayType <- S7::new_class("ArrayType",
+ArrayType <- S7::new_class(
+  "ArrayType",
   package = "RSimpleFFI",
   parent = FFIType,
   properties = list(
@@ -74,8 +79,12 @@ ArrayType <- S7::new_class("ArrayType",
 #' @param length Integer length of array
 #' @export
 ffi_array_type <- function(element_type, length) {
-  if (!S7::S7_inherits(element_type, FFIType)) stop("element_type must be an FFIType object")
-  if (!is.numeric(length) || length <= 0) stop("length must be a positive integer")
+  if (!S7::S7_inherits(element_type, FFIType)) {
+    stop("element_type must be an FFIType object")
+  }
+  if (!is.numeric(length) || length <= 0) {
+    stop("length must be a positive integer")
+  }
   ref <- .Call("R_create_array_ffi_type", element_type@ref, as.integer(length))
   size <- .Call("R_get_ffi_type_size", ref)
   ArrayType(
@@ -93,7 +102,8 @@ ffi_array_type <- function(element_type, length) {
 #' @param arg_types List of FFIType objects for arguments
 #' @param ref External pointer to ffi_cif
 #' @export
-CIF <- S7::new_class("CIF",
+CIF <- S7::new_class(
+  "CIF",
   package = "RSimpleFFI",
   properties = list(
     return_type = FFIType,
@@ -108,12 +118,13 @@ CIF <- S7::new_class("CIF",
 )
 
 # Native Symbol
-#' Native Symbol Reference  
+#' Native Symbol Reference
 #' @param name Character name of the symbol
 #' @param address External pointer to the symbol
 #' @param library Character name of library (optional)
 #' @export
-NativeSymbol <- S7::new_class("NativeSymbol",
+NativeSymbol <- S7::new_class(
+  "NativeSymbol",
   package = "RSimpleFFI",
   properties = list(
     name = S7::class_character,
@@ -131,30 +142,57 @@ create_builtin_type <- S7::new_generic("create_builtin_type", "name")
 S7::method(create_builtin_type, S7::class_character) <- function(name) {
   valid_types <- c(
     # Basic types
-    "void", "int", "double", "float", "pointer", "string", "raw",
+    "void",
+    "int",
+    "double",
+    "float",
+    "pointer",
+    "string",
+    "raw",
     # Extended integer types
-    "int8", "int16", "int32", "int64",
-    "uint8", "uint16", "uint32", "uint64", 
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
     # Long types
-    "long", "ulong", "longlong", "ulonglong",
+    "long",
+    "ulong",
+    "longlong",
+    "ulonglong",
     # Short types
-    "short", "ushort",
+    "short",
+    "ushort",
     # Char types
-    "char", "uchar",
+    "char",
+    "uchar",
     # Unsigned int
     "uint",
     # Floating point variants
     "longdouble",
     # Platform-dependent types
-    "size_t", "ssize_t", "bool", "wchar_t"
+    "size_t",
+    "ssize_t",
+    "bool",
+    "wchar_t"
   )
   if (!name %in% valid_types) {
-    stop("Unknown FFI type: ", name, ". Valid types: ", paste(valid_types, collapse = ", "))
+    stop(
+      "Unknown FFI type: ",
+      name,
+      ". Valid types: ",
+      paste(valid_types, collapse = ", ")
+    )
   }
-  
+
   ref <- .Call("R_get_builtin_ffi_type", name)
-  if (is.null(ref)) stop("Failed to create FFI type: ", name)
-  
+  if (is.null(ref)) {
+    stop("Failed to create FFI type: ", name)
+  }
+
   size <- .Call("R_get_ffi_type_size", ref)
   FFIType(name = name, size = size, ref = ref)
 }
@@ -169,11 +207,11 @@ ffi_raw <- function() create_builtin_type("raw")
 #' @export
 ffi_void <- function() create_builtin_type("void")
 
-#' @export  
+#' @export
 ffi_int <- function() create_builtin_type("int")
 
 #' @export
-ffi_double <- function() create_builtin_type("double") 
+ffi_double <- function() create_builtin_type("double")
 
 #' @export
 ffi_float <- function() create_builtin_type("float")
@@ -181,7 +219,7 @@ ffi_float <- function() create_builtin_type("float")
 #' @export
 ffi_pointer <- function() create_builtin_type("pointer")
 
-#' @export  
+#' @export
 ffi_string <- function() create_builtin_type("string")
 
 # Signed integer types

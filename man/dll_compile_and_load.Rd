@@ -30,6 +30,8 @@ dll_compile_and_load(
 \item{libs}{Additional libraries to link}
 
 \item{verbose}{Print compilation output (default FALSE)}
+
+\item{cflags}{Additional compiler flags (e.g., "-O2", "-O3")}
 }
 \value{
 Library handle that can be used with dll_* functions

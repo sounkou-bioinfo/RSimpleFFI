@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 
 A Foreign Function Interface (FFI) for R using libffi. Call C functions from R with S7 classes.
 
+
 ## Overview
 
 RSimpleFFI lets you call C functions from R using the libffi library. It supports over 25 different C types including integers, floats, and platform-specific types. The package uses S7 classes for type safety and handles memory management automatically. It only needs libffi which is available on most systems.
@@ -273,44 +274,59 @@ result
 
 ### Benchmarking
 
-```{r}
-library(bench)
 
-# Compare FFI call performance
+```{r}
+
+set.seed(123)
+n <- 10000
+x_vec <- runif(n, 1, 100)
+x_ptr <- ffi_alloc(ffi_double(), n)
+ffi_fill_typed_buffer(x_ptr, x_vec, ffi_double())
+out_ptr <- ffi_alloc(ffi_double(), n)
+
 math_code <- '
 #include <math.h>
-double test_sqrt(double x) { return sqrt(x); }
+void vec_sqrt(const double* x, double* out, int n) {
+    for (int i = 0; i < n; ++i) out[i] = sqrt(x[i]);
+}
 '
-lib_handle <- dll_compile_and_load(math_code, "bench_test", libs = "m")
-sqrt_func <- dll_ffi_symbol("test_sqrt", ffi_double(), ffi_double())
+lib_handle <- dll_compile_and_load(math_code, "bench_vec", libs = "m", cflags = "-O3")
+vec_sqrt_func <- dll_ffi_symbol("vec_sqrt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_int())
 
 benchmark_result <- bench::mark(
-  native_r = sqrt(100),
-  ffi_call = sqrt_func(100.0),
+  native_r = sqrt(x_vec),
+  ffi_call = { vec_sqrt_func(x_ptr, out_ptr, n); ffi_copy_array(out_ptr, n, ffi_double()) },
   check = FALSE,
-  iterations = 1000
+  iterations = 100
 )
-
 benchmark_result
 dll_unload(lib_handle)
 ```
 
 ```{r}
-# Performance comparison with benchmarking
-bench::mark(
-  ffi_loop = {
-    for(i in 1:1000) {
-      ffi_call(cif, add_func, i, i+1L)
-    }
-  },
-  r_loop = {
-    for(i in 1:1000) {
-      i + (i + 1L)
-    }
-  },
-  iterations = 10,
-  check = FALSE
+set.seed(456)
+y_vec <- runif(n, 1, 100)
+y_ptr <- ffi_alloc(ffi_double(), n)
+ffi_fill_typed_buffer(y_ptr, y_vec, ffi_double())
+
+sum_code <- '
+double vec_sum(const double* x, int n) {
+    double s = 0.0;
+    for (int i = 0; i < n; ++i) s += x[i];
+    return s;
+}
+'
+lib_handle <- dll_compile_and_load(sum_code, "bench_sum", cflags = "-O3")
+vec_sum_func <- dll_ffi_symbol("vec_sum", ffi_double(), ffi_pointer(), ffi_int())
+
+benchmark_result <- bench::mark(
+  native_r = sum(y_vec),
+  ffi_call = vec_sum_func(y_ptr, n),
+  check = FALSE,
+  iterations = 100
 )
+benchmark_result
+dll_unload(lib_handle)
 ```
 
 ## Advanced Usage

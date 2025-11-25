@@ -221,7 +221,7 @@ libc_handle <- dll_load_system("c")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1259573845
+#> [1] 98849495
 dll_unload(libc_handle)
 ```
 
@@ -250,7 +250,7 @@ aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_p
 aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
 #> NULL
 ffi_copy_array(outbuf_ptr, 16L, raw_type)
-#>  [1] a7 d3 f8 54 42 39 20 f1 19 4a ad b5 13 ad 97 de
+#>  [1] 89 98 2a 95 7a fa 00 cb c6 c2 8b da 28 27 97 ff
 dll_unload(lib_handle)
 ```
 
@@ -302,53 +302,69 @@ result
 ### Benchmarking
 
 ``` r
-library(bench)
 
-# Compare FFI call performance
+set.seed(123)
+n <- 10000
+x_vec <- runif(n, 1, 100)
+x_ptr <- ffi_alloc(ffi_double(), n)
+ffi_fill_typed_buffer(x_ptr, x_vec, ffi_double())
+#> NULL
+out_ptr <- ffi_alloc(ffi_double(), n)
+
 math_code <- '
 #include <math.h>
-double test_sqrt(double x) { return sqrt(x); }
+void vec_sqrt(const double* x, double* out, int n) {
+    for (int i = 0; i < n; ++i) out[i] = sqrt(x[i]);
+}
 '
-lib_handle <- dll_compile_and_load(math_code, "bench_test", libs = "m")
-sqrt_func <- dll_ffi_symbol("test_sqrt", ffi_double(), ffi_double())
+lib_handle <- dll_compile_and_load(math_code, "bench_vec", libs = "m", cflags = "-O3")
+vec_sqrt_func <- dll_ffi_symbol("vec_sqrt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_int())
 
 benchmark_result <- bench::mark(
-  native_r = sqrt(100),
-  ffi_call = sqrt_func(100.0),
+  native_r = sqrt(x_vec),
+  ffi_call = { vec_sqrt_func(x_ptr, out_ptr, n); ffi_copy_array(out_ptr, n, ffi_double()) },
   check = FALSE,
-  iterations = 1000
+  iterations = 100
 )
-
 benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r    30.04ns   36.1ns 26099863.        0B        0
-#> 2 ffi_call     9.21µs   10.1µs    96984.        0B        0
+#> 1 native_r     26.8µs   28.4µs    34285.    78.2KB        0
+#> 2 ffi_call     98.5µs    102µs     9556.    78.7KB        0
 dll_unload(lib_handle)
 ```
 
 ``` r
-# Performance comparison with benchmarking
-bench::mark(
-  ffi_loop = {
-    for(i in 1:1000) {
-      ffi_call(cif, add_func, i, i+1L)
-    }
-  },
-  r_loop = {
-    for(i in 1:1000) {
-      i + (i + 1L)
-    }
-  },
-  iterations = 10,
-  check = FALSE
+set.seed(456)
+y_vec <- runif(n, 1, 100)
+y_ptr <- ffi_alloc(ffi_double(), n)
+ffi_fill_typed_buffer(y_ptr, y_vec, ffi_double())
+#> NULL
+
+sum_code <- '
+double vec_sum(const double* x, int n) {
+    double s = 0.0;
+    for (int i = 0; i < n; ++i) s += x[i];
+    return s;
+}
+'
+lib_handle <- dll_compile_and_load(sum_code, "bench_sum", cflags = "-O3")
+vec_sum_func <- dll_ffi_symbol("vec_sum", ffi_double(), ffi_pointer(), ffi_int())
+
+benchmark_result <- bench::mark(
+  native_r = sum(y_vec),
+  ffi_call = vec_sum_func(y_ptr, n),
+  check = FALSE,
+  iterations = 100
 )
+benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ffi_loop     10.5ms   10.6ms      94.2    45.4KB     141.
-#> 2 r_loop      853.5µs  914.7µs    1093.     16.9KB       0
+#> 1 native_r     9.17µs   9.22µs   107261.        0B        0
+#> 2 ffi_call     13.4µs  14.05µs    59747.        0B        0
+dll_unload(lib_handle)
 ```
 
 ## Advanced Usage

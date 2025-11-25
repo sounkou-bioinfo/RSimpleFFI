@@ -1,7 +1,5 @@
-# Dynamic library loading using R's native facilities
-
 #' Load a shared library/DLL
-#' 
+#'
 #' @param filename Path to the shared library
 #' @param now Whether to resolve all symbols immediately (default TRUE)
 #' @param local Keep symbols local to avoid namespace pollution (default TRUE)
@@ -12,24 +10,27 @@ dll_load <- function(filename, now = TRUE, local = TRUE, verbose = FALSE) {
   if (!file.exists(filename)) {
     stop("Library file not found: ", filename)
   }
-  
+
   # Use R's built-in dyn.load
-  result <- tryCatch({
-    dyn.load(filename, now = now, local = local, verbose = verbose)
-    filename  # Return the filename as handle
-  }, error = function(e) {
-    stop("Failed to load library '", filename, "': ", e$message)
-  })
-  
+  result <- tryCatch(
+    {
+      dyn.load(filename, now = now, local = local, verbose = verbose)
+      filename # Return the filename as handle
+    },
+    error = function(e) {
+      stop("Failed to load library '", filename, "': ", e$message)
+    }
+  )
+
   if (verbose) {
     message("Successfully loaded library:", filename, "\n")
   }
-  
+
   result
 }
 
 #' Unload a shared library/DLL
-#' 
+#'
 #' @param handle Library handle (path) returned by dll_load()
 #' @param verbose Print unloading information (default FALSE)
 #' @export
@@ -37,23 +38,26 @@ dll_unload <- function(handle, verbose = FALSE) {
   if (!is.character(handle)) {
     stop("Handle must be a character string (library path)")
   }
-  
-  result <- tryCatch({
-    dyn.unload(handle)
-    if (verbose) {
-      message("Successfully unloaded library:", handle, "\n")
+
+  result <- tryCatch(
+    {
+      dyn.unload(handle)
+      if (verbose) {
+        message("Successfully unloaded library:", handle, "\n")
+      }
+      TRUE
+    },
+    error = function(e) {
+      warning("Failed to unload library '", handle, "': ", e$message)
+      FALSE
     }
-    TRUE
-  }, error = function(e) {
-    warning("Failed to unload library '", handle, "': ", e$message)
-    FALSE
-  })
-  
+  )
+
   invisible(result)
 }
 
 #' Get symbol information from a loaded library
-#' 
+#'
 #' @param symbol_name Name of the symbol to find
 #' @param package Package name where symbol is registered (optional)
 #' @return Symbol information including address as external pointer
@@ -62,27 +66,30 @@ dll_symbol <- function(symbol_name, package = NULL) {
   if (!is.character(symbol_name) || length(symbol_name) != 1) {
     stop("Symbol name must be a single character string")
   }
-  
+
   # Try to get symbol info
-  symbol_info <- tryCatch({
-    if (is.null(package)) {
-      getNativeSymbolInfo(symbol_name)
-    } else {
-      getNativeSymbolInfo(symbol_name, package)
+  symbol_info <- tryCatch(
+    {
+      if (is.null(package)) {
+        getNativeSymbolInfo(symbol_name)
+      } else {
+        getNativeSymbolInfo(symbol_name, package)
+      }
+    },
+    error = function(e) {
+      stop("Symbol '", symbol_name, "' not found: ", e$message)
     }
-  }, error = function(e) {
-    stop("Symbol '", symbol_name, "' not found: ", e$message)
-  })
-  
+  )
+
   if (is.null(symbol_info$address)) {
     stop("Symbol '", symbol_name, "' has NULL address")
   }
-  
+
   symbol_info
 }
 
 #' Check if a symbol is loaded
-#' 
+#'
 #' @param symbol_name Name of the symbol to check
 #' @param package Package name (optional)
 #' @return TRUE if symbol is loaded, FALSE otherwise
@@ -91,39 +98,42 @@ dll_is_loaded <- function(symbol_name, package = NULL) {
   if (!is.character(symbol_name) || length(symbol_name) != 1) {
     stop("Symbol name must be a single character string")
   }
-  
-  tryCatch({
-    if (is.null(package)) {
-      is.loaded(symbol_name)
-    } else {
-      is.loaded(symbol_name, PACKAGE = package)
+
+  tryCatch(
+    {
+      if (is.null(package)) {
+        is.loaded(symbol_name)
+      } else {
+        is.loaded(symbol_name, PACKAGE = package)
+      }
+    },
+    error = function(e) {
+      FALSE
     }
-  }, error = function(e) {
-    FALSE
-  })
+  )
 }
 
 #' Create FFI function from dynamically loaded function
-#' 
+#'
 #' This creates an FFI function wrapper for dynamically loaded native C functions.
 #' Uses direct address access like Rffi for maximum compatibility.
-#' 
+#'
 #' @param symbol_name Name of the symbol
 #' @param return_type Return type specifimessageion
-#' @param ... Argument type specifimessageions  
+#' @param ... Argument type specifimessageions
 #' @param package Package name (optional)
 #' @return FFI function object that can be called directly
 #' @export
 dll_ffi_symbol <- function(symbol_name, return_type, ..., package = NULL) {
   # Get symbol info using R's facilities (like Rffi does)
   symbol_info <- dll_symbol(symbol_name, package)
-  
+
   # Create CIF for the function signature
   cif <- ffi_cif(return_type, ...)
-  
+
   # Create symbol object from address
   symbol <- ffi_symbol_from_address(symbol_info$address, symbol_name)
-  
+
   # Return a closure that calls the function
   function(...) {
     ffi_call(cif, symbol, ...)
@@ -131,7 +141,7 @@ dll_ffi_symbol <- function(symbol_name, return_type, ..., package = NULL) {
 }
 
 #' List loaded libraries
-#' 
+#'
 #' @return Character vector of loaded library paths
 #' @export
 dll_list_loaded <- function() {
@@ -141,7 +151,7 @@ dll_list_loaded <- function() {
 }
 
 #' Get information about a loaded library
-#' 
+#'
 #' @param handle Library handle (path)
 #' @return List with library information
 #' @export
@@ -149,9 +159,9 @@ dll_info <- function(handle) {
   if (!is.character(handle)) {
     stop("Handle must be a character string (library path)")
   }
-  
+
   loaded <- getLoadedDLLs()
-  
+
   # Find the library by path
   lib_info <- NULL
   for (dll in loaded) {
@@ -160,11 +170,11 @@ dll_info <- function(handle) {
       break
     }
   }
-  
+
   if (is.null(lib_info)) {
     stop("Library not found in loaded DLLs: ", handle)
   }
-  
+
   list(
     name = lib_info[["name"]],
     path = lib_info[["path"]],
@@ -174,79 +184,99 @@ dll_info <- function(handle) {
 }
 
 #' Compile and load C code into a DLL
-#' 
+#'
 #' This function compiles C code using R's configured compiler and loads it.
 #' Uses the same compiler configuration that R was built with.
-#' 
+#'
 #' @param code Character vector of C code to compile
 #' @param name Base name for the compiled library (default "temp_dll")
 #' @param includes Additional include directories
 #' @param libs Additional libraries to link
 #' @param verbose Print compilation output (default FALSE)
+#' @param cflags Additional compiler flags (e.g., "-O2", "-O3")
 #' @return Library handle that can be used with dll_* functions
 #' @export
-dll_compile_and_load <- function(code, name = "temp_dll", includes = NULL, libs = NULL, verbose = FALSE) {
+dll_compile_and_load <- function(
+    code,
+    name = "temp_dll",
+    includes = NULL,
+    libs = NULL,
+    verbose = FALSE,
+    cflags = NULL) {
   # Create temporary directory and files
   temp_dir <- tempfile("dll_compile_")
   dir.create(temp_dir, recursive = TRUE)
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
-  
+
   c_file <- file.path(temp_dir, paste0(name, ".c"))
   so_file <- file.path(temp_dir, paste0(name, .Platform$dynlib.ext))
-  
+
   # Write C code to file
   writeLines(code, c_file)
-  
+
   # Create Makevars file for compilation options
   makevars_content <- character(0)
-  
+
   if (!is.null(includes)) {
     include_flags <- paste(paste0("-I", includes), collapse = " ")
-    makevars_content <- c(makevars_content, paste("PKG_CPPFLAGS =", include_flags))
+    makevars_content <- c(
+      makevars_content,
+      paste("PKG_CPPFLAGS =", include_flags)
+    )
   }
-  
+
   if (!is.null(libs)) {
     lib_flags <- paste(paste0("-l", libs), collapse = " ")
     makevars_content <- c(makevars_content, paste("PKG_LIBS =", lib_flags))
   }
-  
+
+  if (!is.null(cflags)) {
+    makevars_content <- c(makevars_content, paste("PKG_CFLAGS =", cflags))
+  }
+
   # Write Makevars file if we have options
   if (length(makevars_content) > 0) {
     makevars_file <- file.path(temp_dir, "Makevars")
     writeLines(makevars_content, makevars_file)
-    
+
     # Set R_MAKEVARS_USER to point to our Makevars
     old_makevars <- Sys.getenv("R_MAKEVARS_USER", unset = NA)
     Sys.setenv(R_MAKEVARS_USER = makevars_file)
-    on.exit({
-      if (is.na(old_makevars)) {
-        Sys.unsetenv("R_MAKEVARS_USER")
-      } else {
-        Sys.setenv(R_MAKEVARS_USER = old_makevars)
-      }
-    }, add = TRUE)
+    on.exit(
+      {
+        if (is.na(old_makevars)) {
+          Sys.unsetenv("R_MAKEVARS_USER")
+        } else {
+          Sys.setenv(R_MAKEVARS_USER = old_makevars)
+        }
+      },
+      add = TRUE
+    )
   }
-  
+
   # Build R CMD SHLIB command
   r_cmd <- file.path(R.home("bin"), "R")
   cmd_args <- c("CMD", "SHLIB", "-o", so_file, c_file)
-  
+
   # Change to temp directory for compilation
   old_wd <- getwd()
   setwd(temp_dir)
   on.exit(setwd(old_wd), add = TRUE)
-  
-  # Compile using R's configured compiler
+
+  # Compile using R CMD SHLIB
   if (verbose) {
     output <- system2(r_cmd, cmd_args, stdout = TRUE, stderr = TRUE)
   } else {
     output <- system2(r_cmd, cmd_args, stdout = TRUE, stderr = TRUE)
   }
-  
+
   # Get status
   status <- attr(output, "status")
-  if (is.null(status)) status <- 0
-  
+  if (is.null(status)) {
+    status <- 0
+  }
+
+
   # Handle compilation output
   if (verbose || status != 0) {
     if (length(output) > 0) {
@@ -254,19 +284,19 @@ dll_compile_and_load <- function(code, name = "temp_dll", includes = NULL, libs 
       message(paste(output, collapse = "\n"))
     }
   }
-  
+
   if (status != 0) {
     stop("Compilation failed with status ", status)
   }
-  
+
   if (!file.exists(so_file)) {
     stop("Shared library not created: ", so_file)
   }
-  
+
   # Load the library
   dll_load(so_file, verbose = verbose)
-}#' Load system library (like libc, libm, etc.)
-#' 
+} #' Load system library (like libc, libm, etc.)
+#'
 #' @param lib_name Name of system library (e.g., "c", "m", "pthread")
 #' @param verbose Print loading information (default FALSE)
 #' @return Library handle or NULL if not found
@@ -274,44 +304,50 @@ dll_compile_and_load <- function(code, name = "temp_dll", includes = NULL, libs 
 dll_load_system <- function(lib_name, verbose = FALSE) {
   # Common system library paths
   system_paths <- c(
-    paste0("/lib/x86_64-linux-gnu/lib", lib_name, ".so.6"),    # Ubuntu/Debian libc
-    paste0("/lib/x86_64-linux-gnu/lib", lib_name, ".so"),      # Other libs
-    paste0("/usr/lib/x86_64-linux-gnu/lib", lib_name, ".so"),  # Alternative path
-    paste0("/lib64/lib", lib_name, ".so.6"),                   # RedHat/CentOS libc
-    paste0("/lib64/lib", lib_name, ".so"),                     # Other libs
-    paste0("/usr/lib64/lib", lib_name, ".so"),                 # Alternative
-    paste0("/usr/lib/lib", lib_name, ".so"),                   # Generic
-    paste0("lib", lib_name, ".so")                              # Just try the name
+    paste0("/lib/x86_64-linux-gnu/lib", lib_name, ".so.6"), # Ubuntu/Debian libc
+    paste0("/lib/x86_64-linux-gnu/lib", lib_name, ".so"), # Other libs
+    paste0("/usr/lib/x86_64-linux-gnu/lib", lib_name, ".so"), # Alternative path
+    paste0("/lib64/lib", lib_name, ".so.6"), # RedHat/CentOS libc
+    paste0("/lib64/lib", lib_name, ".so"), # Other libs
+    paste0("/usr/lib64/lib", lib_name, ".so"), # Alternative
+    paste0("/usr/lib/lib", lib_name, ".so"), # Generic
+    paste0("lib", lib_name, ".so") # Just try the name
   )
-  
+
   # Try each path
   for (path in system_paths) {
     if (file.exists(path)) {
-      tryCatch({
-        result <- dll_load(path, verbose = verbose)
-        if (verbose) {
-          message("Successfully loaded system library:", path, "\n")
+      tryCatch(
+        {
+          result <- dll_load(path, verbose = verbose)
+          if (verbose) {
+            message("Successfully loaded system library:", path, "\n")
+          }
+          return(result)
+        },
+        error = function(e) {
+          if (verbose) {
+            message("Failed to load", path, ":", e$message, "\n")
+          }
         }
-        return(result)
-      }, error = function(e) {
-        if (verbose) {
-          message("Failed to load", path, ":", e$message, "\n")
-        }
-      })
+      )
     }
   }
-  
+
   # If direct paths fail, try using dlopen with RTLD_DEFAULT
   # This works for already-loaded system libraries
-  tryCatch({
-    # Most system libraries are already loaded in the process
-    if (lib_name == "c") {
-      # libc is always available - return a special marker
-      return("SYSTEM_LIBC")
+  tryCatch(
+    {
+      # Most system libraries are already loaded in the process
+      if (lib_name == "c") {
+        # libc is always available - return a special marker
+        return("SYSTEM_LIBC")
+      }
+      stop("Library not found")
+    },
+    error = function(e) {
+      warning("System library '", lib_name, "' not found or not accessible")
+      return(NULL)
     }
-    stop("Library not found")
-  }, error = function(e) {
-    warning("System library '", lib_name, "' not found or not accessible")
-    return(NULL)
-  })
+  )
 }
