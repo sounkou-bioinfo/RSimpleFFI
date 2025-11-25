@@ -1,0 +1,20 @@
+Package: RSimpleFFI
+Version: 1.0.0
+Title: Simple Foreign Function Interface using 'S7' and 'libffi'
+Description: Simple Foreign Function Interface for R using libffi and S7 classes.
+    Supports calling C functions with proper type conversion and memory management.
+    Includes standard C types (int8, int16, int32, int64, uint variants), platform
+    types (size_t, bool), and floating point types.
+Authors@R: c(
+    person(given = "Sounkou Mahamane", family = "Toure", 
+    email = "sounkoutoure@gmail.com", role = c("aut", "cre")))
+License: GPL-3
+Depends: R (>= 4.0.0)
+Imports: S7
+SystemRequirements: libffi
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+URL: https://github.com/sounkou-bioinfo/RSimpleFFI
+BugReports: https://github.com/sounkou-bioinfo/RSimpleFFI/issues
+
