@@ -213,21 +213,16 @@ lib_handle <- dll_compile_and_load(struct_code, "struct_test")
 dll_unload(lib_handle)
 ```
 
-printf\_func \<- dll\_ffi\_symbol(“my\_printf”, ffi\_int(),
-ffi\_double()) printf\_func(42.5) \# Prints: Value: 42.50
-dll\_unload(lib\_handle)
-
 ### libc rand
 
 ``` r
 # Example: call the C standard library rand() function
-tryCatch({
-  libc_handle <- dll_load_system("c")
-  rand_func <- dll_ffi_symbol("rand", ffi_int())
-  rand_value <- rand_func()
-  print(rand_value)  # Should print a random integer
-  dll_unload(libc_handle)
-}, error = function(e) cat("libc rand() example failed:", e$message, "\n"))
+libc_handle <- dll_load_system("c")
+rand_func <- dll_ffi_symbol("rand", ffi_int())
+rand_value <- rand_func()
+print(rand_value)  # Should print a random integer
+#> [1] 103319096
+dll_unload(libc_handle)
 ```
 
 ### Benchmarking
@@ -252,10 +247,10 @@ benchmark_result <- bench::mark(
 
 benchmark_result
 #> # A tibble: 2 × 6
-#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
-#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0      1ns 50594765.        0B      0  
-#> 2 ffi_call     11.8µs     15µs    60362.        0B     60.4
+#>   expression      min   median  `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>      <dbl> <bch:byt>    <dbl>
+#> 1 native_r          0      1ns 239232403.        0B        0
+#> 2 ffi_call     12.1µs   16.2µs     55859.        0B        0
 dll_unload(lib_handle)
 ```
 
@@ -278,8 +273,8 @@ bench::mark(
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ffi_loop    17.76ms   18.2ms      54.7    45.4KB     54.7
-#> 2 r_loop       1.21ms   1.34ms     646.     16.9KB      0
+#> 1 ffi_loop    17.21ms  17.41ms      54.9    45.4KB     54.9
+#> 2 r_loop       1.16ms   1.28ms     731.     16.9KB      0
 ```
 
 ## Comparison with Other Libraries
@@ -354,6 +349,7 @@ tryCatch({
   libc_handle <- dll_load_system("c")
   if (!is.null(libc_handle)) "System library access works"
 }, error = function(e) e$message)
+#> [1] "System library access works"
 ```
 
 ### Advanced DLL Compilation

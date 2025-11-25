@@ -198,22 +198,15 @@ Point create_point(int x, int y) {
 lib_handle <- dll_compile_and_load(struct_code, "struct_test")
 dll_unload(lib_handle)
 ```
-
-printf_func <- dll_ffi_symbol("my_printf", ffi_int(), ffi_double())
-printf_func(42.5)  # Prints: Value: 42.50
-dll_unload(lib_handle)
-
 ### libc rand
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 # Example: call the C standard library rand() function
-tryCatch({
-  libc_handle <- dll_load_system("c")
-  rand_func <- dll_ffi_symbol("rand", ffi_int())
-  rand_value <- rand_func()
-  print(rand_value)  # Should print a random integer
-  dll_unload(libc_handle)
-}, error = function(e) cat("libc rand() example failed:", e$message, "\n"))
+libc_handle <- dll_load_system("c")
+rand_func <- dll_ffi_symbol("rand", ffi_int())
+rand_value <- rand_func()
+print(rand_value)  # Should print a random integer
+dll_unload(libc_handle)
 ```
 
 ### Benchmarking
@@ -317,7 +310,7 @@ dll_unload(lib_handle)
 
 RSimpleFFI can also access system libraries like libc for calling standard C functions:
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 tryCatch({
   libc_handle <- dll_load_system("c")
   if (!is.null(libc_handle)) "System library access works"
