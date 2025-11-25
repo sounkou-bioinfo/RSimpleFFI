@@ -1,3 +1,35 @@
+test_that("All extended FFI types can be created and have correct properties", {
+  type_fns <- list(
+    char = ffi_char,
+    uchar = ffi_uchar,
+    short = ffi_short,
+    ushort = ffi_ushort,
+    int8 = ffi_int8,
+    int16 = ffi_int16,
+    int32 = ffi_int32,
+    int64 = ffi_int64,
+    uint = ffi_uint,
+    uint8 = ffi_uint8,
+    uint16 = ffi_uint16,
+    uint32 = ffi_uint32,
+    uint64 = ffi_uint64,
+    long = ffi_long,
+    ulong = ffi_ulong,
+    longlong = ffi_longlong,
+    ulonglong = ffi_ulonglong,
+    longdouble = ffi_longdouble,
+    size_t = ffi_size_t,
+    ssize_t = ffi_ssize_t,
+    bool = ffi_bool,
+    wchar_t = ffi_wchar_t
+  )
+  for (type_name in names(type_fns)) {
+    t <- type_fns[[type_name]]()
+    expect_s7_class(t, RSimpleFFI::FFIType)
+    expect_equal(t@name, type_name)
+    expect_gt(t@size, 0)
+  }
+})
 # Basic Type Tests
 
 library(testthat)

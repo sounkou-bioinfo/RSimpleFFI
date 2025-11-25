@@ -1,3 +1,4 @@
+library(RSimpleFFI)
 test_that("DLL loading works with R's native facilities", {
   # DLL loading test - no skips!
   

@@ -90,6 +90,15 @@ static ffi_type_map_t builtin_ffi_types[] = {
     {"bool", &ffi_type_bool_custom},
     {"wchar_t", &ffi_type_wchar_t_custom},
     
+    // Missing ctypes compatibility types
+    {"char", &ffi_type_sint8},           // c_char
+    {"uchar", &ffi_type_uint8},          // c_ubyte  
+    {"short", &ffi_type_sint16},         // c_short
+    {"ushort", &ffi_type_uint16},        // c_ushort
+    {"uint", &ffi_type_uint32},          // c_uint
+    {"longlong", sizeof(long long) == 8 ? &ffi_type_sint64 : &ffi_type_sint32},  // c_longlong
+    {"ulonglong", sizeof(unsigned long long) == 8 ? &ffi_type_uint64 : &ffi_type_uint32}, // c_ulonglong
+    
     {NULL, NULL}
 };
 
@@ -657,7 +666,10 @@ static SEXP do_ffi_call_internal(void* data) {
     }
     
     // Make the FFI call - all R objects are now protected
-    ffi_call(cif, (void(*)())func_ptr, return_value, arg_values);
+    typedef void (*generic_func_ptr)();
+    union { void *obj; generic_func_ptr func; } caster;
+    caster.obj = func_ptr;
+    ffi_call(cif, caster.func, return_value, arg_values);
     
     // Convert return value - this can also error
     SEXP result = R_NilValue;

@@ -213,19 +213,21 @@ lib_handle <- dll_compile_and_load(struct_code, "struct_test")
 dll_unload(lib_handle)
 ```
 
-### libc Printf
+printf\_func \<- dll\_ffi\_symbol(“my\_printf”, ffi\_int(),
+ffi\_double()) printf\_func(42.5) \# Prints: Value: 42.50
+dll\_unload(lib\_handle)
+
+### libc rand
 
 ``` r
-printf_code <- '
-#include <stdio.h>
-int my_printf(double value) {
-    return printf("Value: %.2f\\n", value);
-}
-'
-lib_handle <- dll_compile_and_load(printf_code, "printf_test")
-printf_func <- dll_ffi_symbol("my_printf", ffi_int(), ffi_double())
-printf_func(42.5)  # Prints: Value: 42.50
-dll_unload(lib_handle)
+# Example: call the C standard library rand() function
+tryCatch({
+  libc_handle <- dll_load_system("c")
+  rand_func <- dll_ffi_symbol("rand", ffi_int())
+  rand_value <- rand_func()
+  print(rand_value)  # Should print a random integer
+  dll_unload(libc_handle)
+}, error = function(e) cat("libc rand() example failed:", e$message, "\n"))
 ```
 
 ### Benchmarking
@@ -252,8 +254,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0    104ns  7775984.        0B      0  
-#> 2 ffi_call     23.1µs   41.2µs    18391.        0B     18.4
+#> 1 native_r          0      1ns 50594765.        0B      0  
+#> 2 ffi_call     11.8µs     15µs    60362.        0B     60.4
 dll_unload(lib_handle)
 ```
 
@@ -276,8 +278,8 @@ bench::mark(
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ffi_loop    24.59ms  25.79ms      38.8    45.4KB     38.8
-#> 2 r_loop       1.79ms   1.99ms     491.     16.9KB      0
+#> 1 ffi_loop    17.76ms   18.2ms      54.7    45.4KB     54.7
+#> 2 r_loop       1.21ms   1.34ms     646.     16.9KB      0
 ```
 
 ## Comparison with Other Libraries

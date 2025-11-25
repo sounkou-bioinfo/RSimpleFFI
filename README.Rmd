@@ -199,19 +199,21 @@ lib_handle <- dll_compile_and_load(struct_code, "struct_test")
 dll_unload(lib_handle)
 ```
 
-### libc Printf
-
-```{r eval=FALSE}
-printf_code <- '
-#include <stdio.h>
-int my_printf(double value) {
-    return printf("Value: %.2f\\n", value);
-}
-'
-lib_handle <- dll_compile_and_load(printf_code, "printf_test")
 printf_func <- dll_ffi_symbol("my_printf", ffi_int(), ffi_double())
 printf_func(42.5)  # Prints: Value: 42.50
 dll_unload(lib_handle)
+
+### libc rand
+
+```{r eval=FALSE}
+# Example: call the C standard library rand() function
+tryCatch({
+  libc_handle <- dll_load_system("c")
+  rand_func <- dll_ffi_symbol("rand", ffi_int())
+  rand_value <- rand_func()
+  print(rand_value)  # Should print a random integer
+  dll_unload(libc_handle)
+}, error = function(e) cat("libc rand() example failed:", e$message, "\n"))
 ```
 
 ### Benchmarking

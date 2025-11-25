@@ -97,7 +97,13 @@ S7::method(create_builtin_type, S7::class_character) <- function(name) {
     "int8", "int16", "int32", "int64",
     "uint8", "uint16", "uint32", "uint64", 
     # Long types
-    "long", "ulong",
+    "long", "ulong", "longlong", "ulonglong",
+    # Short types
+    "short", "ushort",
+    # Char types
+    "char", "uchar",
+    # Unsigned int
+    "uint",
     # Floating point variants
     "longdouble",
     # Platform-dependent types
