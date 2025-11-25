@@ -3,7 +3,6 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/workflows/R-CMD-check/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions)
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
@@ -223,10 +222,10 @@ benchmark_result <- bench::mark(
 
 benchmark_result
 #> # A tibble: 2 × 6
-#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
-#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0      1ns 33609862.        0B      0  
-#> 2 ffi_call     11.6µs   13.7µs    67097.        0B     67.2
+#>   expression      min   median  `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>      <dbl> <bch:byt>    <dbl>
+#> 1 native_r          0      1ns 115573816.        0B      0  
+#> 2 ffi_call       12µs   14.8µs     60676.        0B     60.7
 dll_unload(lib_handle)
 ```
 
@@ -238,7 +237,7 @@ for(i in 1:1000) {
 }
 end_time <- Sys.time()
 paste("1000 calls in", round(as.numeric(end_time - start_time, units="secs"), 4), "seconds")
-#> [1] "1000 calls in 0.0279 seconds"
+#> [1] "1000 calls in 0.0277 seconds"
 ```
 
 ## Comparison with Other Libraries
