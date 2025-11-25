@@ -221,7 +221,7 @@ libc_handle <- dll_load_system("c")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 2029166572
+#> [1] 1455471509
 dll_unload(libc_handle)
 ```
 
@@ -236,23 +236,40 @@ lib_handle <- dll_load(so_files[1])
 lib_handle
 #> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
 
-# Allocate memory for input and output buffers (16 bytes each) using RSimpleFFI
-inbuf_ptr <- ffi_alloc_buffer(16L)
-outbuf_ptr <- ffi_alloc_buffer(16L)
+
+# Allocate memory for input and output buffers (16 bytes each) using RSimpleFFI's typed allocator
+raw_type <- ffi_raw()
+inbuf_ptr <- ffi_alloc(raw_type, 16L)
+outbuf_ptr <- ffi_alloc(raw_type, 16L)
 
 
 # Use a character string as a dummy pointer for the key argument (for demonstration only)
 fake_key <- "dummy_key_ptr"
-
-# (Optional) Zero the buffers in C if needed, or just rely on malloc's default
-
 # Use ffi_pointer() for all pointer arguments
 aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_pointer())
 aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
 #> NULL
-outbuf_ptr
-#> <pointer: 0x568d84467410>
+ffi_copy_array(outbuf_ptr, 16L, raw_type)
+#>  [1] 12 35 00 23 2d 0c d6 d2 b3 a1 7a 95 2a 81 d3 cb
 dll_unload(lib_handle)
+```
+
+### Allocating Typed Buffers
+
+``` r
+# Allocate a buffer for 10 integers
+int_type <- ffi_int()
+int_buf <- ffi_alloc(int_type, 10L)
+
+# Read back as R vector (using ffi_copy_array)
+ffi_copy_array(int_buf, 10L, int_type)
+#>  [1] 0 0 0 0 0 0 0 0 0 0
+
+# You can use ffi_alloc for any builtin type:
+double_type <- ffi_double()
+double_buf <- ffi_alloc(double_type, 5L)
+ffi_copy_array(double_buf, 5L, double_type)
+#> [1] 0 0 0 0 0
 ```
 
 > **Note:** RSimpleFFI supports pointer arguments using `ffi_pointer()`.
@@ -285,10 +302,10 @@ benchmark_result <- bench::mark(
 
 benchmark_result
 #> # A tibble: 2 × 6
-#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
-#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r        1ns    208ns  5092349.        0B        0
-#> 2 ffi_call     23.5µs   41.4µs    23429.        0B        0
+#>   expression      min   median  `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>      <dbl> <bch:byt>    <dbl>
+#> 1 native_r          0      1ns 179432510.        0B        0
+#> 2 ffi_call     11.8µs     15µs     56877.        0B        0
 dll_unload(lib_handle)
 ```
 
@@ -311,8 +328,8 @@ bench::mark(
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ffi_loop    35.56ms  44.62ms      23.2    45.9KB     23.2
-#> 2 r_loop       2.22ms   2.41ms     373.     16.9KB     41.4
+#> 1 ffi_loop    17.23ms  17.63ms      53.0    45.4KB     53.0
+#> 2 r_loop       1.21ms   1.46ms     669.     16.9KB     74.3
 ```
 
 ## Advanced Usage

@@ -96,6 +96,23 @@ SEXP R_alloc_buffer(SEXP r_size) {
     return extPtr;
 }
 
+// Allocate a buffer for n elements of a given FFI type
+SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n) {
+    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
+    if (!type) error("Invalid FFI type pointer");
+    int n = asInteger(r_n);
+    if (n <= 0) error("n must be positive");
+    size_t total = (size_t)n * type->size;
+    void* buf = calloc(n, type->size);
+    if (!buf) error("Memory allocation failed");
+    // Tag with type name for safety
+    SEXP tag = R_NilValue;
+    tag = R_ExternalPtrTag(r_type);
+    SEXP extPtr = R_MakeExternalPtr(buf, tag ? tag : Rf_install("typed_buffer"), R_NilValue);
+    R_RegisterCFinalizerEx(extPtr, buffer_finalizer, TRUE);
+    return extPtr;
+}
+
 
 static ffi_type_map_t builtin_ffi_types[] = {
     {"void", &ffi_type_void},
@@ -851,7 +868,6 @@ SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
             UNPROTECT(1);
             break;
         }
-        
         case FFI_TYPE_DOUBLE: {
             PROTECT(result = allocVector(REALSXP, length));
             double* src = (double*)ptr;
@@ -862,11 +878,19 @@ SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
             UNPROTECT(1);
             break;
         }
-        
+        case FFI_TYPE_UINT8: {
+            PROTECT(result = allocVector(RAWSXP, length));
+            unsigned char* src = (unsigned char*)ptr;
+            Rbyte* dest = RAW(result);
+            for (int i = 0; i < length; i++) {
+                dest[i] = src[i];
+            }
+            UNPROTECT(1);
+            break;
+        }
         default:
             error("Unsupported element type for array copy");
     }
-    
     return result;
 }
 

@@ -15,13 +15,15 @@ SEXP R_set_struct_field(SEXP ptr, SEXP field_index, SEXP value, SEXP struct_type
 SEXP R_is_null_pointer(SEXP ptr);
 SEXP R_copy_array(SEXP ptr, SEXP length, SEXP element_type);
 SEXP R_alloc_buffer(SEXP r_size);
-
+SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n);
 // Dynamic library loading functions using R's dynload
 SEXP R_dyn_load(SEXP filename, SEXP local, SEXP now);
 SEXP R_dyn_unload(SEXP dll_info);
 SEXP R_dyn_symbol(SEXP dll_info, SEXP symbol_name);
 SEXP R_find_symbol(SEXP symbol_name, SEXP package_name);
 SEXP R_get_dll_info(SEXP dll_info);
+
+//
 
 /* Declare test functions */
 double test_add_double(double a, double b);
@@ -79,6 +81,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
     {"R_get_ffi_type_size",       (DL_FUNC) &R_get_ffi_type_size,       1},
     {"R_alloc_buffer",            (DL_FUNC) &R_alloc_buffer,            1},
+    {"R_alloc_typed_buffer",      (DL_FUNC) &R_alloc_typed_buffer,      2},
     {NULL, NULL, 0}
 };
 
