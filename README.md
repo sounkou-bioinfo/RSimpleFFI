@@ -204,12 +204,12 @@ bool_result
 # Allocate typed buffer
 ptr <- ffi_alloc(ffi_double(), 5L)
 ptr
-#> <pointer: 0x5b41db641d60>
+#> <pointer: 0x60d2c7114d60>
 
 # Allocate raw buffer
 raw_ptr <- ffi_alloc_buffer(32L)
 raw_ptr
-#> <pointer: 0x5b41d89b7b40>
+#> <pointer: 0x60d2c7bb8bb0>
 
 # Check for null pointer
 is_null_pointer(ptr)
@@ -335,7 +335,7 @@ libc_handle <- dll_load_system("c")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 483920519
+#> [1] 1831946680
 #> [1] 1261047682
 
 dll_unload(libc_handle)
@@ -367,7 +367,7 @@ aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
 #> NULL
 #> NULL
 ffi_copy_array(outbuf_ptr, 16L, raw_type)
-#>  [1] 6d 08 b3 31 d1 26 76 f9 c8 a9 3f ee 14 d3 e7 ba
+#>  [1] 6e d0 5f 3b 77 4c e0 66 89 da ae b7 ca 5a f9 a7
 #>  [1] 0a ae 48 58 58 f0 c0 2c ca cb 6f 54 82 97 7d e9
 dll_unload(lib_handle)
 ```
