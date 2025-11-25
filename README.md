@@ -18,6 +18,13 @@ platform-specific types. The package uses S7 classes for type safety and
 handles memory management automatically. It only needs libffi which is
 available on most systems.
 
+## Related Projects
+
+RSimpleFFI is inspired by the [Rffi
+package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang, which
+pioneered R-to-C FFI interfaces. RSimpleFFI builds on these concepts
+with modern S7 classes and enhanced type safety.
+
 ## Installation
 
 You can install RSimpleFFI from source:
@@ -58,8 +65,8 @@ cif <- ffi_cif(int_type, int_type, int_type)  # return int, takes two ints
 
 # Call the function
 result <- ffi_call(cif, add_func, 15L, 27L)
-print(paste("15 + 27 =", result))
-#> [1] "15 + 27 = 42"
+result
+#> [1] 42
 ```
 
 ## Type System
@@ -70,7 +77,6 @@ platform-specific types:
 ### Basic Types
 
 ``` r
-# Fundamental types
 void_type <- ffi_void()
 int_type <- ffi_int() 
 double_type <- ffi_double()
@@ -82,19 +88,12 @@ string_type <- ffi_string()
 ### Extended Integer Types
 
 ``` r
-# 8-bit integers
 int8_type <- ffi_int8()
 uint8_type <- ffi_uint8()
-
-# 16-bit integers  
 int16_type <- ffi_int16()
 uint16_type <- ffi_uint16()
-
-# 32-bit integers
 int32_type <- ffi_int32() 
 uint32_type <- ffi_uint32()
-
-# 64-bit integers
 int64_type <- ffi_int64()
 uint64_type <- ffi_uint64()
 ```
@@ -102,20 +101,16 @@ uint64_type <- ffi_uint64()
 ### Platform-Dependent Types
 
 ``` r
-# Platform-specific types
-size_t_type <- ffi_size_t()      # Usually 64-bit on 64-bit systems
-ssize_t_type <- ffi_ssize_t()    # Signed version of size_t
-long_type <- ffi_long()          # Platform long
-ulong_type <- ffi_ulong()        # Platform unsigned long
+size_t_type <- ffi_size_t()
+ssize_t_type <- ffi_ssize_t()
+long_type <- ffi_long()
+ulong_type <- ffi_ulong()
 ```
 
 ### Extended Floating-Point and Special Types
 
 ``` r
-# Extended precision
 longdouble_type <- ffi_longdouble()
-
-# Boolean and character types
 bool_type <- ffi_bool()
 wchar_type <- ffi_wchar_t()
 ```
@@ -125,63 +120,60 @@ wchar_type <- ffi_wchar_t()
 ### Testing Integer Types
 
 ``` r
-# Test 8-bit integer function
 int8_func <- ffi_symbol("test_int8_func")
 int8_cif <- ffi_cif(int8_type, int8_type)
 int8_result <- ffi_call(int8_cif, int8_func, 42L)
-print(paste("int8 test (42 + 1):", int8_result))
-#> [1] "int8 test (42 + 1): 43"
+int8_result
+#> [1] 43
 
-# Test 32-bit unsigned integer
 uint32_func <- ffi_symbol("test_uint32_func") 
 uint32_cif <- ffi_cif(uint32_type, uint32_type)
 uint32_result <- ffi_call(uint32_cif, uint32_func, 123L)
-print(paste("uint32 test (123 * 3):", uint32_result))
-#> [1] "uint32 test (123 * 3): 369"
+uint32_result
+#> [1] 369
 
-# Test 64-bit integer
 int64_func <- ffi_symbol("test_int64_func")
 int64_cif <- ffi_cif(int64_type, int64_type)
 int64_result <- ffi_call(int64_cif, int64_func, 999L)
-print(paste("int64 test (999 * 4):", int64_result))
-#> [1] "int64 test (999 * 4): 3996"
+int64_result
+#> [1] 3996
 ```
 
 ### Testing Floating-Point Types
 
 ``` r
-# Test double precision
+add_func <- ffi_symbol("test_add_int")
+add_cif <- ffi_cif(int_type, int_type, int_type)
+int_result <- ffi_call(add_cif, add_func, 10L, 5L)
+int_result
+#> [1] 15
+
 double_func <- ffi_symbol("test_add_double")
 double_cif <- ffi_cif(double_type, double_type, double_type)
 double_result <- ffi_call(double_cif, double_func, 3.14, 2.86)
-print(paste("double test (3.14 + 2.86):", double_result))
-#> [1] "double test (3.14 + 2.86): 6"
+double_result
+#> [1] 6
 
-# Test single precision
 float_func <- ffi_symbol("test_add_float")
 float_cif <- ffi_cif(float_type, float_type, float_type)
 float_result <- ffi_call(float_cif, float_func, 1.5, 2.5)
-print(paste("float test (1.5 + 2.5):", float_result))
-#> [1] "float test (1.5 + 2.5): 4"
+float_result
+#> [1] 4
 ```
 
 ### Advanced Function Calls
 
 ``` r
-# Test void function
 void_func <- ffi_symbol("test_void_function")
 void_cif <- ffi_cif(void_type)
 ffi_call(void_cif, void_func)
 #> NULL
-print("Void function called successfully")
-#> [1] "Void function called successfully"
 
-# Test function with multiple arguments
 factorial_func <- ffi_symbol("test_factorial")
 factorial_cif <- ffi_cif(int_type, int_type)
 factorial_result <- ffi_call(factorial_cif, factorial_func, 5L)
-print(paste("Factorial of 5:", factorial_result))
-#> [1] "Factorial of 5: 120"
+factorial_result
+#> [1] 120
 ```
 
 ## Type Conversions
@@ -189,28 +181,55 @@ print(paste("Factorial of 5:", factorial_result))
 RSimpleFFI converts between R and C types automatically:
 
 ``` r
-# R integers -> C integers (various sizes)
-print("Integer type conversions:")
-#> [1] "Integer type conversions:"
-print(paste("int16 with R integer:", ffi_call(ffi_cif(int16_type, int16_type), 
-                                           ffi_symbol("test_int16_func"), 1000L)))
-#> [1] "int16 with R integer: 2000"
+int16_result <- ffi_call(ffi_cif(int16_type, int16_type), 
+                        ffi_symbol("test_int16_func"), 1000L)
+int16_result
+#> [1] 2000
 
-# R numerics -> C integers  
-print(paste("uint16 with R numeric:", ffi_call(ffi_cif(uint16_type, uint16_type),
-                                              ffi_symbol("test_uint16_func"), 2000.0)))
-#> [1] "uint16 with R numeric: 4000"
+uint16_result <- ffi_call(ffi_cif(uint16_type, uint16_type),
+                         ffi_symbol("test_uint16_func"), 2000.0)
+uint16_result
+#> [1] 4000
 
-# R logicals -> C bool
-print(paste("bool with R logical:", ffi_call(ffi_cif(bool_type, bool_type),
-                                           ffi_symbol("test_bool_func"), TRUE)))
-#> [1] "bool with R logical: 0"
+bool_result <- ffi_call(ffi_cif(bool_type, bool_type),
+                       ffi_symbol("test_bool_func"), TRUE)
+bool_result
+#> [1] 0
 ```
 
 ## Performance and Memory Management
 
 RSimpleFFI handles memory automatically and validates types to prevent
 crashes. It maps directly to libffi types for good performance.
+
+### Benchmarking
+
+``` r
+library(bench)
+
+# Compare FFI call performance
+math_code <- '
+#include <math.h>
+double test_sqrt(double x) { return sqrt(x); }
+'
+lib_handle <- dll_compile_and_load(math_code, "bench_test", libs = "m")
+sqrt_func <- dll_ffi_symbol("test_sqrt", ffi_double(), ffi_double())
+
+benchmark_result <- bench::mark(
+  native_r = sqrt(100),
+  ffi_call = sqrt_func(100.0),
+  check = FALSE,
+  iterations = 1000
+)
+
+benchmark_result
+#> # A tibble: 2 × 6
+#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 native_r          0   1.05ns 29750724.        0B      0  
+#> 2 ffi_call     11.8µs  15.26µs    53926.        0B     54.0
+dll_unload(lib_handle)
+```
 
 ``` r
 # Performance test - multiple rapid calls
@@ -219,8 +238,8 @@ for(i in 1:1000) {
   result <- ffi_call(cif, add_func, i, i+1L)
 }
 end_time <- Sys.time()
-print(paste("1000 FFI calls completed in:", round(as.numeric(end_time - start_time, units="secs"), 4), "seconds"))
-#> [1] "1000 FFI calls completed in: 0.0288 seconds"
+paste("1000 calls in", round(as.numeric(end_time - start_time, units="secs"), 4), "seconds")
+#> [1] "1000 calls in 0.0268 seconds"
 ```
 
 ## Comparison with Other Libraries
@@ -233,15 +252,12 @@ Rcpp. It uses S7 classes and handles memory automatically.
 ### Custom Type Definitions
 
 ``` r
-# Working with pointers (for advanced users)
 ptr_func <- ffi_symbol("test_return_pointer")
 ptr_cif <- ffi_cif(pointer_type, pointer_type)
-
-# Create a test pointer (using built-in NULL for safety)
 test_ptr <- NULL
 ptr_result <- ffi_call(ptr_cif, ptr_func, test_ptr)
-print("Pointer function completed successfully")
-#> [1] "Pointer function completed successfully"
+ptr_result
+#> NULL
 ```
 
 ### Error Handling
@@ -249,22 +265,20 @@ print("Pointer function completed successfully")
 RSimpleFFI provides clear error messages for common issues:
 
 ``` r
-# This will produce a clear error message
 tryCatch({
   invalid_func <- ffi_symbol("nonexistent_function")
 }, error = function(e) {
-  print(paste("Expected error:", e$message))
+  e$message
 })
-#> [1] "Expected error: Symbol not found: nonexistent_function. Make sure the library containing this symbol is loaded."
+#> [1] "Symbol not found: nonexistent_function. Make sure the library containing this symbol is loaded."
 
-# Type mismatch handling
 tryCatch({
   test_cif <- ffi_cif(int_type, int_type, int_type)
   bad_type <- ffi_call(test_cif, add_func, "not_a_number", 5L)
 }, error = function(e) {
-  print(paste("Type conversion error handled:", e$message))
+  e$message
 })
-#> [1] "Type conversion error handled: Cannot convert to int"
+#> [1] "Cannot convert to int"
 ```
 
 ## Dynamic Library Loading
@@ -274,30 +288,20 @@ R’s native `dyn.load()` facilities. This allows you to compile and use
 your own C functions dynamically:
 
 ``` r
-# Create native C code
 c_code <- '
 int add_numbers(int a, int b) {
     return a + b;
 }
 '
 
-# Compile and load
 lib_handle <- dll_compile_and_load(c_code, "example_lib")
-
-# Create FFI wrapper
 int_t <- ffi_int()
 add_fn <- dll_ffi_symbol("add_numbers", int_t, int_t, int_t)
-
-# Use the function
 result <- add_fn(10L, 5L)
-print(paste("10 + 5 =", result))
-#> [1] "10 + 5 = 15"
+result
+#> [1] 15
 
-# Clean up
-# Clean up
 dll_unload(lib_handle)
-print("Dynamic loading example completed")
-#> [1] "Dynamic loading example completed"
 ```
 
 ### System Library Access
@@ -306,27 +310,10 @@ RSimpleFFI can also access system libraries like libc for calling
 standard C functions:
 
 ``` r
-# Example: Calling printf from libc (demonstration only - use cat() in practice)
-# Note: This is mainly for educational purposes to show system library access
-
-# Try to access system libraries
 tryCatch({
-  # Load libc system library
-  libc_handle <- dll_load_system("c", verbose = TRUE)
-  
-  if (!is.null(libc_handle)) {
-    print("System library access available")
-    
-    # For printf, we'd need more complex setup due to variadic arguments
-    # Instead, let's try simpler functions like strlen
-    
-    # Note: Real usage would require careful handling of string pointers
-    # This is just to demonstrate the system library loading capability
-    print("System library loading mechanism works")
-  }
-}, error = function(e) {
-  print(paste("System library example:", e$message))
-})
+  libc_handle <- dll_load_system("c")
+  if (!is.null(libc_handle)) "System library access works"
+}, error = function(e) e$message)
 ```
 
 ### Advanced DLL Compilation
@@ -334,10 +321,8 @@ tryCatch({
 The compiler uses R’s configured toolchain for maximum compatibility:
 
 ``` r
-# Example with custom compilation flags
 math_code <- '
 #include <math.h>
-
 double compute_distance(double x1, double y1, double x2, double y2) {
     double dx = x2 - x1;
     double dy = y2 - y1;
@@ -345,19 +330,13 @@ double compute_distance(double x1, double y1, double x2, double y2) {
 }
 '
 
-# Compile with math library
 lib_handle <- dll_compile_and_load(math_code, "math_lib", libs = "m")
-
-# Create wrapper
 double_t <- ffi_double()
 distance_fn <- dll_ffi_symbol("compute_distance", double_t, double_t, double_t, double_t, double_t)
-
-# Calculate distance between two points
 dist <- distance_fn(0.0, 0.0, 3.0, 4.0)
-print(paste("Distance from (0,0) to (3,4):", dist))
-#> [1] "Distance from (0,0) to (3,4): 5"
+dist
+#> [1] 5
 
-# Cleanup
 dll_unload(lib_handle)
 ```
 
