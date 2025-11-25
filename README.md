@@ -4,6 +4,7 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/workflows/R-CMD-check/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions)
+[![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 A Foreign Function Interface (FFI) for R using libffi. Call C functions
@@ -219,7 +220,7 @@ for(i in 1:1000) {
 }
 end_time <- Sys.time()
 print(paste("1000 FFI calls completed in:", round(as.numeric(end_time - start_time, units="secs"), 4), "seconds"))
-#> [1] "1000 FFI calls completed in: 0.0303 seconds"
+#> [1] "1000 FFI calls completed in: 0.0288 seconds"
 ```
 
 ## Comparison with Other Libraries
@@ -359,10 +360,6 @@ print(paste("Distance from (0,0) to (3,4):", dist))
 # Cleanup
 dll_unload(lib_handle)
 ```
-
-## License
-
-\`\`\`
 
 ## License
 

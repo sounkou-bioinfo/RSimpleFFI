@@ -753,15 +753,7 @@ SEXP R_is_null_pointer(SEXP r_ptr) {
     return ScalarLogical(ptr == NULL);
 }
 
-// Create string value for FFI (explicit string handling like Rffi)
-SEXP R_ffi_string(SEXP r_str) {
-    if (TYPEOF(r_str) != STRSXP || LENGTH(r_str) == 0) {
-        error("ffi_string requires a character string");
-    }
-    
-    // Return the original string - the conversion will happen in convert_r_to_native
-    return r_str;
-}
+
 
 // Copy array from native memory (basic implementation)
 SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {

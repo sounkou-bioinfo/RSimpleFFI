@@ -14,7 +14,6 @@ SEXP R_get_struct_field(SEXP ptr, SEXP field_index, SEXP struct_type);
 SEXP R_set_struct_field(SEXP ptr, SEXP field_index, SEXP value, SEXP struct_type);
 SEXP R_is_null_pointer(SEXP ptr);
 SEXP R_copy_array(SEXP ptr, SEXP length, SEXP element_type);
-SEXP R_ffi_string(SEXP str);
 
 // Dynamic library loading functions using R's dynload
 SEXP R_dyn_load(SEXP filename, SEXP local, SEXP now);
@@ -68,7 +67,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_set_struct_field",        (DL_FUNC) &R_set_struct_field,        4},
     {"R_is_null_pointer",         (DL_FUNC) &R_is_null_pointer,         1},
     {"R_copy_array",              (DL_FUNC) &R_copy_array,              3},
-    {"R_ffi_string",              (DL_FUNC) &R_ffi_string,              1},
     
     {NULL, NULL, 0}
 };

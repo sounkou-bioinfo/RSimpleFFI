@@ -11,6 +11,7 @@ Authors@R: c(
 License: GPL-3
 Depends: R (>= 4.0.0)
 Imports: S7
+Suggests: testthat, bench
 SystemRequirements: libffi
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
