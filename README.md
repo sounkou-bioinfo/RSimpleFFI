@@ -21,9 +21,8 @@ available on most systems.
 ## Related Projects
 
 RSimpleFFI is inspired by the [Rffi
-package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang, which
-pioneered R-to-C FFI interfaces. RSimpleFFI builds on these concepts
-with modern S7 classes and enhanced type safety.
+package](https://github.com/omegahat/Rffi/) by Duncan Temple Langs.
+RSimpleFFI builds on these concepts with S7 classes.
 
 ## Installation
 
@@ -226,8 +225,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0   1.05ns 29750724.        0B      0  
-#> 2 ffi_call     11.8µs  15.26µs    53926.        0B     54.0
+#> 1 native_r          0      1ns 33609862.        0B      0  
+#> 2 ffi_call     11.6µs   13.7µs    67097.        0B     67.2
 dll_unload(lib_handle)
 ```
 
@@ -239,7 +238,7 @@ for(i in 1:1000) {
 }
 end_time <- Sys.time()
 paste("1000 calls in", round(as.numeric(end_time - start_time, units="secs"), 4), "seconds")
-#> [1] "1000 calls in 0.0268 seconds"
+#> [1] "1000 calls in 0.0279 seconds"
 ```
 
 ## Comparison with Other Libraries
