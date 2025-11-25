@@ -29,10 +29,6 @@ src/*.so
 src/*.dll
 src/symbols.rds
 
-# Package build
-man/*.Rd
-NAMESPACE
-
 # Temporary files
 *.tmp
 *.log

@@ -37,6 +37,22 @@ ffi_struct <- function(...) {
   )
 }
 
+#' Create string value for FFI calls
+#' 
+#' This function explicitly marks a character string for FFI conversion.
+#' It helps ensure proper string-to-pointer conversion like in Rffi.
+#' 
+#' @param str Character string to prepare for FFI
+#' @return The string value prepared for FFI conversion
+#' @export
+ffi_string <- function(str) {
+  if (!is.character(str) || length(str) != 1) {
+    stop("ffi_string requires a single character string")
+  }
+  
+  .Call("R_ffi_string", str)
+}
+
 #' Prepare FFI call interface
 #' @param return_type FFIType for return value
 #' @param ... FFIType objects for arguments

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dll_loading.R, R/dll_loading_broken.R
 \name{dll_compile_and_load}
 \alias{dll_compile_and_load}
-\title{Compile and load C code dynamically}
+\title{Compile and load C code into a DLL}
 \usage{
 dll_compile_and_load(
   code,
@@ -37,7 +37,6 @@ Library handle that can be used with dll_* functions
 Library handle that can be used with dll_* functions
 }
 \description{
-Compile and load C code dynamically
-
-Compile and load C code dynamically
+This function compiles C code using R's configured compiler and loads it.
+Uses the same compiler configuration that R was built with.
 }

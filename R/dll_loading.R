@@ -173,66 +173,90 @@ dll_info <- function(handle) {
   )
 }
 
-#' Compile and load C code dynamically
+#' Compile and load C code into a DLL
 #' 
-#' @param code C code as character string
-#' @param name Base name for temporary files (default "temp_dll")
+#' This function compiles C code using R's configured compiler and loads it.
+#' Uses the same compiler configuration that R was built with.
+#' 
+#' @param code Character vector of C code to compile
+#' @param name Base name for the compiled library (default "temp_dll")
 #' @param includes Additional include directories
 #' @param libs Additional libraries to link
 #' @param verbose Print compilation output (default FALSE)
 #' @return Library handle that can be used with dll_* functions
 #' @export
 dll_compile_and_load <- function(code, name = "temp_dll", includes = NULL, libs = NULL, verbose = FALSE) {
-  # Create temporary files
-  temp_dir <- tempdir()
+  # Create temporary directory and files
+  temp_dir <- tempfile("dll_compile_")
+  dir.create(temp_dir, recursive = TRUE)
+  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
+  
   c_file <- file.path(temp_dir, paste0(name, ".c"))
   so_file <- file.path(temp_dir, paste0(name, .Platform$dynlib.ext))
   
   # Write C code to file
   writeLines(code, c_file)
   
-  # Build R CMD SHLIB command using R's compiler configuration
-  r_home <- R.home()
-  r_cmd <- file.path(r_home, "bin", "R")
-  
-  cmd_args <- c("CMD", "SHLIB", "-o", so_file)
+  # Create Makevars file for compilation options
+  makevars_content <- character(0)
   
   if (!is.null(includes)) {
-    include_flags <- paste0("-I", includes, collapse = " ")
-    cmd_args <- c(cmd_args, paste0("PKG_CPPFLAGS=", include_flags))
+    include_flags <- paste(paste0("-I", includes), collapse = " ")
+    makevars_content <- c(makevars_content, paste("PKG_CPPFLAGS =", include_flags))
   }
   
-  # Handle library linking via environment variable
-  old_pkg_libs <- Sys.getenv("PKG_LIBS", unset = NA)
   if (!is.null(libs)) {
-    lib_flags <- paste0("-l", libs, collapse = " ")
-    Sys.setenv(PKG_LIBS = lib_flags)
-    on.exit({
-      if (is.na(old_pkg_libs)) {
-        Sys.unsetenv("PKG_LIBS")
-      } else {
-        Sys.setenv(PKG_LIBS = old_pkg_libs)
-      }
-    })
+    lib_flags <- paste(paste0("-l", libs), collapse = " ")
+    makevars_content <- c(makevars_content, paste("PKG_LIBS =", lib_flags))
   }
   
-  cmd_args <- c(cmd_args, c_file)
+  # Write Makevars file if we have options
+  if (length(makevars_content) > 0) {
+    makevars_file <- file.path(temp_dir, "Makevars")
+    writeLines(makevars_content, makevars_file)
+    
+    # Set R_MAKEVARS_USER to point to our Makevars
+    old_makevars <- Sys.getenv("R_MAKEVARS_USER", unset = NA)
+    Sys.setenv(R_MAKEVARS_USER = makevars_file)
+    on.exit({
+      if (is.na(old_makevars)) {
+        Sys.unsetenv("R_MAKEVARS_USER")
+      } else {
+        Sys.setenv(R_MAKEVARS_USER = old_makevars)
+      }
+    }, add = TRUE)
+  }
+  
+  # Build R CMD SHLIB command
+  r_cmd <- file.path(R.home("bin"), "R")
+  cmd_args <- c("CMD", "SHLIB", "-o", so_file, c_file)
+  
+  # Change to temp directory for compilation
+  old_wd <- getwd()
+  setwd(temp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
   
   # Compile using R's configured compiler
   if (verbose) {
     output <- system2(r_cmd, cmd_args, stdout = TRUE, stderr = TRUE)
-    result <- attr(output, "status")
-    if (is.null(result)) result <- 0
-    if (result != 0) {
-      message("Compilation output:\n")
-      message(paste(output, collapse = "\n"), "\n")
-    }
   } else {
-    result <- system2(r_cmd, cmd_args, stdout = FALSE, stderr = FALSE)
+    output <- system2(r_cmd, cmd_args, stdout = TRUE, stderr = TRUE)
   }
   
-  if (result != 0) {
-    stop("Compilation failed with status ", result)
+  # Get status
+  status <- attr(output, "status")
+  if (is.null(status)) status <- 0
+  
+  # Handle compilation output
+  if (verbose || status != 0) {
+    if (length(output) > 0) {
+      message("Compilation output:")
+      message(paste(output, collapse = "\n"))
+    }
+  }
+  
+  if (status != 0) {
+    stop("Compilation failed with status ", status)
   }
   
   if (!file.exists(so_file)) {
@@ -241,9 +265,7 @@ dll_compile_and_load <- function(code, name = "temp_dll", includes = NULL, libs 
   
   # Load the library
   dll_load(so_file, verbose = verbose)
-}
-
-#' Load system library (like libc, libm, etc.)
+}#' Load system library (like libc, libm, etc.)
 #' 
 #' @param lib_name Name of system library (e.g., "c", "m", "pthread")
 #' @param verbose Print loading information (default FALSE)
