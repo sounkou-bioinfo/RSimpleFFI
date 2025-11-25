@@ -92,7 +92,7 @@ create_builtin_type <- S7::new_generic("create_builtin_type", "name")
 S7::method(create_builtin_type, S7::class_character) <- function(name) {
   valid_types <- c(
     # Basic types
-    "void", "int", "double", "float", "pointer", "string",
+    "void", "int", "double", "float", "pointer", "string", "raw",
     # Extended integer types
     "int8", "int16", "int32", "int64",
     "uint8", "uint16", "uint32", "uint64", 
@@ -121,6 +121,10 @@ S7::method(create_builtin_type, S7::class_character) <- function(name) {
 }
 
 # Convenient type constructors
+#' Create an FFI type for R raw vectors (byte arrays)
+#'
+#' @export
+ffi_raw <- function() create_builtin_type("raw")
 
 # Basic types
 #' @export

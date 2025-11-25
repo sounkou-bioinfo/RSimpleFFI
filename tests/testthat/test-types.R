@@ -1,3 +1,9 @@
+test_that("ffi_raw type can be created and has correct properties", {
+  raw_t <- ffi_raw()
+  expect_s7_class(raw_t, RSimpleFFI::FFIType)
+  expect_equal(raw_t@name, "raw")
+  expect_gt(raw_t@size, 0)
+})
 test_that("All extended FFI types can be created and have correct properties", {
   type_fns <- list(
     char = ffi_char,

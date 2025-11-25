@@ -1,3 +1,13 @@
+#' Allocate a raw memory buffer (external pointer, auto-finalized)
+#'
+#' Allocates a buffer of the given size (in bytes) and returns an external pointer.
+#' The memory is automatically freed when the pointer is garbage collected.
+#' @param size Number of bytes to allocate
+#' @return External pointer to buffer
+#' @export
+ffi_alloc_buffer <- function(size) {
+  .Call("R_alloc_buffer", as.integer(size))
+}
 # RSimpleFFI Utilities
 
 #' @import S7  

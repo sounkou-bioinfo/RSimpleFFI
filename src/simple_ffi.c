@@ -1,3 +1,4 @@
+
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>  // R's dynload facilities
@@ -30,6 +31,23 @@ static ffi_type ffi_type_size_t_custom = {
     NULL 
 };
 
+// Raw type for R raw vectors (byte arrays)
+#ifdef FFI_TYPE_UINT8
+static ffi_type ffi_type_raw_custom = {
+    sizeof(char),
+    sizeof(char),
+    FFI_TYPE_UINT8,
+    NULL
+};
+#else
+static ffi_type ffi_type_raw_custom = {
+    sizeof(char),
+    sizeof(char),
+    FFI_TYPE_SINT8,
+    NULL
+};
+#endif
+
 static ffi_type ffi_type_ssize_t_custom = { 
     sizeof(ssize_t), 
     sizeof(void*),  // alignment 
@@ -59,6 +77,26 @@ static ffi_type ffi_type_string_custom = {
     NULL 
 };
 
+
+// Finalizer for freeing malloc'd memory
+static void buffer_finalizer(SEXP extPtr) {
+    void* ptr = R_ExternalPtrAddr(extPtr);
+    if (ptr) free(ptr);
+    R_ClearExternalPtr(extPtr);
+}
+
+// Allocate a buffer and return an external pointer with finalizer
+SEXP R_alloc_buffer(SEXP r_size) {
+    R_xlen_t size = asInteger(r_size);
+    if (size <= 0) error("Size must be positive");
+    void* buf = malloc(size);
+    if (!buf) error("Memory allocation failed");
+    SEXP extPtr = R_MakeExternalPtr(buf, Rf_install("buffer"), R_NilValue);
+    R_RegisterCFinalizerEx(extPtr, buffer_finalizer, TRUE);
+    return extPtr;
+}
+
+
 static ffi_type_map_t builtin_ffi_types[] = {
     {"void", &ffi_type_void},
     {"int", &ffi_type_sint32},
@@ -66,6 +104,7 @@ static ffi_type_map_t builtin_ffi_types[] = {
     {"float", &ffi_type_float},
     {"pointer", &ffi_type_pointer},
     {"string", &ffi_type_string_custom},
+    {"raw", &ffi_type_raw_custom},
     
     // Extended integer types
     {"int8", &ffi_type_sint8},
@@ -98,7 +137,6 @@ static ffi_type_map_t builtin_ffi_types[] = {
     {"uint", &ffi_type_uint32},          // c_uint
     {"longlong", sizeof(long long) == 8 ? &ffi_type_sint64 : &ffi_type_sint32},  // c_longlong
     {"ulonglong", sizeof(unsigned long long) == 8 ? &ffi_type_uint64 : &ffi_type_uint32}, // c_ulonglong
-    
     {NULL, NULL}
 };
 

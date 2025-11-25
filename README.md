@@ -220,10 +220,48 @@ dll_unload(lib_handle)
 libc_handle <- dll_load_system("c")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
-print(rand_value)  # Should print a random integer
-#> [1] 103319096
+rand_value
+#> [1] 2029166572
 dll_unload(libc_handle)
 ```
+
+### libcrypto
+
+``` r
+# Example: loading libcrypto and calling AES_encrypt using pointers
+so_files <- list.files("/usr/lib/x86_64-linux-gnu", pattern = "^libcrypto[.]so.3", full.names = TRUE)
+so_files
+#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+lib_handle <- dll_load(so_files[1])
+lib_handle
+#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+
+# Allocate memory for input and output buffers (16 bytes each) using RSimpleFFI
+inbuf_ptr <- ffi_alloc_buffer(16L)
+outbuf_ptr <- ffi_alloc_buffer(16L)
+
+
+# Use a character string as a dummy pointer for the key argument (for demonstration only)
+fake_key <- "dummy_key_ptr"
+
+# (Optional) Zero the buffers in C if needed, or just rely on malloc's default
+
+# Use ffi_pointer() for all pointer arguments
+aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_pointer())
+aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
+#> NULL
+outbuf_ptr
+#> <pointer: 0x568d84467410>
+dll_unload(lib_handle)
+```
+
+> **Note:** RSimpleFFI supports pointer arguments using `ffi_pointer()`.
+> For C APIs that expect a pointer (e.g., `unsigned char*`), you can use
+> `ffi_pointer()` in the call interface. However, passing R raw vectors
+> as `unsigned char*` is not yet supported in the backend, so calls like
+> `AES_encrypt(inbuf, outbuf, key)` will fail until this is implemented.
+> For now, you can pass pointers to memory allocated in R or via helper
+> functions, but not raw vectors directly.
 
 ### Benchmarking
 
@@ -247,10 +285,10 @@ benchmark_result <- bench::mark(
 
 benchmark_result
 #> # A tibble: 2 × 6
-#>   expression      min   median  `itr/sec` mem_alloc `gc/sec`
-#>   <bch:expr> <bch:tm> <bch:tm>      <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0      1ns 239232403.        0B        0
-#> 2 ffi_call     12.1µs   16.2µs     55859.        0B        0
+#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 native_r        1ns    208ns  5092349.        0B        0
+#> 2 ffi_call     23.5µs   41.4µs    23429.        0B        0
 dll_unload(lib_handle)
 ```
 
@@ -273,14 +311,9 @@ bench::mark(
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ffi_loop    17.21ms  17.41ms      54.9    45.4KB     54.9
-#> 2 r_loop       1.16ms   1.28ms     731.     16.9KB      0
+#> 1 ffi_loop    35.56ms  44.62ms      23.2    45.9KB     23.2
+#> 2 r_loop       2.22ms   2.41ms     373.     16.9KB     41.4
 ```
-
-## Comparison with Other Libraries
-
-RSimpleFFI supports more types than Rffi and has fewer dependencies than
-Rcpp. It uses S7 classes and handles memory automatically.
 
 ## Advanced Usage
 

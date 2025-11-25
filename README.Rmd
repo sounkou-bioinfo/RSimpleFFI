@@ -205,9 +205,38 @@ dll_unload(lib_handle)
 libc_handle <- dll_load_system("c")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
-print(rand_value)  # Should print a random integer
+rand_value
 dll_unload(libc_handle)
 ```
+
+### libcrypto 
+
+```{r eval=TRUE}
+# Example: loading libcrypto and calling AES_encrypt using pointers
+so_files <- list.files("/usr/lib/x86_64-linux-gnu", pattern = "^libcrypto[.]so.3", full.names = TRUE)
+so_files
+lib_handle <- dll_load(so_files[1])
+lib_handle
+
+# Allocate memory for input and output buffers (16 bytes each) using RSimpleFFI
+inbuf_ptr <- ffi_alloc_buffer(16L)
+outbuf_ptr <- ffi_alloc_buffer(16L)
+
+
+# Use a character string as a dummy pointer for the key argument (for demonstration only)
+fake_key <- "dummy_key_ptr"
+
+# (Optional) Zero the buffers in C if needed, or just rely on malloc's default
+
+# Use ffi_pointer() for all pointer arguments
+aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_pointer())
+aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
+outbuf_ptr
+dll_unload(lib_handle)
+```
+
+> **Note:**
+> RSimpleFFI supports pointer arguments using `ffi_pointer()`. For C APIs that expect a pointer (e.g., `unsigned char*`), you can use `ffi_pointer()` in the call interface. However, passing R raw vectors as `unsigned char*` is not yet supported in the backend, so calls like `AES_encrypt(inbuf, outbuf, key)` will fail until this is implemented. For now, you can pass pointers to memory allocated in R or via helper functions, but not raw vectors directly.
 
 ### Benchmarking
 
@@ -250,10 +279,6 @@ bench::mark(
   check = FALSE
 )
 ```
-
-## Comparison with Other Libraries
-
-RSimpleFFI supports more types than Rffi and has fewer dependencies than Rcpp. It uses S7 classes and handles memory automatically.
 
 ## Advanced Usage
 
