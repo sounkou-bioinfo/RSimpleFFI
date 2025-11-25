@@ -222,22 +222,34 @@ benchmark_result <- bench::mark(
 
 benchmark_result
 #> # A tibble: 2 × 6
-#>   expression      min   median  `itr/sec` mem_alloc `gc/sec`
-#>   <bch:expr> <bch:tm> <bch:tm>      <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0      1ns 115573816.        0B      0  
-#> 2 ffi_call       12µs   14.8µs     60676.        0B     60.7
+#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 native_r          0        0 51030741.        0B      0  
+#> 2 ffi_call       12µs   16.2µs    49911.        0B     50.0
 dll_unload(lib_handle)
 ```
 
 ``` r
-# Performance test - multiple rapid calls
-start_time <- Sys.time()
-for(i in 1:1000) {
-  result <- ffi_call(cif, add_func, i, i+1L)
-}
-end_time <- Sys.time()
-paste("1000 calls in", round(as.numeric(end_time - start_time, units="secs"), 4), "seconds")
-#> [1] "1000 calls in 0.0277 seconds"
+# Performance comparison with benchmarking
+bench::mark(
+  ffi_loop = {
+    for(i in 1:1000) {
+      ffi_call(cif, add_func, i, i+1L)
+    }
+  },
+  r_loop = {
+    for(i in 1:1000) {
+      i + (i + 1L)
+    }
+  },
+  iterations = 10,
+  check = FALSE
+)
+#> # A tibble: 2 × 6
+#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 ffi_loop    17.18ms  17.21ms      57.2    45.4KB     57.2
+#> 2 r_loop       1.24ms   1.34ms     741.     16.9KB      0
 ```
 
 ## Comparison with Other Libraries

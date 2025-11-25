@@ -210,13 +210,21 @@ dll_unload(lib_handle)
 ```
 
 ```{r}
-# Performance test - multiple rapid calls
-start_time <- Sys.time()
-for(i in 1:1000) {
-  result <- ffi_call(cif, add_func, i, i+1L)
-}
-end_time <- Sys.time()
-paste("1000 calls in", round(as.numeric(end_time - start_time, units="secs"), 4), "seconds")
+# Performance comparison with benchmarking
+bench::mark(
+  ffi_loop = {
+    for(i in 1:1000) {
+      ffi_call(cif, add_func, i, i+1L)
+    }
+  },
+  r_loop = {
+    for(i in 1:1000) {
+      i + (i + 1L)
+    }
+  },
+  iterations = 10,
+  check = FALSE
+)
 ```
 
 ## Comparison with Other Libraries
