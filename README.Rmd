@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/workflows/R-CMD-check/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions)
+[![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 A Foreign Function Interface (FFI) for R using libffi. Call C functions from R with S7 classes.
