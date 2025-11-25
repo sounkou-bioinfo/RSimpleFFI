@@ -115,7 +115,7 @@ wchar_type <- ffi_wchar_t()
 
 ## Function Call Examples
 
-### Integer
+### Testing Integer Types
 
 ``` r
 # test_int8_func: returns input + 1
@@ -162,7 +162,7 @@ float_result
 #> [1] 4
 ```
 
-### Other calls
+### Basic Function Calls
 
 ``` r
 void_func <- ffi_symbol("test_void_function")
@@ -198,66 +198,157 @@ bool_result
 #> [1] 0
 ```
 
-## Buffer and Pointer Management
-
-``` r
-# Allocate typed buffer
-ptr <- ffi_alloc(ffi_double(), 5L)
-ptr
-#> <pointer: 0x60d2c7114d60>
-
-# Allocate raw buffer
-raw_ptr <- ffi_alloc_buffer(32L)
-raw_ptr
-#> <pointer: 0x60d2c7bb8bb0>
-
-# Check for null pointer
-is_null_pointer(ptr)
-#> [1] FALSE
-
-# Copy array from native memory
-ffi_copy_array(ptr, 5L, ffi_double())
-#> [1] 0 0 0 0 0
-```
-
-## Structs and Complex Types
-
-``` r
-Point <- ffi_struct(x = ffi_int(), y = ffi_int())
-Point
-```
-
-``` r
-pt_ptr <- ffi_alloc(Point)
-ffi_set_field(pt_ptr, "x", 10L, Point)
-ffi_get_field(pt_ptr, "x", Point) 
-ffi_get_field
-```
-
 ### Structs Example
 
 ``` r
-# Struct compilation example (struct output via pointer)
+# cle compilation example
 struct_code <- '
 typedef struct { int x, y; } Point;
-void create_point(int x, int y, Point* out) {
-    out->x = x;
-    out->y = y;
+Point create_point(int x, int y) {
+    Point p = {x, y};
+    return p;
 }
 '
 lib_handle <- dll_compile_and_load(struct_code, "struct_test")
-
-Point_t <- ffi_struct(x = ffi_int(), y = ffi_int())
-create_point <- dll_ffi_symbol("create_point", ffi_void(), ffi_int(), ffi_int(), ffi_pointer())
-pt <- ffi_alloc(Point_t)
-create_point(10L, 20L, pt)
-#> NULL
-ffi_get_field(pt, "x", Point_t)  # should return 10
-#> [1] 10
-ffi_get_field(pt, "y", Point_t)  # should return 20
-#> [1] 20
-
 dll_unload(lib_handle)
+```
+
+### libc rand
+
+``` r
+# Example: call the C standard library rand() function
+libc_handle <- dll_load_system("c")
+rand_func <- dll_ffi_symbol("rand", ffi_int())
+rand_value <- rand_func()
+rand_value
+#> [1] 1738137974
+dll_unload(libc_handle)
+```
+
+### libcrypto
+
+``` r
+# Example: loading libcrypto and calling AES_encrypt using pointers
+so_files <- list.files("/usr/lib/x86_64-linux-gnu", pattern = "^libcrypto[.]so.3", full.names = TRUE)
+so_files
+#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+lib_handle <- dll_load(so_files[1])
+lib_handle
+#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+
+
+# Allocate memory for input and output buffers (16 bytes each) using RSimpleFFI's typed allocator
+raw_type <- ffi_raw()
+inbuf_ptr <- ffi_alloc(raw_type, 16L)
+outbuf_ptr <- ffi_alloc(raw_type, 16L)
+
+
+# Use a character string as a dummy pointer for the key argument (for demonstration only)
+fake_key <- "dummy_key_ptr"
+# Use ffi_pointer() for all pointer arguments
+aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_pointer())
+aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
+#> NULL
+ffi_copy_array(outbuf_ptr, 16L, raw_type)
+#>  [1] 71 13 cb 48 b8 0c 31 19 0b fa 70 b9 03 28 b2 f1
+dll_unload(lib_handle)
+```
+
+### Allocating Typed Buffers
+
+``` r
+# Allocate a buffer for 10 integers
+int_type <- ffi_int()
+int_buf <- ffi_alloc(int_type, 10L)
+
+# Read back as R vector (using ffi_copy_array)
+ffi_copy_array(int_buf, 10L, int_type)
+#>  [1] 0 0 0 0 0 0 0 0 0 0
+
+# You can use ffi_alloc for any builtin type:
+double_type <- ffi_double()
+double_buf <- ffi_alloc(double_type, 5L)
+ffi_copy_array(double_buf, 5L, double_type)
+#> [1] 0 0 0 0 0
+```
+
+### Array Types (ArrayType)
+
+``` r
+# Allocate an array of 4 integers
+int_type <- ffi_int()
+arr_type <- ffi_array_type(int_type, 4L)
+arr_ptr <- ffi_alloc(arr_type)
+
+# Write values into the buffer using ffi_fill_typed_buffer
+vals <- as.integer(c(10L, 20L, 30L, 40L))
+ffi_fill_typed_buffer(arr_ptr, vals, int_type)
+#> NULL
+
+# Read back as R vector
+result <- ffi_copy_array_type(arr_ptr, arr_type)
+result
+#> [1] 10 20 30 40
+```
+
+> **Note:** RSimpleFFI supports pointer arguments using `ffi_pointer()`.
+> For C APIs that expect a pointer (e.g., `unsigned char*`), you can use
+> `ffi_pointer()` in the call interface. However, passing R raw vectors
+> as `unsigned char*` is not yet supported in the backend, so calls like
+> `AES_encrypt(inbuf, outbuf, key)` will fail until this is implemented.
+> For now, you can pass pointers to memory allocated in R or via helper
+> functions, but not raw vectors directly.
+
+### Benchmarking
+
+``` r
+library(bench)
+
+# Compare FFI call performance
+math_code <- '
+#include <math.h>
+double test_sqrt(double x) { return sqrt(x); }
+'
+lib_handle <- dll_compile_and_load(math_code, "bench_test", libs = "m")
+sqrt_func <- dll_ffi_symbol("test_sqrt", ffi_double(), ffi_double())
+
+benchmark_result <- bench::mark(
+  native_r = sqrt(100),
+  ffi_call = sqrt_func(100.0),
+  check = FALSE,
+  iterations = 1000
+)
+
+benchmark_result
+#> # A tibble: 2 × 6
+#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 native_r          0   1.05ns 90699852.        0B        0
+#> 2 ffi_call     11.8µs   14.2µs    67725.        0B        0
+dll_unload(lib_handle)
+```
+
+``` r
+# Performance comparison with benchmarking
+bench::mark(
+  ffi_loop = {
+    for(i in 1:1000) {
+      ffi_call(cif, add_func, i, i+1L)
+    }
+  },
+  r_loop = {
+    for(i in 1:1000) {
+      i + (i + 1L)
+    }
+  },
+  iterations = 10,
+  check = FALSE
+)
+#> # A tibble: 2 × 6
+#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 ffi_loop    16.23ms  16.75ms      59.1    45.4KB     59.1
+#> 2 r_loop       1.13ms   1.18ms     835.     16.9KB     92.8
 ```
 
 ## Advanced Usage
@@ -317,7 +408,10 @@ result
 dll_unload(lib_handle)
 ```
 
-## System Library Access
+### System Library Access
+
+RSimpleFFI can also access system libraries like libc for calling
+standard C functions:
 
 ``` r
 tryCatch({
@@ -325,51 +419,6 @@ tryCatch({
   if (!is.null(libc_handle)) "System library access works"
 }, error = function(e) e$message)
 #> [1] "System library access works"
-```
-
-### libc rand
-
-``` r
-# Example: call the C standard library rand() function
-libc_handle <- dll_load_system("c")
-rand_func <- dll_ffi_symbol("rand", ffi_int())
-rand_value <- rand_func()
-rand_value
-#> [1] 1831946680
-#> [1] 1261047682
-
-dll_unload(libc_handle)
-```
-
-### libcrypto
-
-``` r
-# Example: loading libcrypto and calling AES_encrypt using pointers
-so_files <- list.files("/usr/lib/x86_64-linux-gnu", pattern = "^libcrypto[.]so.3", full.names = TRUE)
-so_files
-#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
-#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
-lib_handle <- dll_load(so_files[1])
-lib_handle
-#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
-#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
-
-# Allocate memory for input and output buffers (16 bytes each) using RSimpleFFI's typed allocator
-raw_type <- ffi_raw()
-inbuf_ptr <- ffi_alloc(raw_type, 16L)
-outbuf_ptr <- ffi_alloc(raw_type, 16L)
-
-# Use a character string as a dummy pointer for the key argument (for demonstration only)
-fake_key <- "dummy_key_ptr"
-# Use ffi_pointer() for all pointer arguments
-aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_pointer())
-aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
-#> NULL
-#> NULL
-ffi_copy_array(outbuf_ptr, 16L, raw_type)
-#>  [1] 6e d0 5f 3b 77 4c e0 66 89 da ae b7 ca 5a f9 a7
-#>  [1] 0a ae 48 58 58 f0 c0 2c ca cb 6f 54 82 97 7d e9
-dll_unload(lib_handle)
 ```
 
 ### Advanced DLL Compilation
