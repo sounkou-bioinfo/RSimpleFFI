@@ -51,13 +51,21 @@ static ffi_type ffi_type_wchar_t_custom = {
     NULL 
 };
 
+// Custom string type - same as pointer but semantically different
+static ffi_type ffi_type_string_custom = { 
+    sizeof(char*), 
+    sizeof(void*),  // alignment 
+    FFI_TYPE_POINTER, 
+    NULL 
+};
+
 static ffi_type_map_t builtin_ffi_types[] = {
     {"void", &ffi_type_void},
     {"int", &ffi_type_sint32},
     {"double", &ffi_type_double},
     {"float", &ffi_type_float},
     {"pointer", &ffi_type_pointer},
-    {"string", &ffi_type_pointer},
+    {"string", &ffi_type_string_custom},
     
     // Extended integer types
     {"int8", &ffi_type_sint8},
@@ -474,12 +482,26 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
         }
         
         case FFI_TYPE_POINTER:
+            // Handle custom string type separately
+            if (type == &ffi_type_string_custom) {
+                if (TYPEOF(r_val) == STRSXP && LENGTH(r_val) > 0) {
+                    static const char* str_ptr;
+                    str_ptr = CHAR(STRING_ELT(r_val, 0));
+                    return &str_ptr;
+                } else if (r_val == R_NilValue) {
+                    static const char* null_str = NULL;
+                    return &null_str;
+                } else {
+                    error("Cannot convert to string (expected character vector or NULL)");
+                }
+            }
+            // Handle generic pointers
             if (TYPEOF(r_val) == EXTPTRSXP) {
                 static void* ptr;
                 ptr = R_ExternalPtrAddr(r_val);
                 return &ptr;
             } else if (TYPEOF(r_val) == STRSXP && LENGTH(r_val) > 0) {
-                // Handle R character strings -> char* conversion like Rffi
+                // Allow string->pointer conversion with warning for generic pointers
                 static const char* str_ptr;
                 str_ptr = CHAR(STRING_ELT(r_val, 0));
                 return &str_ptr;
@@ -540,19 +562,21 @@ SEXP convert_native_to_r(void* value, ffi_type* type) {
             if (ptr == NULL) {
                 return R_NilValue;
             }
-            // Check if this looks like a string pointer (heuristic)
-            // In practice, users should use explicit typing for better control
-            char* str = (char*)ptr;
-            if (str && strlen(str) < 10000) {  // Reasonable string length check
-                return mkString(str);
-            } else {
-                return R_MakeExternalPtr(ptr, R_NilValue, R_NilValue);
-            }
+            // Always return ExternalPtr for type safety - no dangerous heuristics
+            // Users should use explicit string conversion functions when needed
+            return R_MakeExternalPtr(ptr, Rf_install("generic_pointer"), R_NilValue);
         }
         
         default:
             // Check if this is one of our custom types and handle accordingly
-            if (type == &ffi_type_size_t_custom) {
+            if (type == &ffi_type_string_custom) {
+                char* str = *(char**)value;
+                if (str == NULL) {
+                    return R_NilValue;
+                } else {
+                    return mkString(str);
+                }
+            } else if (type == &ffi_type_size_t_custom) {
                 return ScalarReal((double)(*(size_t*)value));
             } else if (type == &ffi_type_ssize_t_custom) {
                 return ScalarReal((double)(*(ssize_t*)value));
@@ -794,4 +818,47 @@ SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
     }
     
     return result;
+}
+
+// Explicit pointer-to-string conversion for type safety
+SEXP R_pointer_to_string(SEXP r_ptr) {
+    if (TYPEOF(r_ptr) != EXTPTRSXP) {
+        error("Expected external pointer");
+    }
+    
+    char* str = (char*)R_ExternalPtrAddr(r_ptr);
+    if (str == NULL) {
+        return R_NilValue;
+    }
+    
+    return mkString(str);
+}
+
+// Create typed external pointer with proper tag like Rffi
+SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name) {
+    void* ptr = NULL;
+    
+    if (TYPEOF(r_ptr) == EXTPTRSXP) {
+        ptr = R_ExternalPtrAddr(r_ptr);
+    } else {
+        error("Expected external pointer");
+    }
+    
+    const char* type_name = CHAR(STRING_ELT(r_type_name, 0));
+    
+    return R_MakeExternalPtr(ptr, Rf_install(type_name), R_NilValue);
+}
+
+// Get the type tag of an external pointer
+SEXP R_get_pointer_type(SEXP r_ptr) {
+    if (TYPEOF(r_ptr) != EXTPTRSXP) {
+        error("Expected external pointer");
+    }
+    
+    SEXP tag = R_ExternalPtrTag(r_ptr);
+    if (tag == R_NilValue) {
+        return mkString("unknown");
+    }
+    
+    return mkString(CHAR(PRINTNAME(tag)));
 }

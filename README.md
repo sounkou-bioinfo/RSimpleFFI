@@ -118,26 +118,29 @@ wchar_type <- ffi_wchar_t()
 ### Testing Integer Types
 
 ``` r
+# test_int8_func: returns input + 1
 int8_func <- ffi_symbol("test_int8_func")
 int8_cif <- ffi_cif(int8_type, int8_type)
 int8_result <- ffi_call(int8_cif, int8_func, 42L)
-int8_result
+int8_result  # 42 + 1 = 43
 #> [1] 43
 
+# test_uint32_func: returns input * 3
 uint32_func <- ffi_symbol("test_uint32_func") 
 uint32_cif <- ffi_cif(uint32_type, uint32_type)
 uint32_result <- ffi_call(uint32_cif, uint32_func, 123L)
-uint32_result
+uint32_result  # 123 * 3 = 369
 #> [1] 369
 
+# test_int64_func: returns input * 4
 int64_func <- ffi_symbol("test_int64_func")
 int64_cif <- ffi_cif(int64_type, int64_type)
 int64_result <- ffi_call(int64_cif, int64_func, 999L)
-int64_result
+int64_result  # 999 * 4 = 3996
 #> [1] 3996
 ```
 
-### Testing Floating-Point Types
+### Floating-Point Types
 
 ``` r
 add_func <- ffi_symbol("test_add_int")
@@ -159,7 +162,7 @@ float_result
 #> [1] 4
 ```
 
-### Advanced Function Calls
+### Basic Function Calls
 
 ``` r
 void_func <- ffi_symbol("test_void_function")
@@ -195,10 +198,35 @@ bool_result
 #> [1] 0
 ```
 
-## Performance and Memory Management
+### Structs Example
 
-RSimpleFFI handles memory automatically and validates types to prevent
-crashes. It maps directly to libffi types for good performance.
+``` r
+# Struct compilation example
+struct_code <- '
+typedef struct { int x, y; } Point;
+Point create_point(int x, int y) {
+    Point p = {x, y};
+    return p;
+}
+'
+lib_handle <- dll_compile_and_load(struct_code, "struct_test")
+dll_unload(lib_handle)
+```
+
+### libc Printf
+
+``` r
+printf_code <- '
+#include <stdio.h>
+int my_printf(double value) {
+    return printf("Value: %.2f\\n", value);
+}
+'
+lib_handle <- dll_compile_and_load(printf_code, "printf_test")
+printf_func <- dll_ffi_symbol("my_printf", ffi_int(), ffi_double())
+printf_func(42.5)  # Prints: Value: 42.50
+dll_unload(lib_handle)
+```
 
 ### Benchmarking
 
@@ -224,8 +252,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0        0 51030741.        0B      0  
-#> 2 ffi_call       12µs   16.2µs    49911.        0B     50.0
+#> 1 native_r          0    104ns  7775984.        0B      0  
+#> 2 ffi_call     23.1µs   41.2µs    18391.        0B     18.4
 dll_unload(lib_handle)
 ```
 
@@ -248,8 +276,8 @@ bench::mark(
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ffi_loop    17.18ms  17.21ms      57.2    45.4KB     57.2
-#> 2 r_loop       1.24ms   1.34ms     741.     16.9KB      0
+#> 1 ffi_loop    24.59ms  25.79ms      38.8    45.4KB     38.8
+#> 2 r_loop       1.79ms   1.99ms     491.     16.9KB      0
 ```
 
 ## Comparison with Other Libraries

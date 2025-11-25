@@ -1,5 +1,5 @@
 test_that("DLL loading works with R's native facilities", {
-  skip_on_cran()  # Re-enabled to prevent segfaults in automated testing
+  # DLL loading test - no skips!
   
   # Create types needed for testing
   int_t <- ffi_int()

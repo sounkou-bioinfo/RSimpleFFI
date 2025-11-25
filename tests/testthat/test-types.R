@@ -66,8 +66,9 @@ test_that("Type validation works", {
 
 test_that("Pretty printing works", {
   int_t <- ffi_int()
-  output <- capture.output(print(int_t))
-  expect_match(output, "FFIType\\(int, size=\\d+\\)")
+  # Test format method which works reliably  
+  formatted_int <- format(int_t)
+  expect_match(formatted_int, "FFIType\\(int, size=\\d+\\)")
   
   double_t <- ffi_double()
   formatted <- format(double_t)

@@ -55,6 +55,11 @@ Point2D test_create_point2d(int x, int y);
 int test_get_point_x(Point2D* point);
 int test_get_point_y(Point2D* point);
 
+/* pointer utility functions */
+SEXP R_pointer_to_string(SEXP r_ptr);
+SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name);
+SEXP R_get_pointer_type(SEXP r_ptr);
+
 /* Registration table */
 static const R_CallMethodDef CallEntries[] = {
     {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
@@ -67,6 +72,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_set_struct_field",        (DL_FUNC) &R_set_struct_field,        4},
     {"R_is_null_pointer",         (DL_FUNC) &R_is_null_pointer,         1},
     {"R_copy_array",              (DL_FUNC) &R_copy_array,              3},
+    {"R_pointer_to_string",       (DL_FUNC) &R_pointer_to_string,       1},
+    {"R_make_typed_pointer",      (DL_FUNC) &R_make_typed_pointer,      2},
+    {"R_get_pointer_type",        (DL_FUNC) &R_get_pointer_type,        1},
     
     {NULL, NULL, 0}
 };

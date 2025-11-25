@@ -37,18 +37,6 @@ ffi_struct <- function(...) {
   )
 }
 
-#' Create string FFI type
-#' 
-#' Creates an FFI type for string (char*) parameters.
-#' This is equivalent to ffi_pointer() but semantically represents strings.
-#' 
-#' @return FFIType object representing a string (char*) type
-#' @export
-ffi_string <- function() {
-  # String type is implemented as pointer type (char*)
-  ffi_pointer()
-}
-
 #' Prepare FFI call interface
 #' @param return_type FFIType for return value
 #' @param ... FFIType objects for arguments
