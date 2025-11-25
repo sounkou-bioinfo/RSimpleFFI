@@ -1,0 +1,16 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.git$
+^\.gitignore$
+^README\.Rmd$
+^README\.html$
+^\.vscode$
+^\.idea$
+^.*\.swp$
+^.*\.swo$
+^.*~$
+^\.DS_Store$
+^Thumbs\.db$
+^.*\.tmp$
+^.*\.log$
+^tests/testthat\.R$

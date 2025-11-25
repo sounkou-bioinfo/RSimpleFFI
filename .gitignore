@@ -1,0 +1,38 @@
+# Compiled Object files
+*.o
+*.so
+*.dll
+*.dylib
+
+# R specific
+.Rhistory
+.RData
+.Ruserdata
+*.Rcheck/
+*.tar.gz
+.Rproj.user/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+src/*.o
+src/*.so
+src/*.dll
+src/symbols.rds
+
+# Package build
+man/*.Rd
+NAMESPACE
+
+# Temporary files
+*.tmp
+*.log
