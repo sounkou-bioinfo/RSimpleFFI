@@ -25,7 +25,7 @@ RSimpleFFI lets you call C functions from R using the libffi library. It support
 
 ## Related Projects
 
-RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang, which pioneered R-to-C FFI interfaces. RSimpleFFI builds on these concepts with modern S7 classes and enhanced type safety.
+RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Langs. RSimpleFFI builds on these concepts with  S7 classes.
 
 ## Installation
 
