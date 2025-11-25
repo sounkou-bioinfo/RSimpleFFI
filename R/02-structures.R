@@ -3,13 +3,19 @@
 #' @import S7
 NULL
 
-#' Allomessagee memory for FFI structure
-#' @param type StructType object
+#' Allocate memory for FFI structure or array
+#' @param type StructType or ArrayType object
+#' @param n (optional) number of elements for array allocation
 #' @export
 ffi_alloc <- S7::new_generic("ffi_alloc", "type")
 
-S7::method(ffi_alloc, StructType) <- function(type) {
+S7::method(ffi_alloc, StructType) <- function(type, n = 1L) {
+  if (n != 1L) stop("StructType allocation only supports n = 1")
   .Call("R_alloc_struct", type@ref)
+}
+
+S7::method(ffi_alloc, ArrayType) <- function(type, n = 1L) {
+  .Call("R_alloc_typed_buffer", type@ref, as.integer(type@length * n))
 }
 
 #' Get field value from FFI structure

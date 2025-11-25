@@ -113,6 +113,29 @@ SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n) {
     return extPtr;
 }
 
+// Create array FFI type
+SEXP R_create_array_ffi_type(SEXP r_element_type, SEXP r_length) {
+    ffi_type* element_type = (ffi_type*)R_ExternalPtrAddr(r_element_type);
+    if (!element_type) error("Invalid element type pointer");
+    int length = asInteger(r_length);
+    if (length <= 0) error("Array length must be positive");
+    ffi_type** elements = (ffi_type**)calloc(length + 1, sizeof(ffi_type*));
+    if (!elements) error("Memory allocation failed");
+    for (int i = 0; i < length; i++) elements[i] = element_type;
+    elements[length] = NULL;
+    ffi_type* array_type = (ffi_type*)malloc(sizeof(ffi_type));
+    if (!array_type) { free(elements); error("Memory allocation failed"); }
+    array_type->size = 0;
+    array_type->alignment = 0;
+    array_type->type = FFI_TYPE_STRUCT; // libffi uses STRUCT for arrays
+    array_type->elements = elements;
+    ffi_cif dummy_cif;
+    ffi_status status = ffi_prep_cif(&dummy_cif, FFI_DEFAULT_ABI, 0, array_type, NULL);
+    if (status != FFI_OK) { free(elements); free(array_type); error("Failed to compute array layout"); }
+    return R_MakeExternalPtr(array_type, R_NilValue, R_NilValue);
+}
+
+
 
 static ffi_type_map_t builtin_ffi_types[] = {
     {"void", &ffi_type_void},

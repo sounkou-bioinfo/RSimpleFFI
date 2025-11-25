@@ -1,3 +1,5 @@
+# Register S7 classes for non-standard evaluation (R CMD check)
+if (getRversion() >= "2.15.1") utils::globalVariables("ArrayType")
 #' Allocate a raw memory buffer (external pointer, auto-finalized)
 #'
 #' Allocates a buffer of the given size (in bytes) and returns an external pointer.
@@ -29,8 +31,16 @@ ffi_copy_array <- function(ptr, length, element_type) {
   if (!S7::S7_inherits(element_type, FFIType)) {
     stop("element_type must be an FFIType object")
   }
-  
   .Call("R_copy_array", ptr, as.integer(length), element_type@ref)
+}
+
+#' Copy array from native memory (ArrayType version)
+#' @param ptr External pointer to array
+#' @param array_type ArrayType object
+#' @export
+ffi_copy_array_type <- function(ptr, array_type) {
+  if (!S7::S7_inherits(array_type, ArrayType)) stop("array_type must be an ArrayType object")
+  .Call("R_copy_array", ptr, as.integer(array_type@length), array_type@element_type@ref)
 }
 
 # Pretty printing methods

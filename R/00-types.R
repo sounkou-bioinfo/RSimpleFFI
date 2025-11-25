@@ -48,6 +48,45 @@ StructType <- S7::new_class("StructType",
   }
 )
 
+# Array type extends FFIType
+#' FFI Array Type
+#' @param element_type FFIType of array elements
+#' @param length Integer length of array
+#' @export
+ArrayType <- S7::new_class("ArrayType",
+  package = "RSimpleFFI",
+  parent = FFIType,
+  properties = list(
+    element_type = FFIType,
+    length = S7::class_integer
+  ),
+  validator = function(self) {
+    if (!S7::S7_inherits(self@element_type, FFIType)) {
+      "element_type must be an FFIType object"
+    } else if (length(self@length) != 1 || self@length <= 0) {
+      "length must be a positive integer"
+    }
+  }
+)
+
+#' Create an FFI array type
+#' @param element_type FFIType of array elements
+#' @param length Integer length of array
+#' @export
+ffi_array_type <- function(element_type, length) {
+  if (!S7::S7_inherits(element_type, FFIType)) stop("element_type must be an FFIType object")
+  if (!is.numeric(length) || length <= 0) stop("length must be a positive integer")
+  ref <- .Call("R_create_array_ffi_type", element_type@ref, as.integer(length))
+  size <- .Call("R_get_ffi_type_size", ref)
+  ArrayType(
+    name = paste0("array[", element_type@name, ", ", length, "]"),
+    size = size,
+    ref = ref,
+    element_type = element_type,
+    length = as.integer(length)
+  )
+}
+
 # Call Interface
 #' FFI Call Interface (CIF)
 #' @param return_type FFIType for return value

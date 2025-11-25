@@ -2,7 +2,7 @@
 % Please edit documentation in R/02-structures.R, R/04-alloc.R
 \name{ffi_alloc}
 \alias{ffi_alloc}
-\title{Allomessagee memory for FFI structure}
+\title{Allocate memory for FFI structure or array}
 \usage{
 ffi_alloc(type, ...)
 
