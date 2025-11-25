@@ -221,7 +221,7 @@ libc_handle <- dll_load_system("c")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1738137974
+#> [1] 1259573845
 dll_unload(libc_handle)
 ```
 
@@ -250,7 +250,7 @@ aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_p
 aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
 #> NULL
 ffi_copy_array(outbuf_ptr, 16L, raw_type)
-#>  [1] 71 13 cb 48 b8 0c 31 19 0b fa 70 b9 03 28 b2 f1
+#>  [1] a7 d3 f8 54 42 39 20 f1 19 4a ad b5 13 ad 97 de
 dll_unload(lib_handle)
 ```
 
@@ -323,8 +323,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r          0   1.05ns 90699852.        0B        0
-#> 2 ffi_call     11.8µs   14.2µs    67725.        0B        0
+#> 1 native_r    30.04ns   36.1ns 26099863.        0B        0
+#> 2 ffi_call     9.21µs   10.1µs    96984.        0B        0
 dll_unload(lib_handle)
 ```
 
@@ -347,8 +347,8 @@ bench::mark(
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ffi_loop    16.23ms  16.75ms      59.1    45.4KB     59.1
-#> 2 r_loop       1.13ms   1.18ms     835.     16.9KB     92.8
+#> 1 ffi_loop     10.5ms   10.6ms      94.2    45.4KB     141.
+#> 2 r_loop      853.5µs  914.7µs    1093.     16.9KB       0
 ```
 
 ## Advanced Usage
