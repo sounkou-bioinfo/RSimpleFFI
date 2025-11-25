@@ -1,3 +1,11 @@
+#' Fill a typed buffer from an R vector (int or double)
+#' @param ptr External pointer to buffer
+#' @param values Integer or double vector
+#' @param type FFIType object
+#' @export
+ffi_fill_typed_buffer <- function(ptr, values, type) {
+  .Call("R_fill_typed_buffer", ptr, values, type@ref)
+}
 # Register S7 classes for non-standard evaluation (R CMD check)
 if (getRversion() >= "2.15.1") utils::globalVariables("ArrayType")
 #' Allocate a raw memory buffer (external pointer, auto-finalized)

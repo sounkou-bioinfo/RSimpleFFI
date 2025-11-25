@@ -25,6 +25,7 @@ S7::method(ffi_alloc, ArrayType) <- function(type, n = 1L) {
 #' @export
 ffi_get_field <- S7::new_generic("ffi_get_field", c("ptr", "field", "struct_type"))
 
+#' @export
 S7::method(ffi_get_field, list(S7::class_any, S7::class_character, StructType)) <- function(ptr, field, struct_type) {
   field_index <- match(field, struct_type@fields)
   if (is.na(field_index)) {
@@ -35,6 +36,7 @@ S7::method(ffi_get_field, list(S7::class_any, S7::class_character, StructType)) 
   .Call("R_get_struct_field", ptr, as.integer(field_index - 1), struct_type@ref)
 }
 
+#' @export
 S7::method(ffi_get_field, list(S7::class_any, S7::class_integer, StructType)) <- function(ptr, field, struct_type) {
   if (field < 1 || field > length(struct_type@fields)) {
     stop("Field index out of range: ", field, ". Struct has ", 
@@ -52,6 +54,7 @@ S7::method(ffi_get_field, list(S7::class_any, S7::class_integer, StructType)) <-
 #' @export
 ffi_set_field <- S7::new_generic("ffi_set_field", c("ptr", "field", "value", "struct_type"))
 
+#' @export
 S7::method(ffi_set_field, list(S7::class_any, S7::class_character, S7::class_any, StructType)) <- function(ptr, field, value, struct_type) {
   field_index <- match(field, struct_type@fields)
   if (is.na(field_index)) {
@@ -63,6 +66,7 @@ S7::method(ffi_set_field, list(S7::class_any, S7::class_character, S7::class_any
   invisible(ptr)
 }
 
+#' @export
 S7::method(ffi_set_field, list(S7::class_any, S7::class_integer, S7::class_any, StructType)) <- function(ptr, field, value, struct_type) {
   if (field < 1 || field > length(struct_type@fields)) {
     stop("Field index out of range: ", field, ". Struct has ",

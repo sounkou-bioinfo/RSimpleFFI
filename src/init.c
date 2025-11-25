@@ -17,6 +17,7 @@ SEXP R_is_null_pointer(SEXP ptr);
 SEXP R_copy_array(SEXP ptr, SEXP length, SEXP element_type);
 SEXP R_alloc_buffer(SEXP r_size);
 SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n);
+SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type);
 // Dynamic library loading functions using R's dynload
 SEXP R_dyn_load(SEXP filename, SEXP local, SEXP now);
 SEXP R_dyn_unload(SEXP dll_info);
@@ -84,6 +85,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_get_ffi_type_size",       (DL_FUNC) &R_get_ffi_type_size,       1},
     {"R_alloc_buffer",            (DL_FUNC) &R_alloc_buffer,            1},
     {"R_alloc_typed_buffer",      (DL_FUNC) &R_alloc_typed_buffer,      2},
+    {"R_fill_typed_buffer",       (DL_FUNC) &R_fill_typed_buffer,       3},
     {NULL, NULL, 0}
 };
 

@@ -1,4 +1,3 @@
-
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>  // R's dynload facilities
@@ -135,6 +134,31 @@ SEXP R_create_array_ffi_type(SEXP r_element_type, SEXP r_length) {
     return R_MakeExternalPtr(array_type, R_NilValue, R_NilValue);
 }
 
+
+
+// Fill a typed buffer from an R vector (int or double)
+SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type) {
+    void* ptr = R_ExternalPtrAddr(r_ptr);
+    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
+    if (!ptr) error("Invalid pointer");
+    if (!type) error("Invalid FFI type pointer");
+    int n = LENGTH(r_vals);
+    switch (type->type) {
+        case FFI_TYPE_SINT32: {
+            int* dest = (int*)ptr;
+            for (int i = 0; i < n; i++) dest[i] = INTEGER(r_vals)[i];
+            break;
+        }
+        case FFI_TYPE_DOUBLE: {
+            double* dest = (double*)ptr;
+            for (int i = 0; i < n; i++) dest[i] = REAL(r_vals)[i];
+            break;
+        }
+        default:
+            error("R_fill_typed_buffer only supports int and double types for now");
+    }
+    return R_NilValue;
+}
 
 
 static ffi_type_map_t builtin_ffi_types[] = {
