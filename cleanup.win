@@ -12,3 +12,4 @@ if [ -d "$LIBFFI_BUILD" ]; then
     rm -rf "$LIBFFI_BUILD"
     echo "Removed $LIBFFI_BUILD"
 fi
+rm -rf src/libffi

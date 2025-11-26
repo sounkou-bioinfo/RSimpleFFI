@@ -16,3 +16,4 @@ fi
 cd src/libffi
 make clean || true
 cd ../..
+rm -rf src/libffi

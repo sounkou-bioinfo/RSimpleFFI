@@ -5,8 +5,8 @@ else
 	DYLIB_EXT := so
 endif
 
-PKG_ROOT := $(CURDIR)/..
-LIBFFI_DIR := $(PKG_ROOT)/libffi
+PKG_ROOT = $(CURDIR)/..
+LIBFFI_DIR = $(PKG_ROOT)/libffi
 
-PKG_CPPFLAGS = -I$(LIBFFI_DIR)
+PKG_CFLAGS = -I$(LIBFFI_DIR)  -I$(LIBFFI_DIR)/include
 PKG_LIBS = -L$(LIBFFI_DIR) -lffi -Wl,-rpath,'$$ORIGIN/../libffi'
