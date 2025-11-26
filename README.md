@@ -303,7 +303,7 @@ libc_path <- dll_load_system("libgcc_s.so.1")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 2068509016
+#> [1] 710985426
 dll_unload(libc_path)
 ```
 
@@ -325,7 +325,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x60e515bb4060>
+#> <pointer: 0x5e6ab03f1f90>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -413,8 +413,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     15.3µs   35.7µs    25115.    78.2KB      0  
-#> 2 ffi_call    109.8µs  143.3µs     6360.    78.7KB     64.2
+#> 1 native_r       14µs   31.5µs    31328.    78.2KB      0  
+#> 2 ffi_call      107µs    139µs     6628.    78.7KB     67.0
 dll_unload(lib_path)
 ```
 
@@ -443,7 +443,7 @@ void c_convolve(const double* signal, int n_signal, const double* kernel, int n_
     for (int j = 0; j < n_kernel; ++j) {
       int k = i - j;
       if (k >= 0 && k < n_signal) {
-        out[i] += signal[k] * kernel[j];  // kernel already reversed in R
+        out[i] += signal[k] * kernel[n_kernel - 1 - j];  // reverse kernel inside C
       }
     }
   }
@@ -462,19 +462,11 @@ signal_ptr <- ffi_alloc(ffi_double(), n_signal)
 kernel_ptr <- ffi_alloc(ffi_double(), n_kernel)
 out_ptr <- ffi_alloc(ffi_double(), n_out)
 
+# Fill buffers
 ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
 #> NULL
-signal_back <- ffi_copy_array(signal_ptr, n_signal, ffi_double())
-all.equal(as.numeric(signal), as.numeric(signal_back))
-#> [1] TRUE
-
-# Reverse kernel before filling buffer for C
-kernel_rev <- rev(kernel)
-ffi_fill_typed_buffer(kernel_ptr, kernel_rev, ffi_double())
+ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
 #> NULL
-kernel_back <- ffi_copy_array(kernel_ptr, n_kernel, ffi_double())
-all.equal(as.numeric(kernel_rev), as.numeric(kernel_back))
-#> [1] TRUE
 
 # Compile and load C convolution
 lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
@@ -512,8 +504,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            3.31ms   3.83ms      254.    78.2KB     13.4
-#> 2 c_ffi      172.54µs  191.6µs     4550.    78.7KB      0
+#> 1 r            3.25ms   3.72ms      269.    78.2KB     14.2
+#> 2 c_ffi      160.02µs 172.68µs     5308.    78.7KB      0
 
 dll_unload(lib_path)
 ```
