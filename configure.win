@@ -7,7 +7,4 @@ if ! pkg-config --exists libffi; then
     exit 1
 fi
 echo "Using system libffi from Rtools45."
-exit 0else
-    echo "libffi source directory not found: $LIBFFI_SRC" >&2
-    exit 1
-fi
+exit 0

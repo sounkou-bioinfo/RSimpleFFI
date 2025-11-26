@@ -1035,3 +1035,14 @@ SEXP R_libffi_version() {
     return mkString("unknown");
 #endif
 }
+
+SEXP R_libffi_check_version() {
+#ifdef FFI_VERSION_NUMBER
+    if (FFI_VERSION_NUMBER < 30408) {
+        Rf_error("libffi >= 3.4.8 is required (found %d)", FFI_VERSION_NUMBER);
+    }
+    return ScalarInteger(FFI_VERSION_NUMBER);
+#else
+    Rf_error("libffi version macro not found");
+#endif
+}
