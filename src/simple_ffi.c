@@ -518,6 +518,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             
 
             
+        #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
         case FFI_TYPE_LONGDOUBLE: {
             if (TYPEOF(r_val) == REALSXP) {
                 long double* converted = (long double*)R_alloc(1, sizeof(long double));
@@ -531,6 +532,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 Rf_error("Cannot convert to long double");
             }
         }
+        #endif
             
         // Handle custom platform-dependent types by their underlying type
         default:
@@ -695,8 +697,10 @@ SEXP convert_native_to_r(void* value, ffi_type* type) {
         case FFI_TYPE_FLOAT:
             return ScalarReal((double)(*(float*)value));
             
+        #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
         case FFI_TYPE_LONGDOUBLE:
             return ScalarReal((double)(*(long double*)value));
+        #endif
             
         // Handle custom platform-dependent types by their underlying type
             
