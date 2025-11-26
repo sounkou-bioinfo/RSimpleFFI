@@ -1,5 +1,5 @@
 PKG_ROOT := $(CURDIR)/..
 LIBFFI_DIR := $(PKG_ROOT)/libffi
 
-PKG_CPPFLAGS = -I$(LIBFFI_DIR)/include
+PKG_CPPFLAGS = -I$(LIBFFI_DIR)
 PKG_LIBS = -L$(LIBFFI_DIR) -lffi
