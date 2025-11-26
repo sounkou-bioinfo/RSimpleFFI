@@ -7,14 +7,6 @@
 #include <wchar.h>
 #include <math.h>
 
-// Define missing FFI types
-#ifndef FFI_TYPE_SLONG
-#define FFI_TYPE_SLONG 13
-#endif
-#ifndef FFI_TYPE_ULONG
-#define FFI_TYPE_ULONG 14
-#endif
-
 // Type mapping structure
 typedef struct {
     const char* name;
@@ -87,9 +79,9 @@ static void buffer_finalizer(SEXP extPtr) {
 // Allocate a buffer and return an external pointer with finalizer
 SEXP R_alloc_buffer(SEXP r_size) {
     R_xlen_t size = asInteger(r_size);
-    if (size <= 0) error("Size must be positive");
+    if (size <= 0) Rf_error("Size must be positive");
     void* buf = malloc(size);
-    if (!buf) error("Memory allocation failed");
+    if (!buf) Rf_error("Memory allocation failed");
     SEXP extPtr = R_MakeExternalPtr(buf, Rf_install("buffer"), R_NilValue);
     R_RegisterCFinalizerEx(extPtr, buffer_finalizer, TRUE);
     return extPtr;
@@ -98,40 +90,48 @@ SEXP R_alloc_buffer(SEXP r_size) {
 // Allocate a buffer for n elements of a given FFI type
 SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n) {
     ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
-    if (!type) error("Invalid FFI type pointer");
+    if (!type) Rf_error("Invalid FFI type pointer");
     int n = asInteger(r_n);
-    if (n <= 0) error("n must be positive");
+    if (n <= 0) Rf_error("n must be positive");
     size_t total = (size_t)n * type->size;
     void* buf = calloc(n, type->size);
-    if (!buf) error("Memory allocation failed");
-    // Tag with type name for safety
-    SEXP tag = R_NilValue;
-    tag = R_ExternalPtrTag(r_type);
-    SEXP extPtr = R_MakeExternalPtr(buf, tag ? tag : Rf_install("typed_buffer"), R_NilValue);
+    if (!buf) Rf_error("Memory allocation failed");
+    SEXP extPtr = R_MakeExternalPtr(buf, Rf_install("typed_buffer"), R_NilValue);
     R_RegisterCFinalizerEx(extPtr, buffer_finalizer, TRUE);
     return extPtr;
 }
 
+
+// Finalizer for freeing array ffi_type and its elements
+static void array_type_finalizer(SEXP extPtr) {
+    ffi_type* array_type = (ffi_type*)R_ExternalPtrAddr(extPtr);
+    if (array_type) {
+        if (array_type->elements) free(array_type->elements);
+        free(array_type);
+        R_ClearExternalPtr(extPtr);
+    }
+}
 // Create array FFI type
 SEXP R_create_array_ffi_type(SEXP r_element_type, SEXP r_length) {
     ffi_type* element_type = (ffi_type*)R_ExternalPtrAddr(r_element_type);
-    if (!element_type) error("Invalid element type pointer");
+    if (!element_type) Rf_error("Invalid element type pointer");
     int length = asInteger(r_length);
-    if (length <= 0) error("Array length must be positive");
+    if (length <= 0) Rf_error("Array length must be positive");
     ffi_type** elements = (ffi_type**)calloc(length + 1, sizeof(ffi_type*));
-    if (!elements) error("Memory allocation failed");
+    if (!elements) Rf_error("Memory allocation failed");
     for (int i = 0; i < length; i++) elements[i] = element_type;
     elements[length] = NULL;
     ffi_type* array_type = (ffi_type*)malloc(sizeof(ffi_type));
-    if (!array_type) { free(elements); error("Memory allocation failed"); }
+    if (!array_type) { free(elements); Rf_error("Memory allocation failed"); }
     array_type->size = 0;
     array_type->alignment = 0;
     array_type->type = FFI_TYPE_STRUCT; // libffi uses STRUCT for arrays
     array_type->elements = elements;
     ffi_cif dummy_cif;
     ffi_status status = ffi_prep_cif(&dummy_cif, FFI_DEFAULT_ABI, 0, array_type, NULL);
-    if (status != FFI_OK) { free(elements); free(array_type); error("Failed to compute array layout"); }
-    return R_MakeExternalPtr(array_type, R_NilValue, R_NilValue);
+    if (status != FFI_OK) { free(elements); free(array_type); Rf_error("Failed to compute array layout"); }
+    SEXP extPtr = R_MakeExternalPtr(array_type, R_NilValue, R_NilValue);
+    return extPtr;
 }
 
 
@@ -140,8 +140,8 @@ SEXP R_create_array_ffi_type(SEXP r_element_type, SEXP r_length) {
 SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type) {
     void* ptr = R_ExternalPtrAddr(r_ptr);
     ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
-    if (!ptr) error("Invalid pointer");
-    if (!type) error("Invalid FFI type pointer");
+    if (!ptr) Rf_error("Invalid pointer");
+    if (!type) Rf_error("Invalid FFI type pointer");
     int n = LENGTH(r_vals);
     switch (type->type) {
         case FFI_TYPE_SINT32: {
@@ -155,7 +155,7 @@ SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type) {
             break;
         }
         default:
-            error("R_fill_typed_buffer only supports int and double types for now");
+            Rf_error("R_fill_typed_buffer only supports int and double types for now");
     }
     return R_NilValue;
 }
@@ -204,13 +204,17 @@ static ffi_type_map_t builtin_ffi_types[] = {
     {NULL, NULL}
 };
 
+
+
 // Get built-in FFI type by name
 SEXP R_get_builtin_ffi_type(SEXP r_name) {
     const char* name = CHAR(STRING_ELT(r_name, 0));
     
     for (int i = 0; builtin_ffi_types[i].name; i++) {
         if (strcmp(name, builtin_ffi_types[i].name) == 0) {
-            return R_MakeExternalPtr(builtin_ffi_types[i].type, R_NilValue, R_NilValue);
+            // we let these leak
+            SEXP extPtr = R_MakeExternalPtr(builtin_ffi_types[i].type, R_NilValue, R_NilValue);
+            return extPtr;
         }
     }
     
@@ -221,22 +225,32 @@ SEXP R_get_builtin_ffi_type(SEXP r_name) {
 SEXP R_get_ffi_type_size(SEXP r_type) {
     ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
     if (!type) {
-        error("Invalid FFI type pointer");
+        Rf_error("Invalid FFI type pointer");
     }
     return ScalarInteger((int)type->size);
+}
+
+
+static void struct_type_finalizer(SEXP extPtr) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(extPtr);
+    if (struct_type) {
+        if (struct_type->elements) free(struct_type->elements);
+        free(struct_type);
+        R_ClearExternalPtr(extPtr);
+    }
 }
 
 // Create structure FFI type
 SEXP R_create_struct_ffi_type(SEXP r_field_types) {
     int num_fields = LENGTH(r_field_types);
     if (num_fields == 0) {
-        error("Structure must have at least one field");
+        Rf_error("Structure must have at least one field");
     }
     
     // Allocate array for field types (+ NULL terminator)
     ffi_type** field_types = (ffi_type**)calloc(num_fields + 1, sizeof(ffi_type*));
     if (!field_types) {
-        error("Memory allocation failed");
+        Rf_error("Memory allocation failed");
     }
     
     // Extract field types from R list
@@ -245,7 +259,7 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types) {
         field_types[i] = (ffi_type*)R_ExternalPtrAddr(field);
         if (!field_types[i]) {
             free(field_types);
-            error("Invalid field type at index %d", i + 1);
+            Rf_error("Invalid field type at index %d", i + 1);
         }
     }
     field_types[num_fields] = NULL;  // NULL terminator
@@ -254,7 +268,7 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types) {
     ffi_type* struct_type = (ffi_type*)malloc(sizeof(ffi_type));
     if (!struct_type) {
         free(field_types);
-        error("Memory allocation failed");
+        Rf_error("Memory allocation failed");
     }
     
     struct_type->size = 0;  // Will be computed by libffi
@@ -268,17 +282,22 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types) {
     if (status != FFI_OK) {
         free(field_types);
         free(struct_type);
-        error("Failed to compute struct layout");
+        Rf_error("Failed to compute struct layout");
     }
     
-    return R_MakeExternalPtr(struct_type, R_NilValue, R_NilValue);
+   SEXP extPtr = R_MakeExternalPtr(struct_type, R_NilValue, R_NilValue);
+    PROTECT(extPtr);
+    R_RegisterCFinalizerEx(extPtr, struct_type_finalizer, TRUE);
+    UNPROTECT(1);
+    return extPtr;
 }
+
 
 // Prepare FFI call interface (CIF)
 SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
     ffi_type* return_type = (ffi_type*)R_ExternalPtrAddr(r_return_type);
     if (!return_type) {
-        error("Invalid return type");
+        Rf_error("Invalid return type");
     }
     
     int num_args = LENGTH(r_arg_types);
@@ -287,7 +306,7 @@ SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
     if (num_args > 0) {
         arg_types = (ffi_type**)malloc(sizeof(ffi_type*) * num_args);
         if (!arg_types) {
-            error("Memory allocation failed");
+            Rf_error("Memory allocation failed");
         }
         
         for (int i = 0; i < num_args; i++) {
@@ -295,7 +314,7 @@ SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
             arg_types[i] = (ffi_type*)R_ExternalPtrAddr(arg_type);
             if (!arg_types[i]) {
                 free(arg_types);
-                error("Invalid argument type at index %d", i + 1);
+                Rf_error("Invalid argument type at index %d", i + 1);
             }
         }
     }
@@ -304,14 +323,14 @@ SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
     ffi_cif* cif = (ffi_cif*)malloc(sizeof(ffi_cif));
     if (!cif) {
         if (arg_types) free(arg_types);
-        error("Memory allocation failed");
+        Rf_error("Memory allocation failed");
     }
     
     ffi_status status = ffi_prep_cif(cif, FFI_DEFAULT_ABI, num_args, return_type, arg_types);
     if (status != FFI_OK) {
         free(cif);
         if (arg_types) free(arg_types);
-        error("Failed to prepare FFI call interface (status: %d)", status);
+        Rf_error("Failed to prepare FFI call interface (status: %d)", status);
     }
     
     return R_MakeExternalPtr(cif, R_NilValue, R_NilValue);
@@ -328,19 +347,19 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             if (TYPEOF(r_val) == INTSXP) {
                 int val = INTEGER(r_val)[0];
                 if (val < -128 || val > 127) {
-                    error("Integer %d out of range for int8 [-128, 127]", val);
+                    Rf_error("Integer %d out of range for int8 [-128, 127]", val);
                 }
                 *converted = (int8_t)val;
                 return converted;
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
                 if (val < -128.0 || val > 127.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for int8 [-128, 127]", val);
+                    Rf_error("Value %g out of range or not integer for int8 [-128, 127]", val);
                 }
                 *converted = (int8_t)val;
                 return converted;
             } else {
-                error("Cannot convert to int8");
+                Rf_error("Cannot convert to int8");
             }
         }
             
@@ -349,19 +368,19 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             if (TYPEOF(r_val) == INTSXP) {
                 int val = INTEGER(r_val)[0];
                 if (val < -32768 || val > 32767) {
-                    error("Integer %d out of range for int16 [-32768, 32767]", val);
+                    Rf_error("Integer %d out of range for int16 [-32768, 32767]", val);
                 }
                 *converted = (int16_t)val;
                 return converted;
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
                 if (val < -32768.0 || val > 32767.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for int16 [-32768, 32767]", val);
+                    Rf_error("Value %g out of range or not integer for int16 [-32768, 32767]", val);
                 }
                 *converted = (int16_t)val;
                 return converted;
             } else {
-                error("Cannot convert to int16");
+                Rf_error("Cannot convert to int16");
             }
         }
 
@@ -372,7 +391,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
                 if (val < -2147483648.0 || val > 2147483647.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for int32 [-2147483648, 2147483647]", val);
+                    Rf_error("Value %g out of range or not integer for int32 [-2147483648, 2147483647]", val);
                 }
                 int* converted = (int*)R_alloc(1, sizeof(int));
                 *converted = (int)val;
@@ -382,7 +401,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 *converted = LOGICAL(r_val)[0];
                 return converted;
             } else {
-                error("Cannot convert to int");
+                Rf_error("Cannot convert to int");
             }
             
         case FFI_TYPE_SINT64: {
@@ -394,12 +413,12 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 double val = REAL(r_val)[0];
                 // Note: double precision limits exact integer representation to ~53 bits
                 if (val < -9007199254740992.0 || val > 9007199254740992.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for safe int64 conversion", val);
+                    Rf_error("Value %g out of range or not integer for safe int64 conversion", val);
                 }
                 *converted = (int64_t)val;
                 return converted;
             } else {
-                error("Cannot convert to int64");
+                Rf_error("Cannot convert to int64");
             }
         }
             
@@ -408,19 +427,19 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             if (TYPEOF(r_val) == INTSXP) {
                 int val = INTEGER(r_val)[0];
                 if (val < 0 || val > 255) {
-                    error("Integer %d out of range for uint8 [0, 255]", val);
+                    Rf_error("Integer %d out of range for uint8 [0, 255]", val);
                 }
                 *converted = (uint8_t)val;
                 return converted;
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
                 if (val < 0.0 || val > 255.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for uint8 [0, 255]", val);
+                    Rf_error("Value %g out of range or not integer for uint8 [0, 255]", val);
                 }
                 *converted = (uint8_t)val;
                 return converted;
             } else {
-                error("Cannot convert to uint8");
+                Rf_error("Cannot convert to uint8");
             }
         }
             
@@ -429,19 +448,19 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             if (TYPEOF(r_val) == INTSXP) {
                 int val = INTEGER(r_val)[0];
                 if (val < 0 || val > 65535) {
-                    error("Integer %d out of range for uint16 [0, 65535]", val);
+                    Rf_error("Integer %d out of range for uint16 [0, 65535]", val);
                 }
                 *converted = (uint16_t)val;
                 return converted;
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
                 if (val < 0.0 || val > 65535.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for uint16 [0, 65535]", val);
+                    Rf_error("Value %g out of range or not integer for uint16 [0, 65535]", val);
                 }
                 *converted = (uint16_t)val;
                 return converted;
             } else {
-                error("Cannot convert to uint16");
+                Rf_error("Cannot convert to uint16");
             }
         }
             
@@ -450,19 +469,19 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             if (TYPEOF(r_val) == INTSXP) {
                 int val = INTEGER(r_val)[0];
                 if (val < 0) {
-                    error("Integer %d out of range for uint32 [0, 4294967295]", val);
+                    Rf_error("Integer %d out of range for uint32 [0, 4294967295]", val);
                 }
                 *converted = (uint32_t)val;
                 return converted;
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
                 if (val < 0.0 || val > 4294967295.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for uint32 [0, 4294967295]", val);
+                    Rf_error("Value %g out of range or not integer for uint32 [0, 4294967295]", val);
                 }
                 *converted = (uint32_t)val;
                 return converted;
             } else {
-                error("Cannot convert to uint32");
+                Rf_error("Cannot convert to uint32");
             }
         }
             
@@ -471,19 +490,19 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             if (TYPEOF(r_val) == INTSXP) {
                 int val = INTEGER(r_val)[0];
                 if (val < 0) {
-                    error("Integer %d out of range for uint64 [0, 18446744073709551615]", val);
+                    Rf_error("Integer %d out of range for uint64 [0, 18446744073709551615]", val);
                 }
                 *converted = (uint64_t)val;
                 return converted;
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
                 if (val < 0.0 || val > 18446744073709551615.0 || val != floor(val)) {
-                    error("Value %g out of range or not integer for uint64", val);
+                    Rf_error("Value %g out of range or not integer for uint64", val);
                 }
                 *converted = (uint64_t)val;
                 return converted;
             } else {
-                error("Cannot convert to uint64");
+                Rf_error("Cannot convert to uint64");
             }
         }
             
@@ -499,7 +518,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 *converted = (long double)INTEGER(r_val)[0];
                 return converted;
             } else {
-                error("Cannot convert to long double");
+                Rf_error("Cannot convert to long double");
             }
         }
             
@@ -516,7 +535,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                     *converted = (size_t)REAL(r_val)[0];
                     return converted;
                 } else {
-                    error("Cannot convert to size_t");
+                    Rf_error("Cannot convert to size_t");
                 }
             } else if (type == &ffi_type_ssize_t_custom) {
                 if (TYPEOF(r_val) == INTSXP) {
@@ -528,7 +547,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                     *converted = (ssize_t)REAL(r_val)[0];
                     return converted;
                 } else {
-                    error("Cannot convert to ssize_t");
+                    Rf_error("Cannot convert to ssize_t");
                 }
             } else if (type == &ffi_type_bool_custom) {
                 if (TYPEOF(r_val) == LGLSXP) {
@@ -544,7 +563,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                     *converted = REAL(r_val)[0] != 0.0;
                     return converted;
                 } else {
-                    error("Cannot convert to bool");
+                    Rf_error("Cannot convert to bool");
                 }
             } else if (type == &ffi_type_wchar_t_custom) {
                 if (TYPEOF(r_val) == INTSXP) {
@@ -561,10 +580,10 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                     }
                     return converted;
                 } else {
-                    error("Cannot convert to wchar_t");
+                    Rf_error("Cannot convert to wchar_t");
                 }
             }
-            error("Unsupported FFI type for conversion: %d", type->type);
+            Rf_error("Unsupported FFI type for conversion: %d", type->type);
             
         case FFI_TYPE_DOUBLE:
             if (TYPEOF(r_val) == REALSXP) {
@@ -575,7 +594,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 *converted = (double)INTEGER(r_val)[0];
                 return converted;
             } else {
-                error("Cannot convert to double");
+                Rf_error("Cannot convert to double");
             }
             
         case FFI_TYPE_FLOAT: {
@@ -588,7 +607,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 *converted = (float)INTEGER(r_val)[0];
                 return converted;
             } else {
-                error("Cannot convert to float");
+                Rf_error("Cannot convert to float");
             }
         }
         
@@ -603,7 +622,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                     static const char* null_str = NULL;
                     return &null_str;
                 } else {
-                    error("Cannot convert to string (expected character vector or NULL)");
+                    Rf_error("Cannot convert to string (expected character vector or NULL)");
                 }
             }
             // Handle generic pointers
@@ -620,7 +639,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 static void* null_ptr = NULL;
                 return &null_ptr;
             } else {
-                error("Cannot convert to pointer (supported: external pointer, character string, NULL)");
+                Rf_error("Cannot convert to pointer (supported: external pointer, character string, NULL)");
             }
     }
 }
@@ -703,7 +722,7 @@ SEXP convert_native_to_r(void* value, ffi_type* type) {
                     return ScalarInteger((int)wc);
                 }
             }
-            error("Unsupported FFI type for return conversion: %d", type->type);
+            Rf_error("Unsupported FFI type for return conversion: %d", type->type);
     }
 }
 
@@ -730,12 +749,12 @@ static SEXP do_ffi_call_internal(void* data) {
     ffi_cif* cif = (ffi_cif*)R_ExternalPtrAddr(r_cif);
     void* func_ptr = R_ExternalPtrAddr(r_func_ptr);
     
-    if (!cif) error("Invalid CIF pointer");
-    if (!func_ptr) error("Invalid function pointer");
+    if (!cif) Rf_error("Invalid CIF pointer");
+    if (!func_ptr) Rf_error("Invalid function pointer");
     
     int num_args = LENGTH(r_args);
     if (num_args != (int)cif->nargs) {
-        error("Argument count mismatch: expected %d, got %d", (int)cif->nargs, num_args);
+        Rf_error("Argument count mismatch: expected %d, got %d", (int)cif->nargs, num_args);
     }
     
     // Set up cleanup context
@@ -799,15 +818,19 @@ SEXP R_ffi_call(SEXP r_cif, SEXP r_func_ptr, SEXP r_args) {
 SEXP R_alloc_struct(SEXP r_struct_type) {
     ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
     if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
-        error("Invalid structure type");
+        Rf_error("Invalid structure type");
     }
     
     void* ptr = calloc(1, struct_type->size);
     if (!ptr) {
-        error("Memory allocation failed");
+        Rf_error("Memory allocation failed");
     }
     
-    return R_MakeExternalPtr(ptr, R_NilValue, R_NilValue);
+    SEXP extPtr = R_MakeExternalPtr(ptr, R_NilValue, R_NilValue);
+    PROTECT(extPtr);
+    R_RegisterCFinalizerEx(extPtr, buffer_finalizer, TRUE);
+    UNPROTECT(1);
+    return extPtr;
 }
 
 // Simple offset calculation for struct fields
@@ -844,11 +867,11 @@ SEXP R_get_struct_field(SEXP r_struct_ptr, SEXP r_field_index, SEXP r_struct_typ
     ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
     int field_index = INTEGER(r_field_index)[0];
     
-    if (!struct_ptr) error("Invalid structure pointer");
-    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) error("Invalid structure type");
+    if (!struct_ptr) Rf_error("Invalid structure pointer");
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) Rf_error("Invalid structure type");
     
     if (!struct_type->elements || !struct_type->elements[field_index]) {
-        error("Field index out of range: %d", field_index);
+        Rf_error("Field index out of range: %d", field_index);
     }
     
     ffi_type* field_type = struct_type->elements[field_index];
@@ -864,11 +887,11 @@ SEXP R_set_struct_field(SEXP r_struct_ptr, SEXP r_field_index, SEXP r_value, SEX
     ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
     int field_index = INTEGER(r_field_index)[0];
     
-    if (!struct_ptr) error("Invalid structure pointer");
-    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) error("Invalid structure type");
+    if (!struct_ptr) Rf_error("Invalid structure pointer");
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) Rf_error("Invalid structure type");
     
     if (!struct_type->elements || !struct_type->elements[field_index]) {
-        error("Field index out of range: %d", field_index);
+        Rf_error("Field index out of range: %d", field_index);
     }
     
     ffi_type* field_type = struct_type->elements[field_index];
@@ -899,9 +922,9 @@ SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
     int length = INTEGER(r_length)[0];
     ffi_type* element_type = (ffi_type*)R_ExternalPtrAddr(r_element_type);
     
-    if (!ptr) error("Invalid pointer");
-    if (length <= 0) error("Invalid length");
-    if (!element_type) error("Invalid element type");
+    if (!ptr) Rf_error("Invalid pointer");
+    if (length <= 0) Rf_error("Invalid length");
+    if (!element_type) Rf_error("Invalid element type");
     
     SEXP result;
     switch (element_type->type) {
@@ -936,7 +959,7 @@ SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
             break;
         }
         default:
-            error("Unsupported element type for array copy");
+            Rf_error("Unsupported element type for array copy");
     }
     return result;
 }
@@ -944,7 +967,7 @@ SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
 // Explicit pointer-to-string conversion for type safety
 SEXP R_pointer_to_string(SEXP r_ptr) {
     if (TYPEOF(r_ptr) != EXTPTRSXP) {
-        error("Expected external pointer");
+        Rf_error("Expected external pointer");
     }
     
     char* str = (char*)R_ExternalPtrAddr(r_ptr);
@@ -962,7 +985,7 @@ SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name) {
     if (TYPEOF(r_ptr) == EXTPTRSXP) {
         ptr = R_ExternalPtrAddr(r_ptr);
     } else {
-        error("Expected external pointer");
+        Rf_error("Expected external pointer");
     }
     
     const char* type_name = CHAR(STRING_ELT(r_type_name, 0));
@@ -973,7 +996,7 @@ SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name) {
 // Get the type tag of an external pointer
 SEXP R_get_pointer_type(SEXP r_ptr) {
     if (TYPEOF(r_ptr) != EXTPTRSXP) {
-        error("Expected external pointer");
+        Rf_error("Expected external pointer");
     }
     
     SEXP tag = R_ExternalPtrTag(r_ptr);

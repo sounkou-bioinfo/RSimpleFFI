@@ -220,10 +220,3 @@ make_typed_pointer <- function(ptr, type_name) {
   .Call("R_make_typed_pointer", ptr, type_name)
 }
 
-#' Get the type tag of an external pointer
-#' @param ptr External pointer
-#' @return Character type name
-#' @export
-get_pointer_type <- function(ptr) {
-  .Call("R_get_pointer_type", ptr)
-}

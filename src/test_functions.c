@@ -1,12 +1,10 @@
-/* Test C functions for SimpleFFI */
-
-#include <R.h>
-#include <Rinternals.h>
-#include <math.h>
+/* Test C functions for RSimpleFFI */
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
 
 /* Test functions for basic FFI operations */
 

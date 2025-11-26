@@ -5,16 +5,12 @@
 \title{Get pointer type tag}
 \usage{
 get_pointer_type(ptr)
-
-get_pointer_type(ptr)
 }
 \arguments{
 \item{ptr}{External pointer}
 }
 \value{
 Character string with the type name
-
-Character type name
 }
 \description{
 Retrieves the type tag from an external pointer.
