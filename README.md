@@ -12,16 +12,10 @@ from R with S7 classes.
 ## Overview
 
 RSimpleFFI lets you call C functions from R using the libffi library. It
-supports over 25 different C types including integers, floats, and
-platform-specific types. The package uses S7 classes for type safety and
-handles memory management automatically. It only needs libffi which is
-available on most systems.
-
-## Related Projects
-
-RSimpleFFI is inspired by the [Rffi
+different C types including integers, floats, and platform-specific types. The package uses S7 classes for type safety and
+handles memory management automatically. RSimpleFFI is inspired by the [Rffi
 package](https://github.com/omegahat/Rffi/) by Duncan Temple Langs.
-RSimpleFFI builds on these concepts with S7 classes.
+RSimpleFFI builds on the same concepts with S7 classes.
 
 ## Installation
 
@@ -30,9 +24,6 @@ You can install RSimpleFFI from source:
 ``` r
 remotes::install_git("sounkou-bioinfo/RSimpleFFI")
 ```
-
-### System Requirements
-
 RSimpleFFI requires libffi to be installed on your system:
 
 ``` bash
@@ -75,17 +66,18 @@ platform-specific types:
 ### Basic Types
 
 ``` r
+
 void_type <- ffi_void()
 int_type <- ffi_int() 
 double_type <- ffi_double()
 float_type <- ffi_float()
 pointer_type <- ffi_pointer()
 string_type <- ffi_string()
-```
+longdouble_type <- ffi_longdouble()
+bool_type <- ffi_bool()
+wchar_type <- ffi_wchar_t()
 
-### Extended Integer Types
 
-``` r
 int8_type <- ffi_int8()
 uint8_type <- ffi_uint8()
 int16_type <- ffi_int16()
@@ -94,26 +86,32 @@ int32_type <- ffi_int32()
 uint32_type <- ffi_uint32()
 int64_type <- ffi_int64()
 uint64_type <- ffi_uint64()
-```
 
-### Platform-Dependent Types
 
-``` r
 size_t_type <- ffi_size_t()
 ssize_t_type <- ffi_ssize_t()
 long_type <- ffi_long()
 ulong_type <- ffi_ulong()
 ```
 
-### Extended Floating-Point and Special Types
+## Function Call Examples
+
+### Basic Function Calls
+
+The package comes with some test functions defined in [src/test_functions.c](src/test_functions.c)
 
 ``` r
-longdouble_type <- ffi_longdouble()
-bool_type <- ffi_bool()
-wchar_type <- ffi_wchar_t()
-```
+void_func <- ffi_symbol("test_void_function")
+void_cif <- ffi_cif(void_type)
+ffi_call(void_cif, void_func)
+#> NULL
 
-## Function Call Examples
+factorial_func <- ffi_symbol("test_factorial")
+factorial_cif <- ffi_cif(int_type, int_type)
+factorial_result <- ffi_call(factorial_cif, factorial_func, 5L)
+factorial_result
+#> [1] 120
+```
 
 ### Testing Integer Types
 
@@ -162,24 +160,11 @@ float_result
 #> [1] 4
 ```
 
-### Basic Function Calls
 
-``` r
-void_func <- ffi_symbol("test_void_function")
-void_cif <- ffi_cif(void_type)
-ffi_call(void_cif, void_func)
-#> NULL
-
-factorial_func <- ffi_symbol("test_factorial")
-factorial_cif <- ffi_cif(int_type, int_type)
-factorial_result <- ffi_call(factorial_cif, factorial_func, 5L)
-factorial_result
-#> [1] 120
-```
 
 ## Type Conversions
 
-RSimpleFFI converts between R and C types automatically:
+RSimpleFFI tries to  converts between R and C types automatically 
 
 ``` r
 int16_result <- ffi_call(ffi_cif(int16_type, int16_type), 
