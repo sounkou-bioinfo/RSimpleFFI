@@ -345,6 +345,8 @@ dll_unload(lib_path)
 
 We run some benchmarks to estimate the performance of FFI calls (i.e the overhead of calling C functions from R using RSimpleFFI) compared to native R C built-in functions.
 
+
+### R builtin C functions
 ```{r}
 
 set.seed(123)
@@ -373,27 +375,71 @@ benchmark_result
 dll_unload(lib_path)
 ```
 
-```{r}
-set.seed(456)
-y_vec <- runif(n, 1, 100)
-y_ptr <- ffi_alloc(ffi_double(), n)
-ffi_fill_typed_buffer(y_ptr, y_vec, ffi_double())
+### Interpreted R Code 
+We compare a pure C convolution (via FFI) to a simple R implementation.
 
-sum_code <- '
-double vec_sum(const double* x, int n) {
-    double s = 0.0;
-    for (int i = 0; i < n; ++i) s += x[i];
-    return s;
+```{r}
+# Slow R convolution
+slow_convolve <- function(a, b) {
+  ab <- double(length(a) + length(b) - 1)
+  for (i in seq_along(a)) {
+    for (j in seq_along(b)) {
+      ab[i+j-1] <- ab[i+j-1] + a[i] * b[j]
+    }
+  }
+  ab
+}
+
+# C code for convolution (valid for FFI)
+conv_code <- '
+void c_convolve(const double* signal, int n_signal, const double* kernel, int n_kernel, double* out) {
+    int n_out = n_signal + n_kernel - 1;
+    for (int i = 0; i < n_out; ++i) {
+        out[i] = 0.0;
+        for (int j = 0; j < n_kernel; ++j) {
+            int k = i - j;
+            if (k >= 0 && k < n_signal) {
+                out[i] += signal[k] * kernel[j];
+            }
+        }
+    }
 }
 '
-lib_path <- dll_compile_and_load(sum_code, "bench_sum", cflags = "-O3")
-vec_sum_func <- dll_ffi_symbol("vec_sum", ffi_double(), ffi_pointer(), ffi_int())
 
+set.seed(42)
+signal <- rnorm(10000)
+kernel <- c(0.2, 0.5, 0.3)
+n_signal <- length(signal)
+n_kernel <- length(kernel)
+n_out <- n_signal + n_kernel - 1
+
+# Allocate buffers for FFI
+signal_ptr <- ffi_alloc(ffi_double(), n_signal)
+kernel_ptr <- ffi_alloc(ffi_double(), n_kernel)
+out_ptr <- ffi_alloc(ffi_double(), n_out)
+ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
+ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
+
+# Compile and load C convolution
+lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
+c_conv_fn <- dll_ffi_symbol("c_convolve", ffi_void(), ffi_pointer(), ffi_int(), ffi_pointer(), ffi_int(), ffi_pointer())
+
+# Run C convolution via FFI
+c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr)
+c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
+
+# Run R convolution
+r_result <- slow_convolve(signal, kernel)
+
+# Check results are similar
+all.equal(as.numeric(c_result), as.numeric(r_result))
+
+# Benchmark
 benchmark_result <- bench::mark(
-  native_r = sum(y_vec),
-  ffi_call = vec_sum_func(y_ptr, n),
+  r = slow_convolve(signal, kernel),
+  c_ffi = { c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr); ffi_copy_array(out_ptr, n_out, ffi_double()) },
   check = FALSE,
-  iterations = 100
+  iterations = 20
 )
 benchmark_result
 dll_unload(lib_path)
@@ -401,7 +447,7 @@ dll_unload(lib_path)
 
 ## Limitations and issues
 
-Right now there are unimplemented features and limitations including uncessary copying, lack of protection and several potential memory leaks. The interface can and should be refined further. Furthermore we will vendor libffi in future releases to avoid dependency issues.
+Right now there are unimplemented features and limitations including uncessary copying, lack of protection and several potential memory leaks. The interface can and should be refined further. Our types are C pointers never collected. Furthermore we will vendor libffi in future releases to avoid dependency issues.
 
 ## License
 

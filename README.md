@@ -303,7 +303,7 @@ libc_path <- dll_load_system("libgcc_s.so.1")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 15865086
+#> [1] 1701965846
 dll_unload(libc_path)
 ```
 
@@ -325,7 +325,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x6369dfb970e0>
+#> <pointer: 0x596751e53330>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -382,6 +382,8 @@ We run some benchmarks to estimate the performance of FFI calls (i.e the
 overhead of calling C functions from R using RSimpleFFI) compared to
 native R C built-in functions.
 
+### R builtin C functions
+
 ``` r
 
 set.seed(123)
@@ -411,40 +413,88 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     14.1µs   31.3µs    32110.    78.2KB      0  
-#> 2 ffi_call    107.8µs    131µs     7210.    78.7KB     72.8
+#> 1 native_r     13.9µs   31.4µs    32165.    78.2KB      0  
+#> 2 ffi_call    107.7µs  129.2µs     7310.    78.7KB     73.8
 dll_unload(lib_path)
 ```
 
-``` r
-set.seed(456)
-y_vec <- runif(n, 1, 100)
-y_ptr <- ffi_alloc(ffi_double(), n)
-ffi_fill_typed_buffer(y_ptr, y_vec, ffi_double())
-#> NULL
+### Interpreted R Code
 
-sum_code <- '
-double vec_sum(const double* x, int n) {
-    double s = 0.0;
-    for (int i = 0; i < n; ++i) s += x[i];
-    return s;
+We compare a pure C convolution (via FFI) to a simple R implementation.
+
+``` r
+# Slow R convolution
+slow_convolve <- function(a, b) {
+  ab <- double(length(a) + length(b) - 1)
+  for (i in seq_along(a)) {
+    for (j in seq_along(b)) {
+      ab[i+j-1] <- ab[i+j-1] + a[i] * b[j]
+    }
+  }
+  ab
+}
+
+# C code for convolution (valid for FFI)
+conv_code <- '
+void c_convolve(const double* signal, int n_signal, const double* kernel, int n_kernel, double* out) {
+    int n_out = n_signal + n_kernel - 1;
+    for (int i = 0; i < n_out; ++i) {
+        out[i] = 0.0;
+        for (int j = 0; j < n_kernel; ++j) {
+            int k = i - j;
+            if (k >= 0 && k < n_signal) {
+                out[i] += signal[k] * kernel[j];
+            }
+        }
+    }
 }
 '
-lib_path <- dll_compile_and_load(sum_code, "bench_sum", cflags = "-O3")
-vec_sum_func <- dll_ffi_symbol("vec_sum", ffi_double(), ffi_pointer(), ffi_int())
 
+set.seed(42)
+signal <- rnorm(10000)
+kernel <- c(0.2, 0.5, 0.3)
+n_signal <- length(signal)
+n_kernel <- length(kernel)
+n_out <- n_signal + n_kernel - 1
+
+# Allocate buffers for FFI
+signal_ptr <- ffi_alloc(ffi_double(), n_signal)
+kernel_ptr <- ffi_alloc(ffi_double(), n_kernel)
+out_ptr <- ffi_alloc(ffi_double(), n_out)
+ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
+#> NULL
+ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
+#> NULL
+
+# Compile and load C convolution
+lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
+c_conv_fn <- dll_ffi_symbol("c_convolve", ffi_void(), ffi_pointer(), ffi_int(), ffi_pointer(), ffi_int(), ffi_pointer())
+
+# Run C convolution via FFI
+c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr)
+#> NULL
+c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
+
+# Run R convolution
+r_result <- slow_convolve(signal, kernel)
+
+# Check results are similar
+all.equal(as.numeric(c_result), as.numeric(r_result))
+#> [1] "Mean absolute difference: 0.4954148"
+
+# Benchmark
 benchmark_result <- bench::mark(
-  native_r = sum(y_vec),
-  ffi_call = vec_sum_func(y_ptr, n),
+  r = slow_convolve(signal, kernel),
+  c_ffi = { c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr); ffi_copy_array(out_ptr, n_out, ffi_double()) },
   check = FALSE,
-  iterations = 100
+  iterations = 20
 )
 benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      7.4µs    7.5µs   128172.        0B        0
-#> 2 ffi_call       20µs   24.9µs    38858.        0B        0
+#> 1 r            3.12ms   3.42ms      291.    78.2KB     15.3
+#> 2 c_ffi      153.27µs 173.11µs     5426.    78.7KB      0
 dll_unload(lib_path)
 ```
 
@@ -452,8 +502,9 @@ dll_unload(lib_path)
 
 Right now there are unimplemented features and limitations including
 uncessary copying, lack of protection and several potential memory
-leaks. The interface can and should be refined further. Furthermore we
-will vendor libffi in future releases to avoid dependency issues.
+leaks. The interface can and should be refined further. Our types are C
+pointers never collected. Furthermore we will vendor libffi in future
+releases to avoid dependency issues.
 
 ## License
 
