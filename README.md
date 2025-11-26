@@ -284,7 +284,7 @@ libc_path <- dll_load_system("libgcc_s.so.1")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1034345194
+#> [1] 2016057146
 dll_unload(libc_path)
 ```
 
@@ -292,27 +292,25 @@ dll_unload(libc_path)
 
 ``` r
 # Find the libc shared object (libc is always present)
-so_files <- list.files("/usr/lib/x86_64-linux-gnu", pattern = "^libgcc_s.so.1", full.names = TRUE)
-so_files
-#> [1] "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1"
+so_files <- list.files("/lib/x86_64-linux-gnu", pattern = "^libc[.]so[.]6$", full.names = TRUE)
+if (length(so_files) == 0) stop("libc.so.6 not found")
 lib_path <- dll_load(so_files[1])
-lib_path
-#> [1] "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1"
 
 # Allocate a buffer of 8 bytes
 raw_type <- ffi_raw()
 buf_ptr <- ffi_alloc(raw_type, 8L)
-
+rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
+#> [1] ""
 # Get memset from libc: void *memset(void *s, int c, size_t n)
 memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), ffi_size_t())
 
-# Set all bytes in the buffer to 0xAB
-memset_fn(buf_ptr, as.integer(0xAB), 8L)
-#> <pointer: 0x5b4fa82d0e60>
+# Fill the buffer with ASCII 'A' (0x41)
+memset_fn(buf_ptr, as.integer(0x41), 8L)
+#> <pointer: 0x5c7469854820>
 
-# Read back the buffer as a raw vector
-ffi_copy_array(buf_ptr, 8L, raw_type)
-#> [1] ab ab ab ab ab ab ab ab
+# Read back the buffer and print as string
+rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
+#> [1] "AAAAAAAA"
 
 dll_unload(lib_path)
 ```
@@ -394,8 +392,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.6µs   31.6µs    30916.    78.2KB      0  
-#> 2 ffi_call    108.3µs  142.1µs     6800.    78.7KB     68.7
+#> 1 native_r     14.1µs   31.1µs    33324.    78.2KB      0  
+#> 2 ffi_call    108.2µs  142.6µs     6752.    78.7KB     68.2
 dll_unload(lib_path)
 ```
 
@@ -426,8 +424,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     7.34µs   7.44µs   133904.        0B        0
-#> 2 ffi_call    23.42µs  25.53µs    36490.        0B        0
+#> 1 native_r     7.42µs   7.52µs   132905.        0B        0
+#> 2 ffi_call    23.66µs  25.77µs    37100.        0B        0
 dll_unload(lib_path)
 ```
 

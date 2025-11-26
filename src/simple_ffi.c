@@ -154,8 +154,16 @@ SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type) {
             for (int i = 0; i < n; i++) dest[i] = REAL(r_vals)[i];
             break;
         }
+        case FFI_TYPE_UINT8:
+        // fall through
+        case FFI_TYPE_SINT8: {
+            if (TYPEOF(r_vals) != RAWSXP)
+                Rf_error("For raw/uint8 buffers, supply a raw vector");
+            memcpy(ptr, RAW(r_vals), n);
+            break;
+        }
         default:
-            Rf_error("R_fill_typed_buffer only supports int and double types for now");
+            Rf_error("R_fill_typed_buffer only supports int, double, and raw types for now");
     }
     return R_NilValue;
 }
