@@ -623,9 +623,10 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             // Handle custom string type separately
             if (type == &ffi_type_string_custom) {
                 if (TYPEOF(r_val) == STRSXP && LENGTH(r_val) > 0) {
-                    static const char* str_ptr;
-                    str_ptr = CHAR(STRING_ELT(r_val, 0));
-                    return &str_ptr;
+                   const char* str = CHAR(STRING_ELT(r_val, 0));
+                    const char** ptr = (const char**)R_alloc(1, sizeof(const char*));
+                    *ptr = str;
+                    return ptr;
                 } else if (r_val == R_NilValue) {
                     static const char* null_str = NULL;
                     return &null_str;
@@ -635,14 +636,16 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             }
             // Handle generic pointers
             if (TYPEOF(r_val) == EXTPTRSXP) {
-                static void* ptr;
-                ptr = R_ExternalPtrAddr(r_val);
-                return &ptr;
+                void* addr = R_ExternalPtrAddr(r_val);
+                // we will let this leak
+                void** ptr = (void**)R_alloc(1, sizeof(void*));
+                *ptr = addr;
+                return ptr;
             } else if (TYPEOF(r_val) == STRSXP && LENGTH(r_val) > 0) {
-                // Allow string->pointer conversion with warning for generic pointers
-                static const char* str_ptr;
-                str_ptr = CHAR(STRING_ELT(r_val, 0));
-                return &str_ptr;
+                 const char* str = CHAR(STRING_ELT(r_val, 0));
+                    const char** ptr = (const char**)R_alloc(1, sizeof(const char*));
+                    *ptr = str;
+                    return ptr;
             } else if (r_val == R_NilValue) {
                 static void* null_ptr = NULL;
                 return &null_ptr;
@@ -785,6 +788,7 @@ static SEXP do_ffi_call_internal(void* data) {
             
             // This can error - but cleanup will handle unprotecting
             arg_values[i] = convert_r_to_native(arg, cif->arg_types[i]);
+           // Rprintf("Converted argument %d to native value at %p\n", i, arg_values[i]);
         }
     }
     

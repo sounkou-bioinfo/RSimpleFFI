@@ -185,7 +185,7 @@ supported FFI type.
 ### Basic Function Calls
 
 The package comes with some built-in C test functions for testing, they
-are defined in [src/test\_functions.c](src/test_functions.c)
+are defined in [src/test_functions.c](src/test_functions.c)
 
 ``` r
 void_func <- ffi_symbol("test_void_function")
@@ -298,12 +298,12 @@ system paths when required.
 
 ``` r
 # Example: call the C standard library rand() function
-libc_path <- dll_load_system("libgcc_s.so.1")
-#> Loading system library from: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+libc_path <- dll_load_system("libc.so.6")
+#> Loading system library from: /usr/lib/x86_64-linux-gnu/libc.so.6
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 710985426
+#> [1] 161685584
 dll_unload(libc_path)
 ```
 
@@ -325,7 +325,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5e6ab03f1f90>
+#> <pointer: 0x625c071e08e0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -413,8 +413,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       14µs   31.5µs    31328.    78.2KB      0  
-#> 2 ffi_call      107µs    139µs     6628.    78.7KB     67.0
+#> 1 native_r     13.2µs   28.9µs    35816.    78.2KB      0  
+#> 2 ffi_call       91µs   98.4µs     9695.    78.7KB     97.9
 dll_unload(lib_path)
 ```
 
@@ -436,6 +436,7 @@ slow_convolve <- function(a, b) {
 
 # C code for convolution (matches R)
 conv_code <- '
+#include <stdio.h>
 void c_convolve(const double* signal, int n_signal, const double* kernel, int n_kernel, double* out) {
   int n_out = n_signal + n_kernel - 1;
   for (int i = 0; i < n_out; ++i) {
@@ -443,7 +444,8 @@ void c_convolve(const double* signal, int n_signal, const double* kernel, int n_
     for (int j = 0; j < n_kernel; ++j) {
       int k = i - j;
       if (k >= 0 && k < n_signal) {
-        out[i] += signal[k] * kernel[n_kernel - 1 - j];  // reverse kernel inside C
+        //printf("signal[%d]=%f, kernel[%d]=%f\\n", k, signal[k], j, kernel[j]);
+        out[i] += signal[k] * kernel[j];
       }
     }
   }
@@ -465,31 +467,53 @@ out_ptr <- ffi_alloc(ffi_double(), n_out)
 # Fill buffers
 ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
 #> NULL
+all.equal(ffi_copy_array(signal_ptr, length(signal),
+ffi_double()), signal)
+#> [1] TRUE
 ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
 #> NULL
+all.equal(ffi_copy_array(kernel_ptr, length(kernel),
+ffi_double()), kernel)
+#> [1] TRUE
 
 # Compile and load C convolution
-lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
+lib_path <- dll_compile_and_load(conv_code, "bench_conv.so", cflags = "-O3")
+pointer_t <- ffi_pointer()
 c_conv_fn <- dll_ffi_symbol(
   "c_convolve",
   ffi_void(),
-  ffi_pointer(), ffi_int(),
-  ffi_pointer(), ffi_int(),
-  ffi_pointer()
+  pointer_t, ffi_int(),
+  pointer_t, ffi_int(),
+  pointer_t
 )
 
 # Run C convolution via FFI
-c_conv_fn(signal_ptr, as.integer(n_signal), kernel_ptr, as.integer(n_kernel), out_ptr)
+c_conv_fn(
+      signal_ptr, 
+      as.integer(n_signal),
+      kernel_ptr,
+      as.integer(n_kernel),
+      out_ptr)
 #> NULL
+out_ptr
+#> <pointer: 0x625c0dce9490>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
 r_result <- slow_convolve(signal, kernel)
 
 # Check results
+all.equal(ffi_copy_array(signal_ptr, length(signal),
+ffi_double()), signal)
+#> [1] TRUE
+all.equal(ffi_copy_array(kernel_ptr, length(kernel),
+ffi_double()), kernel)
+#> [1] TRUE
 all.equal(as.numeric(c_result), as.numeric(r_result))
-#> [1] "Mean absolute difference: 0.4879267"
+#> [1] TRUE
 
+ffi_copy_array(out_ptr, n_out, ffi_double()) |> head()
+#> [1] 0.21215265 0.46328129 0.17953895 0.05081738 0.57361490 0.88130298
 # Benchmark
 benchmark_result <- bench::mark(
   r = slow_convolve(signal, kernel),
@@ -504,8 +528,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            3.25ms   3.72ms      269.    78.2KB     14.2
-#> 2 c_ffi      160.02µs 172.68µs     5308.    78.7KB      0
+#> 1 r            2.55ms    2.9ms      359.    78.2KB     18.9
+#> 2 c_ffi       95.93µs   99.8µs     9230.    78.7KB      0
 
 dll_unload(lib_path)
 ```

@@ -270,7 +270,7 @@ You can load external shared libraries at runtime using RSimpleFFI's `dll_load()
 
 ```{r eval=TRUE}
 # Example: call the C standard library rand() function
-libc_path <- dll_load_system("libgcc_s.so.1")
+libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
@@ -392,6 +392,7 @@ slow_convolve <- function(a, b) {
 
 # C code for convolution (matches R)
 conv_code <- '
+#include <stdio.h>
 void c_convolve(const double* signal, int n_signal, const double* kernel, int n_kernel, double* out) {
   int n_out = n_signal + n_kernel - 1;
   for (int i = 0; i < n_out; ++i) {
@@ -399,7 +400,8 @@ void c_convolve(const double* signal, int n_signal, const double* kernel, int n_
     for (int j = 0; j < n_kernel; ++j) {
       int k = i - j;
       if (k >= 0 && k < n_signal) {
-        out[i] += signal[k] * kernel[n_kernel - 1 - j];  // reverse kernel inside C
+        //printf("signal[%d]=%f, kernel[%d]=%f\\n", k, signal[k], j, kernel[j]);
+        out[i] += signal[k] * kernel[j];
       }
     }
   }
@@ -420,28 +422,44 @@ out_ptr <- ffi_alloc(ffi_double(), n_out)
 
 # Fill buffers
 ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
+all.equal(ffi_copy_array(signal_ptr, length(signal),
+ffi_double()), signal)
 ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
+all.equal(ffi_copy_array(kernel_ptr, length(kernel),
+ffi_double()), kernel)
 
 # Compile and load C convolution
-lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
+lib_path <- dll_compile_and_load(conv_code, "bench_conv.so", cflags = "-O3")
+pointer_t <- ffi_pointer()
 c_conv_fn <- dll_ffi_symbol(
   "c_convolve",
   ffi_void(),
-  ffi_pointer(), ffi_int(),
-  ffi_pointer(), ffi_int(),
-  ffi_pointer()
+  pointer_t, ffi_int(),
+  pointer_t, ffi_int(),
+  pointer_t
 )
 
 # Run C convolution via FFI
-c_conv_fn(signal_ptr, as.integer(n_signal), kernel_ptr, as.integer(n_kernel), out_ptr)
+c_conv_fn(
+      signal_ptr, 
+      as.integer(n_signal),
+      kernel_ptr,
+      as.integer(n_kernel),
+      out_ptr)
+out_ptr
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
 r_result <- slow_convolve(signal, kernel)
 
 # Check results
+all.equal(ffi_copy_array(signal_ptr, length(signal),
+ffi_double()), signal)
+all.equal(ffi_copy_array(kernel_ptr, length(kernel),
+ffi_double()), kernel)
 all.equal(as.numeric(c_result), as.numeric(r_result))
 
+ffi_copy_array(out_ptr, n_out, ffi_double()) |> head()
 # Benchmark
 benchmark_result <- bench::mark(
   r = slow_convolve(signal, kernel),
