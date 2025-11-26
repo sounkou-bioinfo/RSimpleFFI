@@ -321,6 +321,9 @@ SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
             SEXP arg_type = VECTOR_ELT(r_arg_types, i);
             arg_types[i] = (ffi_type*)R_ExternalPtrAddr(arg_type);
             if (!arg_types[i]) {
+                // previous allocation may leek here
+                // we are not sure here because arg_types_i may be reused
+                // and is normally managed by R                
                 free(arg_types);
                 Rf_error("Invalid argument type at index %d", i + 1);
             }
@@ -340,7 +343,7 @@ SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
         if (arg_types) free(arg_types);
         Rf_error("Failed to prepare FFI call interface (status: %d)", status);
     }
-    
+    // TO DO add tags to the cif for the return type and arg type converstions
     return R_MakeExternalPtr(cif, R_NilValue, R_NilValue);
 }
 

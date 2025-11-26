@@ -225,6 +225,18 @@ float_result <- ffi_call(float_cif, float_func, 1.5, 2.5)
 float_result
 ```
 
+#### String output example 
+
+This calls a C function that returns a string (const char*) as pointer
+
+```{r}
+string_func <- ffi_symbol("test_return_string")
+string_cif <- ffi_cif(string_type)
+string_result <- ffi_call(string_cif, string_func)
+string_result
+pointer_to_string(string_result)
+```
+
 #### Struct Types
 
 ```{r}
