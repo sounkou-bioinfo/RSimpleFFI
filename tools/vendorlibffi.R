@@ -39,19 +39,25 @@ if (mode == "unpack") {
     if (!file.exists(tarball_path)) {
         stop("libffi tarball not found: ", tarball_path)
     }
-    if (dir.exists(file.path(dest_dir, paste0("libffi-", version)))) {
-        unlink(file.path(dest_dir, paste0("libffi-", version)), recursive = TRUE)
+    # Remove any existing libffi* directories in dest_dir
+    old_dirs <- list.dirs(dest_dir, full.names = TRUE, recursive = FALSE)
+    old_dirs <- old_dirs[grepl("^libffi", basename(old_dirs))]
+    if (length(old_dirs) > 0) {
+        unlink(old_dirs, recursive = TRUE)
     }
     utils::untar(tarball_path, exdir = dest_dir)
-    # rename libffi-version to libffi
-    if (!dir.exists(file.path(dest_dir, "libffi"))) {
-        dir.create(file.path(dest_dir, "libffi"), recursive = TRUE)
+    # Find the extracted directory (should match libffi*)
+    new_dirs <- list.dirs(dest_dir, full.names = TRUE, recursive = FALSE)
+    libffi_dir <- new_dirs[grepl("^libffi", basename(new_dirs))]
+    if (length(libffi_dir) == 0) {
+        stop("Could not find extracted libffi directory in ", dest_dir)
     }
-    file.rename(
-        file.path(dest_dir, paste0("libffi-", version)),
-        file.path(dest_dir, "libffi")
-    )
-    message("libffi unpacked to ", file.path(dest_dir, "libffi"))
+    # If not already named 'libffi', rename it
+    if (!basename(libffi_dir[1]) == "libffi") {
+        file.rename(libffi_dir[1], file.path(dest_dir, "libffi"))
+        libffi_dir <- file.path(dest_dir, "libffi")
+    }
+    message("libffi unpacked to ", libffi_dir)
     quit(save = "no")
 }
 

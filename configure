@@ -2,6 +2,7 @@
 #!/bin/sh
 # configure script to build and install libffi to inst/libffi for Unix and MinGW
 set -e
+
 THISDir=`dirname $0`
 THISDir=`realpath ${THISDir}`
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
@@ -11,6 +12,12 @@ AR=`"${R_HOME}/bin/R" CMD config AR`
 RANLIB=`"${R_HOME}/bin/R" CMD config RANLIB`
 LIBFFI_SRC="${THISDir}/src/libffi"
 LIBFFI_DEST="${THISDir}/inst/libffi"
+
+# Unpack libffi tarball if needed
+echo "Unpacking libffi tarball (if needed) ..."
+"${R_HOME}/bin/Rscript" "${THISDir}/tools/vendorlibffi.R" unpack
+
+
 if [ -d "$LIBFFI_SRC" ]; then
     cd "$LIBFFI_SRC"
     echo "$PWD"
