@@ -13,7 +13,11 @@ create_builtin_type(name, ...)
 }
 \value{
 An FFIType object
+
+FFIType object for bool
 }
 \description{
 Create built-in FFI type
+
+create_builtin_type
 }

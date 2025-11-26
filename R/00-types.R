@@ -1,6 +1,3 @@
-#' @docType package
-#' @keywords internal
-
 #####################################
 #
 # FFIType  Basic Types
@@ -42,6 +39,10 @@ FFIType <- S7::new_class(
 
 # Structure type extends FFIType
 #' FFI Structure Type
+#' @name StructType
+#' @param name Character name of the type
+#' @param size Integer size in bytes
+#' @param ref External pointer to ffi_type
 #' @param fields Character vector of field names
 #' @param field_types List of FFIType objects for each field
 #' @export
@@ -71,6 +72,10 @@ StructType <- S7::new_class(
 ######################################
 # Array type extends FFIType
 #' FFI Array Type
+#' @name ArrayType
+#' @param name Character name of the type
+#' @param size Integer size in bytes
+#' @param ref External pointer to ffi_type
 #' @param element_type FFIType of array elements
 #' @param length Integer length of array
 #' @export
@@ -186,7 +191,10 @@ NativeSymbol <- S7::new_class(
 #' @export
 create_builtin_type <- S7::new_generic("create_builtin_type", "name")
 
-#' Boolean FFI type
+#' create_builtin_type
+#' @name create_builtin_type
+#' @param name Character name of built-in type
+#' @param ... Additional arguments (not used)
 #' @return FFIType object for bool
 #' @export
 S7::method(create_builtin_type, S7::class_character) <- function(name) {
@@ -394,6 +402,10 @@ ffi_ssize_t <- function() create_builtin_type("ssize_t")
 ffi_bool <- function() create_builtin_type("bool")
 
 # Wide character
+#' Wide char FFI type
+#' @name ffi_wchar_t
+#' @title Wide char FFI type
+#' @return FFIType object for wchar_t
 #' @export
 ffi_wchar_t <- function() create_builtin_type("wchar_t")
 
@@ -434,7 +446,7 @@ ffi_struct <- function(...) {
 
 
 #' Get field value from FFI structure
-#'
+#' @name ffi_get_field
 #' @param ptr External pointer to structure
 #' @param field Character field name or integer field index
 #' @param struct_type StructType object
@@ -483,7 +495,7 @@ S7::method(
 }
 
 #' Set field value in FFI structure
-#'
+#' @name ffi_set_field
 #' @param ptr External pointer to structure
 #' @param field Character field name or integer field index
 #' @param value Value to set
@@ -549,7 +561,7 @@ S7::method(
 
 # Type information
 #' Get size of FFI type in bytes
-#'
+#' @name ffi_sizeof
 #' @param type FFIType object
 #' @param ... Additional arguments (not used)
 #' @return Size in bytes

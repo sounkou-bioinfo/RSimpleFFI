@@ -2,6 +2,7 @@
 % Please edit documentation in R/04-alloc.R
 \docType{package}
 \name{ffi_alloc}
+\alias{-package}
 \alias{ffi_alloc}
 \title{Allocate a buffer for a given FFI type}
 \usage{

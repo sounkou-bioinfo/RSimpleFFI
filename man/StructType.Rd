@@ -13,6 +13,12 @@ StructType(
 )
 }
 \arguments{
+\item{name}{Character name of the type}
+
+\item{size}{Integer size in bytes}
+
+\item{ref}{External pointer to ffi_type}
+
 \item{fields}{Character vector of field names}
 
 \item{field_types}{List of FFIType objects for each field}

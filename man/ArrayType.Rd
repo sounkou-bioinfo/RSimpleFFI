@@ -13,6 +13,12 @@ ArrayType(
 )
 }
 \arguments{
+\item{name}{Character name of the type}
+
+\item{size}{Integer size in bytes}
+
+\item{ref}{External pointer to ffi_type}
+
 \item{element_type}{FFIType of array elements}
 
 \item{length}{Integer length of array}

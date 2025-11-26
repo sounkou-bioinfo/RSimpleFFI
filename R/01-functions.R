@@ -1,6 +1,3 @@
-#' @docType package
-#' @keywords internal
-
 #####################################
 #
 # FFI CIF
