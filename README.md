@@ -446,7 +446,6 @@ dist
 dll_unload(lib_handle)
 ```
 
-## License
+## License and LLM usage
 
-This project is licensed under the GPL-3 License - see the
-[LICENSE](LICENSE) file for details.
+Code and documentation in this project have been generated with the assistance of the github Copilot LLM tools. While we have reviewed and edited the generated content, we acknowledge that LLM tools were used in the creation process and accordingl the code is released under GPL-3. So if you use this code in any way, you must comply with the GPL-3 license.
