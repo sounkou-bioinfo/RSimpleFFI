@@ -16,12 +16,12 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-A Foreign Function Interface (FFI) for R using libffi. Call C functions from R with S7 classes.
+A Simple Foreign Function Interface (FFI) for R using libffi.
 
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the libffi library. It supports over 25 different C types including integers, floats, and platform-specific types. The package uses S7 classes for type safety and handles memory management automatically. It only needs libffi which is available on most systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Langs. It builds on these concepts with  S7 classes.
+RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports over 25 different C types including integers, floats, and platform-specific types. The package uses S7 classes for type safety and handles memory management automatically. It only needs libffi which is available on most systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
 
 ## Installation
 
@@ -225,6 +225,23 @@ float_result <- ffi_call(float_cif, float_func, 1.5, 2.5)
 float_result
 ```
 
+#### Struct Types
+
+```{r}
+# Define struct type: struct Point { int x; double y; }
+point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
+
+# Allocate and set fields
+point_ptr <- ffi_alloc(point_type)
+ffi_set_field(point_ptr, "x", 42L, point_type)
+ffi_set_field(point_ptr, "y", 3.14, point_type)
+
+# Call the built-in C function: int test_get_point_x(Point2D* point)
+get_point_x_func <- ffi_symbol("test_get_point_x")
+get_point_x_cif <- ffi_cif(ffi_int(), ffi_pointer())
+result_x <- ffi_call(get_point_x_cif, get_point_x_func, point_ptr)
+result_x  
+```
 #### Type Conversions
 
 RSimpleFFI attemps to convert between R and C types automatically

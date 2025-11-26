@@ -6,18 +6,18 @@
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-A Foreign Function Interface (FFI) for R using libffi. Call C functions
-from R with S7 classes.
+A Simple Foreign Function Interface (FFI) for R using libffi.
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the libffi library. It
-supports over 25 different C types including integers, floats, and
-platform-specific types. The package uses S7 classes for type safety and
-handles memory management automatically. It only needs libffi which is
-available on most systems. RSimpleFFI is inspired by the [Rffi
-package](https://github.com/omegahat/Rffi/) by Duncan Temple Langs. It
-builds on these concepts with S7 classes.
+RSimpleFFI lets you call C functions from R using the
+[libffi](https://github.com/libffi/libffi) library. It supports over 25
+different C types including integers, floats, and platform-specific
+types. The package uses S7 classes for type safety and handles memory
+management automatically. It only needs libffi which is available on
+most systems. RSimpleFFI is inspired by the [Rffi
+package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It
+builds on the same structure with S7 classes.
 
 ## Installation
 
@@ -247,6 +247,25 @@ float_result
 #> [1] 4
 ```
 
+#### Struct Types
+
+``` r
+# Define struct type: struct Point { int x; double y; }
+point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
+
+# Allocate and set fields
+point_ptr <- ffi_alloc(point_type)
+ffi_set_field(point_ptr, "x", 42L, point_type)
+ffi_set_field(point_ptr, "y", 3.14, point_type)
+
+# Call the built-in C function: int test_get_point_x(Point2D* point)
+get_point_x_func <- ffi_symbol("test_get_point_x")
+get_point_x_cif <- ffi_cif(ffi_int(), ffi_pointer())
+result_x <- ffi_call(get_point_x_cif, get_point_x_func, point_ptr)
+result_x  
+#> [1] 42
+```
+
 #### Type Conversions
 
 RSimpleFFI attemps to convert between R and C types automatically
@@ -284,7 +303,7 @@ libc_path <- dll_load_system("libgcc_s.so.1")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 2016057146
+#> [1] 15865086
 dll_unload(libc_path)
 ```
 
@@ -306,7 +325,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5c7469854820>
+#> <pointer: 0x6369dfb970e0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -392,8 +411,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     14.1µs   31.1µs    33324.    78.2KB      0  
-#> 2 ffi_call    108.2µs  142.6µs     6752.    78.7KB     68.2
+#> 1 native_r     14.1µs   31.3µs    32110.    78.2KB      0  
+#> 2 ffi_call    107.8µs    131µs     7210.    78.7KB     72.8
 dll_unload(lib_path)
 ```
 
@@ -424,8 +443,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     7.42µs   7.52µs   132905.        0B        0
-#> 2 ffi_call    23.66µs  25.77µs    37100.        0B        0
+#> 1 native_r      7.4µs    7.5µs   128172.        0B        0
+#> 2 ffi_call       20µs   24.9µs    38858.        0B        0
 dll_unload(lib_path)
 ```
 
