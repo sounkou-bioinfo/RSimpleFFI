@@ -806,7 +806,7 @@ pointer</p>
 <span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>string_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(string_type)</span>
 <span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>string_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(string_cif, string_func)</span>
 <span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>string_result</span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x71b9870eb5c8&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x70f29e1065c8&gt;</span></span>
 <span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="fu">pointer_to_string</span>(string_result)</span>
 <span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Hello from C!&quot;</span></span></code></pre></div>
 <h4 id="struct-types-1">Struct Types</h4>
@@ -854,7 +854,7 @@ paths</h4>
 <span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>rand_func <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(<span class="st">&quot;rand&quot;</span>, <span class="fu">ffi_int</span>())</span>
 <span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>rand_value <span class="ot">&lt;-</span> <span class="fu">rand_func</span>()</span>
 <span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>rand_value</span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co">#&gt; [1] 911337855</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co">#&gt; [1] 479296274</span></span>
 <span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="fu">dll_unload</span>(libc_path)</span></code></pre></div>
 <h4 id="explicitly-load-shared-libraries">Explicitly load shared
 libraries</h4>
@@ -873,7 +873,7 @@ libraries</h4>
 <span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a></span>
 <span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co"># Fill the buffer with ASCII &#39;A&#39; (0x41)</span></span>
 <span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="fu">memset_fn</span>(buf_ptr, <span class="fu">as.integer</span>(<span class="dv">0x41</span>), <span class="dv">8</span><span class="dt">L</span>)</span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x5e7383da5df0&gt;</span></span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x5a8299bd3df0&gt;</span></span>
 <span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a></span>
 <span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="co"># Read back the buffer and print as string</span></span>
 <span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a><span class="fu">rawToChar</span>(<span class="fu">ffi_copy_array</span>(buf_ptr, <span class="dv">8</span><span class="dt">L</span>, raw_type))</span>
@@ -950,8 +950,8 @@ native R C built-in functions.</p>
 <span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="co">#&gt; 1 native_r       13µs   29.2µs    33505.    78.2KB        0</span></span>
-<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a><span class="co">#&gt; 2 ffi_call     91.9µs   97.2µs    10046.    78.7KB        0</span></span>
+<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="co">#&gt; 1 native_r       13µs   28.8µs    35628.    78.2KB        0</span></span>
+<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a><span class="co">#&gt; 2 ffi_call     91.5µs   97.7µs     9815.    78.7KB        0</span></span>
 <span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
 <h3 id="interpreted-r-code">Interpreted R Code</h3>
 <p>We compare a pure C convolution (via FFI) to a simple R
@@ -1029,7 +1029,7 @@ implementation.</p>
 <span id="cb19-71"><a href="#cb19-71" tabindex="-1"></a>      out_ptr)</span>
 <span id="cb19-72"><a href="#cb19-72" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
 <span id="cb19-73"><a href="#cb19-73" tabindex="-1"></a>out_ptr</span>
-<span id="cb19-74"><a href="#cb19-74" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x5e7389a2fa50&gt;</span></span>
+<span id="cb19-74"><a href="#cb19-74" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x5a829f85da50&gt;</span></span>
 <span id="cb19-75"><a href="#cb19-75" tabindex="-1"></a>c_result <span class="ot">&lt;-</span> <span class="fu">ffi_copy_array</span>(out_ptr, n_out, <span class="fu">ffi_double</span>())</span>
 <span id="cb19-76"><a href="#cb19-76" tabindex="-1"></a></span>
 <span id="cb19-77"><a href="#cb19-77" tabindex="-1"></a><span class="co"># Run R convolution</span></span>
@@ -1061,8 +1061,8 @@ implementation.</p>
 <span id="cb19-103"><a href="#cb19-103" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span id="cb19-104"><a href="#cb19-104" tabindex="-1"></a><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span id="cb19-105"><a href="#cb19-105" tabindex="-1"></a><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span id="cb19-106"><a href="#cb19-106" tabindex="-1"></a><span class="co">#&gt; 1 r            2.45ms   2.57ms      370.    78.2KB     19.5</span></span>
-<span id="cb19-107"><a href="#cb19-107" tabindex="-1"></a><span class="co">#&gt; 2 c_ffi       96.08µs 111.83µs     8548.    78.7KB      0</span></span>
+<span id="cb19-106"><a href="#cb19-106" tabindex="-1"></a><span class="co">#&gt; 1 r            2.49ms   2.66ms      368.    78.2KB     19.4</span></span>
+<span id="cb19-107"><a href="#cb19-107" tabindex="-1"></a><span class="co">#&gt; 2 c_ffi       95.42µs 113.71µs     8521.    78.7KB      0</span></span>
 <span id="cb19-108"><a href="#cb19-108" tabindex="-1"></a></span>
 <span id="cb19-109"><a href="#cb19-109" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
 <h2 id="limitations-and-issues">Limitations and issues</h2>
