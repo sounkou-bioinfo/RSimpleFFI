@@ -1,5 +1,2 @@
-SRC = $(CURDIR)
-LIBFFI_DIR = $(SRC)/../libffi
-PKG_CFLAGS = -I$(LIBFFI_DIR)  -I$(LIBFFI_DIR)/include
-PKG_LIBS = -L$(LIBFFI_DIR)/lib -lffi
-all: $(SHLIB)
+PKG_CFLAGS = $(shell pkg-config --cflags libffi)
+PKG_LIBS = $(shell pkg-config --libs libffi)
