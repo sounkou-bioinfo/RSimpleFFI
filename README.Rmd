@@ -310,6 +310,8 @@ memset_fn(buf_ptr, as.integer(0x41), 8L)
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
 
+pointer_to_string(buf_ptr)
+
 dll_unload(lib_path)
 ```
 

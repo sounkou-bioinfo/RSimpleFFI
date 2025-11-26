@@ -93,7 +93,7 @@ SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n) {
     if (!type) Rf_error("Invalid FFI type pointer");
     int n = asInteger(r_n);
     if (n <= 0) Rf_error("n must be positive");
-    size_t total = (size_t)n * type->size;
+   // size_t total = (size_t)n * type->size;
     void* buf = calloc(n, type->size);
     if (!buf) Rf_error("Memory allocation failed");
     SEXP extPtr = R_MakeExternalPtr(buf, Rf_install("typed_buffer"), R_NilValue);
@@ -133,7 +133,6 @@ SEXP R_create_array_ffi_type(SEXP r_element_type, SEXP r_length) {
     SEXP extPtr = R_MakeExternalPtr(array_type, R_NilValue, R_NilValue);
     return extPtr;
 }
-
 
 
 // Fill a typed buffer from an R vector (int or double)
