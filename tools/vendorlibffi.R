@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
-# vendor libffi into src/libffi
+# vendor libffi: download or unpack libffi tarball
 
-# url https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz
+args <- commandArgs(trailingOnly = TRUE)
+mode <- if (length(args) > 0) args[[1]] else "download"
 
 url <- "https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz"
 version <- basename(url) |>
@@ -9,6 +10,8 @@ version <- basename(url) |>
     gsub("\\.tar\\.gz$", "", x = _)
 
 dest_dir <- "../src"
+tarball_path <- "../src/libffi-3.5.2.tar.gz"
+
 getScriptPath <- function() {
     cmd.args <- commandArgs()
     m <- regexpr("(?<=^--file=).+", cmd.args, perl = TRUE)
@@ -21,23 +24,35 @@ getScriptPath <- function() {
     }
     return(script.dir)
 }
-# get this script's directory
 script_dir <- getScriptPath()
 dest_dir <- file.path(script_dir, dest_dir) |> normalizePath()
-message("Downloading libffi to ", dest_dir)
-temp_file <- tempfile(fileext = ".tar.gz")
-download.file(url, temp_file, quiet = TRUE)
-if (dir.exists(file.path(dest_dir, paste0("libffi-", version)))) {
-    unlink(file.path(dest_dir, paste0("libffi-", version)), recursive = TRUE)
+tarball_path <- file.path(script_dir, tarball_path)
+
+if (mode == "download") {
+    message("Downloading libffi tarball to ", tarball_path)
+    download.file(url, tarball_path, quiet = TRUE)
+    message("libffi tarball downloaded.")
+    quit(save = "no")
 }
-utils::untar(temp_file, exdir = dest_dir)
-unlink(temp_file)
-# renmae libffi-version to libffi
-if (!dir.exists(file.path(dest_dir, "libffi"))) {
-    dir.create(file.path(dest_dir, "libffi"), recursive = TRUE)
+
+if (mode == "unpack") {
+    if (!file.exists(tarball_path)) {
+        stop("libffi tarball not found: ", tarball_path)
+    }
+    if (dir.exists(file.path(dest_dir, paste0("libffi-", version)))) {
+        unlink(file.path(dest_dir, paste0("libffi-", version)), recursive = TRUE)
+    }
+    utils::untar(tarball_path, exdir = dest_dir)
+    # rename libffi-version to libffi
+    if (!dir.exists(file.path(dest_dir, "libffi"))) {
+        dir.create(file.path(dest_dir, "libffi"), recursive = TRUE)
+    }
+    file.rename(
+        file.path(dest_dir, paste0("libffi-", version)),
+        file.path(dest_dir, "libffi")
+    )
+    message("libffi unpacked to ", file.path(dest_dir, "libffi"))
+    quit(save = "no")
 }
-file.rename(
-    file.path(dest_dir, "libffi-3.5.2"),
-    file.path(dest_dir, "libffi")
-)
-message("libffi downloaded and extracted to ", file.path(dest_dir, "libffi"))
+
+stop("Unknown mode: ", mode)

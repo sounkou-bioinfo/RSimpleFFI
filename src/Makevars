@@ -1,2 +1,12 @@
-PKG_CPPFLAGS = -I../inst/libffi/include -fPIC
-PKG_LIBS = ../inst/libffi/libffi.a
+UNAME := $(shell uname)
+ifeq ($(UNAME),Darwin)
+	DYLIB_EXT := dylib
+else
+	DYLIB_EXT := so
+endif
+
+PKG_ROOT := $(CURDIR)/..
+LIBFFI_DIR := $(PKG_ROOT)/libffi
+
+PKG_CPPFLAGS = -I$(LIBFFI_DIR)/include
+PKG_LIBS = -L$(LIBFFI_DIR) -lffi -Wl,-rpath,$(LIBFFI_DIR)

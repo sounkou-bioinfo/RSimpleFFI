@@ -1,2 +1,5 @@
-PKG_CPPFLAGS = -I../inst/libffi/include -fPIC
-PKG_LIBS = ../inst/libffi/libffi.a
+PKG_ROOT := $(CURDIR)/..
+LIBFFI_DIR := $(PKG_ROOT)/libffi
+
+PKG_CPPFLAGS = -I$(LIBFFI_DIR)/include
+PKG_LIBS = -L$(LIBFFI_DIR) -lffi
