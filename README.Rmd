@@ -21,23 +21,17 @@ A Foreign Function Interface (FFI) for R using libffi. Call C functions from R w
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the libffi library. It supports over 25 different C types including integers, floats, and platform-specific types. The package uses S7 classes for type safety and handles memory management automatically. It only needs libffi which is available on most systems.
-
-## Related Projects
-
-RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Langs. RSimpleFFI builds on these concepts with  S7 classes.
+RSimpleFFI lets you call C functions from R using the libffi library. It supports over 25 different C types including integers, floats, and platform-specific types. The package uses S7 classes for type safety and handles memory management automatically. It only needs libffi which is available on most systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Langs. It builds on these concepts with  S7 classes.
 
 ## Installation
 
-You can install RSimpleFFI from source:
+You can install RSimpleFFI from source using the `remotes` package:
 
 ```{r eval=FALSE}
 remotes::install_git("sounkou-bioinfo/RSimpleFFI")
 ```
 
-### System Requirements
-
-RSimpleFFI requires libffi to be installed on your system:
+it requires libffi to be installed on your system (we will vendor libffi in future releases)
 
 ```bash
 # Ubuntu/Debian
@@ -72,7 +66,7 @@ result
 
 ## Type System
 
-RSimpleFFI supports many C types including integers, floats, and platform-specific types:
+RSimpleFFI supports many C types including integers, floats, and platform-specific types
 
 ### Basic Types
 ```{r}
@@ -82,10 +76,7 @@ double_type <- ffi_double()
 float_type <- ffi_float()
 pointer_type <- ffi_pointer()
 string_type <- ffi_string()
-```
 
-### Extended Integer Types
-```{r}
 int8_type <- ffi_int8()
 uint8_type <- ffi_uint8()
 int16_type <- ffi_int16()
@@ -94,26 +85,106 @@ int32_type <- ffi_int32()
 uint32_type <- ffi_uint32()
 int64_type <- ffi_int64()
 uint64_type <- ffi_uint64()
-```
 
-### Platform-Dependent Types
-```{r}
 size_t_type <- ffi_size_t()
 ssize_t_type <- ffi_ssize_t()
 long_type <- ffi_long()
 ulong_type <- ffi_ulong()
-```
 
-### Extended Floating-Point and Special Types
-```{r}
 longdouble_type <- ffi_longdouble()
 bool_type <- ffi_bool()
 wchar_type <- ffi_wchar_t()
 ```
 
-## Function Call Examples
 
-### Testing Integer Types
+### Typed Buffers
+
+We can allocate typed buffers using `ffi_alloc()` and read/write data using `ffi_copy_array()` and `ffi_fill_typed_buffer()`
+
+```{r}
+# Allocate a buffer for 10 integers
+int_type <- ffi_int()
+int_buf <- ffi_alloc(int_type, 10L)
+
+# Read back as R vector (using ffi_copy_array)
+ffi_copy_array(int_buf, 10L, int_type)
+
+# You can use ffi_alloc for any builtin type:
+double_type <- ffi_double()
+double_buf <- ffi_alloc(double_type, 5L)
+ffi_copy_array(double_buf, 5L, double_type)
+```
+
+### Array Types (ArrayType)
+
+Array types can be created using `ffi_array_type()` and used with `ffi_alloc()` and `ffi_copy_array_type()`. They provide a convenient way to handle fixed-size arrays and passed them to C functions via pointers.
+
+```{r}
+# Allocate an array of 4 integers
+int_type <- ffi_int()
+arr_type <- ffi_array_type(int_type, 4L)
+arr_ptr <- ffi_alloc(arr_type)
+
+# Write values into the buffer using ffi_fill_typed_buffer
+vals <- as.integer(c(10L, 20L, 30L, 40L))
+ffi_fill_typed_buffer(arr_ptr, vals, int_type)
+
+# Read back as R vector
+result <- ffi_copy_array_type(arr_ptr, arr_type)
+result
+```
+
+
+### Struct Types
+
+You can define and use C struct types  using `ffi_struct()`, `ffi_alloc()`, `ffi_get_field()`, and `ffi_set_field()`
+
+```{r}
+
+# Define a struct type: struct Point { int x; double y; }
+point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
+
+# use the print methods for no
+print(point_type)
+
+# Allocate a struct instance
+point_ptr <- ffi_alloc(point_type)
+
+# Set fields
+ffi_set_field(point_ptr, "x", 42L, point_type)
+ffi_set_field(point_ptr, "y", 3.14, point_type)
+
+# Get fields
+x_val <- ffi_get_field(point_ptr, "x", point_type)
+y_val <- ffi_get_field(point_ptr, "y", point_type)
+x_val 
+y_val 
+# You can also use integer field indices (1-based):
+ffi_set_field(point_ptr, 1L, 100L, point_type)  
+ffi_get_field(point_ptr, 2L, point_type)       
+```
+
+You can define more complex structs by adding more fields and using any supported FFI type.
+
+
+## Function Calling
+
+### Basic Function Calls
+
+The package comes with some built-in C test functions for testing, they are defined in [src/test_functions.c](src/test_functions.c)
+
+```{r}
+void_func <- ffi_symbol("test_void_function")
+void_cif <- ffi_cif(void_type)
+ffi_call(void_cif, void_func)
+
+factorial_func <- ffi_symbol("test_factorial")
+factorial_cif <- ffi_cif(int_type, int_type)
+factorial_result <- ffi_call(factorial_cif, factorial_func, 5L)
+factorial_result
+```
+
+#### Testing Integer Types
 
 ```{r}
 # test_int8_func: returns input + 1
@@ -135,7 +206,7 @@ int64_result <- ffi_call(int64_cif, int64_func, 999L)
 int64_result  # 999 * 4 = 3996
 ```
 
-### Floating-Point Types
+#### Floating-Point Types
 
 ```{r}
 add_func <- ffi_symbol("test_add_int")
@@ -154,22 +225,9 @@ float_result <- ffi_call(float_cif, float_func, 1.5, 2.5)
 float_result
 ```
 
-### Basic Function Calls
+#### Type Conversions
 
-```{r}
-void_func <- ffi_symbol("test_void_function")
-void_cif <- ffi_cif(void_type)
-ffi_call(void_cif, void_func)
-
-factorial_func <- ffi_symbol("test_factorial")
-factorial_cif <- ffi_cif(int_type, int_type)
-factorial_result <- ffi_call(factorial_cif, factorial_func, 5L)
-factorial_result
-```
-
-## Type Conversions
-
-RSimpleFFI converts between R and C types automatically:
+RSimpleFFI attemps to convert between R and C types automatically
 
 ```{r}
 int16_result <- ffi_call(ffi_cif(int16_type, int16_type), 
@@ -185,21 +243,12 @@ bool_result <- ffi_call(ffi_cif(bool_type, bool_type),
 bool_result
 ```
 
-### Structs Example
+### Call system libraries functions or external shared libraries
 
-```{r}
-# cle compilation example
-struct_code <- '
-typedef struct { int x, y; } Point;
-Point create_point(int x, int y) {
-    Point p = {x, y};
-    return p;
-}
-'
-lib_handle <- dll_compile_and_load(struct_code, "struct_test")
-dll_unload(lib_handle)
-```
-### libc rand
+You can load external shared libraries at runtime using RSimpleFFI's `dll_load()` and `dll_ffi_symbol()` functions. These are wrappers around R's native `dyn.load()` facilities.
+
+####  libc example
+
 
 ```{r eval=TRUE}
 # Example: call the C standard library rand() function
@@ -210,7 +259,7 @@ rand_value
 dll_unload(libc_handle)
 ```
 
-### libcrypto 
+#### libcrypto 
 
 ```{r eval=TRUE}
 # Example: loading libcrypto and calling AES_encrypt using pointers
@@ -236,44 +285,48 @@ dll_unload(lib_handle)
 ```
 
 
-### Allocating Typed Buffers
+### Compile and Load C Code
+
+The package provides facilities to load C code on the fly. The compiler uses R CMD SHLIB under the hood
 
 ```{r}
-# Allocate a buffer for 10 integers
-int_type <- ffi_int()
-int_buf <- ffi_alloc(int_type, 10L)
+c_code <- '
+int add_numbers(int a, int b) {
+    return a + b;
+}
+'
 
-# Read back as R vector (using ffi_copy_array)
-ffi_copy_array(int_buf, 10L, int_type)
-
-# You can use ffi_alloc for any builtin type:
-double_type <- ffi_double()
-double_buf <- ffi_alloc(double_type, 5L)
-ffi_copy_array(double_buf, 5L, double_type)
-```
-
-### Array Types (ArrayType)
-
-```{r}
-# Allocate an array of 4 integers
-int_type <- ffi_int()
-arr_type <- ffi_array_type(int_type, 4L)
-arr_ptr <- ffi_alloc(arr_type)
-
-# Write values into the buffer using ffi_fill_typed_buffer
-vals <- as.integer(c(10L, 20L, 30L, 40L))
-ffi_fill_typed_buffer(arr_ptr, vals, int_type)
-
-# Read back as R vector
-result <- ffi_copy_array_type(arr_ptr, arr_type)
+lib_handle <- dll_compile_and_load(c_code, "example_lib")
+int_t <- ffi_int()
+add_fn <- dll_ffi_symbol("add_numbers", int_t, int_t, int_t)
+result <- add_fn(10L, 5L)
 result
+
+dll_unload(lib_handle)
 ```
 
-> **Note:**
-> RSimpleFFI supports pointer arguments using `ffi_pointer()`. For C APIs that expect a pointer (e.g., `unsigned char*`), you can use `ffi_pointer()` in the call interface. However, passing R raw vectors as `unsigned char*` is not yet supported in the backend, so calls like `AES_encrypt(inbuf, outbuf, key)` will fail until this is implemented. For now, you can pass pointers to memory allocated in R or via helper functions, but not raw vectors directly.
+```{r}
+math_code <- '
+#include <math.h>
+double compute_distance(double x1, double y1, double x2, double y2) {
+    double dx = x2 - x1;
+    double dy = y2 - y1;
+    return sqrt(dx*dx + dy*dy);
+}
+'
 
-### Benchmarking
+lib_handle <- dll_compile_and_load(math_code, "math_lib", libs = "m")
+double_t <- ffi_double()
+distance_fn <- dll_ffi_symbol("compute_distance", double_t, double_t, double_t, double_t, double_t)
+dist <- distance_fn(0.0, 0.0, 3.0, 4.0)
+dist
 
+dll_unload(lib_handle)
+```
+
+## Benchmarking
+
+We run some benchmarks to estimate the performance of FFI calls (i.e the overhead of calling C functions from R using RSimpleFFI) compared to native R C built-in functions.
 
 ```{r}
 
@@ -329,92 +382,10 @@ benchmark_result
 dll_unload(lib_handle)
 ```
 
-## Advanced Usage
+## Limitations and issues
 
-### Custom Type Definitions
-
-```{r}
-ptr_func <- ffi_symbol("test_return_pointer")
-ptr_cif <- ffi_cif(pointer_type, pointer_type)
-test_ptr <- NULL
-ptr_result <- ffi_call(ptr_cif, ptr_func, test_ptr)
-ptr_result
-```
-
-### Error Handling
-
-RSimpleFFI provides clear error messages for common issues:
-
-```{r, error=TRUE}
-tryCatch({
-  invalid_func <- ffi_symbol("nonexistent_function")
-}, error = function(e) {
-  e$message
-})
-
-tryCatch({
-  test_cif <- ffi_cif(int_type, int_type, int_type)
-  bad_type <- ffi_call(test_cif, add_func, "not_a_number", 5L)
-}, error = function(e) {
-  e$message
-})
-```
-
-## Dynamic Library Loading
-
-RSimpleFFI supports loading external shared libraries at runtime using R's native `dyn.load()` facilities. This allows you to compile and use your own C functions dynamically:
-
-```{r}
-c_code <- '
-int add_numbers(int a, int b) {
-    return a + b;
-}
-'
-
-lib_handle <- dll_compile_and_load(c_code, "example_lib")
-int_t <- ffi_int()
-add_fn <- dll_ffi_symbol("add_numbers", int_t, int_t, int_t)
-result <- add_fn(10L, 5L)
-result
-
-dll_unload(lib_handle)
-```
-
-### System Library Access
-
-RSimpleFFI can also access system libraries like libc for calling standard C functions:
-
-```{r eval=TRUE}
-tryCatch({
-  libc_handle <- dll_load_system("c")
-  if (!is.null(libc_handle)) "System library access works"
-}, error = function(e) e$message)
-```
-
-### Advanced DLL Compilation
-
-The compiler uses R's configured toolchain for maximum compatibility:
-
-```{r}
-math_code <- '
-#include <math.h>
-double compute_distance(double x1, double y1, double x2, double y2) {
-    double dx = x2 - x1;
-    double dy = y2 - y1;
-    return sqrt(dx*dx + dy*dy);
-}
-'
-
-lib_handle <- dll_compile_and_load(math_code, "math_lib", libs = "m")
-double_t <- ffi_double()
-distance_fn <- dll_ffi_symbol("compute_distance", double_t, double_t, double_t, double_t, double_t)
-dist <- distance_fn(0.0, 0.0, 3.0, 4.0)
-dist
-
-dll_unload(lib_handle)
-```
-
+Right now there are unimplemented features and limitations including uncessary copying, lack of protection and several potential memory leaks. The interface can and should be refined further. Furthermore we will vendor libffi in future releases to avoid dependency issues.
 
 ## License
 
-This project is licensed under the GPL-3 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPL-3 License.

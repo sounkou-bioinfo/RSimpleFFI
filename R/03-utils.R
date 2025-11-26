@@ -6,6 +6,7 @@
 ffi_fill_typed_buffer <- function(ptr, values, type) {
   .Call("R_fill_typed_buffer", ptr, values, type@ref)
 }
+
 # Register S7 classes for non-standard evaluation (R CMD check)
 if (getRversion() >= "2.15.1") {
   utils::globalVariables("ArrayType")
@@ -20,10 +21,7 @@ if (getRversion() >= "2.15.1") {
 ffi_alloc_buffer <- function(size) {
   .Call("R_alloc_buffer", as.integer(size))
 }
-# RSimpleFFI Utilities
 
-#' @import S7
-NULL
 
 #' Check if pointer is NULL
 #' @param ptr External pointer to check

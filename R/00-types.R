@@ -1,8 +1,5 @@
 # RSimpleFFI S7 Classes and Types
 
-#' @import S7
-NULL
-
 # Core FFI Type class
 #' FFI Type representation
 #' @param name Character name of the type
@@ -294,8 +291,157 @@ ffi_bool <- function() create_builtin_type("bool")
 #' @export
 ffi_wchar_t <- function() create_builtin_type("wchar_t")
 
+
+#' Create FFI structure type
+#' @param ... Named FFIType objects representing struct fields
+#' @export
+ffi_struct <- function(...) {
+  fields <- list(...)
+
+  if (length(fields) == 0) {
+    stop("Struct must have at least one field")
+  }
+
+  if (is.null(names(fields)) || any(names(fields) == "")) {
+    stop("All struct fields must be named")
+  }
+
+  # Validate all fields are FFIType objects
+  if (!all(sapply(fields, function(f) S7::S7_inherits(f, FFIType)))) {
+    stop("All struct fields must be FFIType objects")
+  }
+
+  field_names <- names(fields)
+  field_refs <- lapply(fields, function(f) f@ref)
+
+  struct_ref <- .Call("R_create_struct_ffi_type", field_refs)
+  struct_size <- .Call("R_get_ffi_type_size", struct_ref)
+
+  StructType(
+    name = "struct",
+    size = struct_size,
+    ref = struct_ref,
+    fields = field_names,
+    field_types = unname(fields)
+  )
+  
+}
+
+
+#' Get field value from FFI structure
+#' @param ptr External pointer to structure
+#' @param field Character field name or integer field index
+#' @param struct_type StructType object
+#' @export
+ffi_get_field <- S7::new_generic(
+  "ffi_get_field",
+  c("ptr", "field", "struct_type")
+)
+
+#' @export
+S7::method(
+  ffi_get_field,
+  list(S7::class_any, S7::class_character, StructType)
+) <- function(ptr, field, struct_type) {
+  field_index <- match(field, struct_type@fields)
+  if (is.na(field_index)) {
+    stop(
+      "No such field '",
+      field,
+      "' in struct. Available fields: ",
+      paste(struct_type@fields, collapse = ", ")
+    )
+  }
+
+  .Call("R_get_struct_field", ptr, as.integer(field_index - 1), struct_type@ref)
+}
+
+#' @export
+S7::method(
+  ffi_get_field,
+  list(S7::class_any, S7::class_integer, StructType)
+) <- function(ptr, field, struct_type) {
+  if (field < 1 || field > length(struct_type@fields)) {
+    stop(
+      "Field index out of range: ",
+      field,
+      ". Struct has ",
+      length(struct_type@fields),
+      " fields."
+    )
+  }
+
+  .Call("R_get_struct_field", ptr, as.integer(field - 1), struct_type@ref)
+}
+
+#' Set field value in FFI structure
+#' @param ptr External pointer to structure
+#' @param field Character field name or integer field index
+#' @param value Value to set
+#' @param struct_type StructType object
+#' @export
+ffi_set_field <- S7::new_generic(
+  "ffi_set_field",
+  c("ptr", "field", "value", "struct_type")
+)
+
+#' @export
+S7::method(
+  ffi_set_field,
+  list(S7::class_any, S7::class_character, S7::class_any, StructType)
+) <- function(ptr, field, value, struct_type) {
+  field_index <- match(field, struct_type@fields)
+  if (is.na(field_index)) {
+    stop(
+      "No such field '",
+      field,
+      "' in struct. Available fields: ",
+      paste(struct_type@fields, collapse = ", ")
+    )
+  }
+
+  .Call(
+    "R_set_struct_field",
+    ptr,
+    as.integer(field_index - 1),
+    value,
+    struct_type@ref
+  )
+  invisible(ptr)
+}
+
+#' @export
+S7::method(
+  ffi_set_field,
+  list(S7::class_any, S7::class_integer, S7::class_any, StructType)
+) <- function(ptr, field, value, struct_type) {
+  if (field < 1 || field > length(struct_type@fields)) {
+    stop(
+      "Field index out of range: ",
+      field,
+      ". Struct has ",
+      length(struct_type@fields),
+      " fields."
+    )
+  }
+
+  .Call(
+    "R_set_struct_field",
+    ptr,
+    as.integer(field - 1),
+    value,
+    struct_type@ref
+  )
+  invisible(ptr)
+}
+
+###
+###
+
 # Type information
 #' Get size of FFI type in bytes
 #' @export
 ffi_sizeof <- S7::new_generic("ffi_sizeof", "type")
+
+#' @export
 S7::method(ffi_sizeof, FFIType) <- function(type) type@size

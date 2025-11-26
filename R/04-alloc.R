@@ -18,3 +18,16 @@ S7::method(ffi_alloc, FFIType) <- function(type, n = 1L) {
   }
   .Call("R_alloc_typed_buffer", type@ref, as.integer(n))
 }
+
+#' @export
+S7::method(ffi_alloc, StructType) <- function(type, n = 1L) {
+  if (n != 1L) {
+    stop("StructType allocation only supports n = 1")
+  }
+  .Call("R_alloc_struct", type@ref)
+}
+
+#' @export
+S7::method(ffi_alloc, ArrayType) <- function(type, n = 1L) {
+  .Call("R_alloc_typed_buffer", type@ref, as.integer(type@length * n))
+}

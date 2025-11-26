@@ -1,42 +1,5 @@
 # RSimpleFFI Core Functions
 
-#' @import S7
-NULL
-
-#' Create FFI structure type
-#' @param ... Named FFIType objects representing struct fields
-#' @export
-ffi_struct <- function(...) {
-  fields <- list(...)
-
-  if (length(fields) == 0) {
-    stop("Struct must have at least one field")
-  }
-
-  if (is.null(names(fields)) || any(names(fields) == "")) {
-    stop("All struct fields must be named")
-  }
-
-  # Validate all fields are FFIType objects
-  if (!all(sapply(fields, function(f) S7::S7_inherits(f, FFIType)))) {
-    stop("All struct fields must be FFIType objects")
-  }
-
-  field_names <- names(fields)
-  field_refs <- lapply(fields, function(f) f@ref)
-
-  struct_ref <- .Call("R_create_struct_ffi_type", field_refs)
-  struct_size <- .Call("R_get_ffi_type_size", struct_ref)
-
-  StructType(
-    name = "struct",
-    size = struct_size,
-    ref = struct_ref,
-    fields = field_names,
-    field_types = unname(fields)
-  )
-}
-
 #' Prepare FFI call interface
 #' @param return_type FFIType for return value
 #' @param ... FFIType objects for arguments
