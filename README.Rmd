@@ -399,7 +399,7 @@ void c_convolve(const double* signal, int n_signal, const double* kernel, int n_
     for (int j = 0; j < n_kernel; ++j) {
       int k = i - j;
       if (k >= 0 && k < n_signal) {
-        out[i] += signal[k] * kernel[j];  // kernel already reversed in R
+        out[i] += signal[k] * kernel[n_kernel - 1 - j];  // reverse kernel inside C
       }
     }
   }
@@ -418,15 +418,9 @@ signal_ptr <- ffi_alloc(ffi_double(), n_signal)
 kernel_ptr <- ffi_alloc(ffi_double(), n_kernel)
 out_ptr <- ffi_alloc(ffi_double(), n_out)
 
+# Fill buffers
 ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
-signal_back <- ffi_copy_array(signal_ptr, n_signal, ffi_double())
-all.equal(as.numeric(signal), as.numeric(signal_back))
-
-# Reverse kernel before filling buffer for C
-kernel_rev <- rev(kernel)
-ffi_fill_typed_buffer(kernel_ptr, kernel_rev, ffi_double())
-kernel_back <- ffi_copy_array(kernel_ptr, n_kernel, ffi_double())
-all.equal(as.numeric(kernel_rev), as.numeric(kernel_back))
+ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
 
 # Compile and load C convolution
 lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
