@@ -48,7 +48,8 @@ sudo yum install libffi-devel  # or dnf install libffi-devel
 
 ```{r}
 library(RSimpleFFI)
-
+# lib ffi version
+libffi_version()
 # Create FFI types
 int_type <- ffi_int()
 double_type <- ffi_double()

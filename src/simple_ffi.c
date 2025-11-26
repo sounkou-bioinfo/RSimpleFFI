@@ -1027,8 +1027,8 @@ SEXP R_get_pointer_type(SEXP r_ptr) {
 
 
 SEXP R_libffi_version() {
-#ifdef FFI_VERSION
-    return mkString(FFI_VERSION);
+#ifdef FFI_VERSION_STRING
+    return mkString(FFI_VERSION_STRING);
 #else
     return mkString("unknown");
 #endif

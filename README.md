@@ -45,7 +45,9 @@ sudo yum install libffi-devel  # or dnf install libffi-devel
 
 ``` r
 library(RSimpleFFI)
-
+# lib ffi version
+libffi_version()
+#> [1] "3.5.2"
 # Create FFI types
 int_type <- ffi_int()
 double_type <- ffi_double()
@@ -256,7 +258,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x77f4e463bd48>
+#> <pointer: 0x711f4a4a2ca0>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -317,7 +319,7 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 641751716
+#> [1] 614348628
 dll_unload(libc_path)
 ```
 
@@ -339,7 +341,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x55f246940d20>
+#> <pointer: 0x62f48aad5c70>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -430,8 +432,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.3µs   28.8µs    35001.    78.2KB        0
-#> 2 ffi_call     95.1µs   99.9µs     9714.    78.7KB        0
+#> 1 native_r     13.1µs   28.8µs    34500.    78.2KB        0
+#> 2 ffi_call       90µs   95.4µs    10255.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -513,7 +515,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x55f24b84f970>
+#> <pointer: 0x62f491226a80>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -545,8 +547,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.43ms   2.61ms      373.    78.2KB     19.7
-#> 2 c_ffi      100.21µs 116.94µs     8220.    78.7KB      0
+#> 1 r            2.43ms   2.67ms      369.    78.2KB     19.4
+#> 2 c_ffi       96.01µs 110.78µs     8560.    78.7KB      0
 
 dll_unload(lib_path)
 ```
