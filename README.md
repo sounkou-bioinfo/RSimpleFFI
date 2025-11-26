@@ -303,7 +303,7 @@ libc_path <- dll_load_system("libgcc_s.so.1")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1701965846
+#> [1] 2068509016
 dll_unload(libc_path)
 ```
 
@@ -325,7 +325,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x596751e53330>
+#> <pointer: 0x60e515bb4060>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -413,8 +413,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.9µs   31.4µs    32165.    78.2KB      0  
-#> 2 ffi_call    107.7µs  129.2µs     7310.    78.7KB     73.8
+#> 1 native_r     15.3µs   35.7µs    25115.    78.2KB      0  
+#> 2 ffi_call    109.8µs  143.3µs     6360.    78.7KB     64.2
 dll_unload(lib_path)
 ```
 
@@ -428,29 +428,29 @@ slow_convolve <- function(a, b) {
   ab <- double(length(a) + length(b) - 1)
   for (i in seq_along(a)) {
     for (j in seq_along(b)) {
-      ab[i+j-1] <- ab[i+j-1] + a[i] * b[j]
+      ab[i + j - 1] <- ab[i + j - 1] + a[i] * b[j]
     }
   }
   ab
 }
 
-# C code for convolution (valid for FFI)
+# C code for convolution (matches R)
 conv_code <- '
 void c_convolve(const double* signal, int n_signal, const double* kernel, int n_kernel, double* out) {
-    int n_out = n_signal + n_kernel - 1;
-    for (int i = 0; i < n_out; ++i) {
-        out[i] = 0.0;
-        for (int j = 0; j < n_kernel; ++j) {
-            int k = i - j;
-            if (k >= 0 && k < n_signal) {
-                out[i] += signal[k] * kernel[j];
-            }
-        }
+  int n_out = n_signal + n_kernel - 1;
+  for (int i = 0; i < n_out; ++i) {
+    out[i] = 0.0;
+    for (int j = 0; j < n_kernel; ++j) {
+      int k = i - j;
+      if (k >= 0 && k < n_signal) {
+        out[i] += signal[k] * kernel[j];  // kernel already reversed in R
+      }
     }
+  }
 }
 '
 
-set.seed(42)
+set.seed(1995)
 signal <- rnorm(10000)
 kernel <- c(0.2, 0.5, 0.3)
 n_signal <- length(signal)
@@ -461,31 +461,50 @@ n_out <- n_signal + n_kernel - 1
 signal_ptr <- ffi_alloc(ffi_double(), n_signal)
 kernel_ptr <- ffi_alloc(ffi_double(), n_kernel)
 out_ptr <- ffi_alloc(ffi_double(), n_out)
+
 ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
 #> NULL
-ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
+signal_back <- ffi_copy_array(signal_ptr, n_signal, ffi_double())
+all.equal(as.numeric(signal), as.numeric(signal_back))
+#> [1] TRUE
+
+# Reverse kernel before filling buffer for C
+kernel_rev <- rev(kernel)
+ffi_fill_typed_buffer(kernel_ptr, kernel_rev, ffi_double())
 #> NULL
+kernel_back <- ffi_copy_array(kernel_ptr, n_kernel, ffi_double())
+all.equal(as.numeric(kernel_rev), as.numeric(kernel_back))
+#> [1] TRUE
 
 # Compile and load C convolution
 lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
-c_conv_fn <- dll_ffi_symbol("c_convolve", ffi_void(), ffi_pointer(), ffi_int(), ffi_pointer(), ffi_int(), ffi_pointer())
+c_conv_fn <- dll_ffi_symbol(
+  "c_convolve",
+  ffi_void(),
+  ffi_pointer(), ffi_int(),
+  ffi_pointer(), ffi_int(),
+  ffi_pointer()
+)
 
 # Run C convolution via FFI
-c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr)
+c_conv_fn(signal_ptr, as.integer(n_signal), kernel_ptr, as.integer(n_kernel), out_ptr)
 #> NULL
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
 r_result <- slow_convolve(signal, kernel)
 
-# Check results are similar
+# Check results
 all.equal(as.numeric(c_result), as.numeric(r_result))
-#> [1] "Mean absolute difference: 0.4954148"
+#> [1] "Mean absolute difference: 0.4879267"
 
 # Benchmark
 benchmark_result <- bench::mark(
   r = slow_convolve(signal, kernel),
-  c_ffi = { c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr); ffi_copy_array(out_ptr, n_out, ffi_double()) },
+  c_ffi = {
+    c_conv_fn(signal_ptr, as.integer(n_signal), kernel_ptr, as.integer(n_kernel), out_ptr)
+    ffi_copy_array(out_ptr, n_out, ffi_double())
+  },
   check = FALSE,
   iterations = 20
 )
@@ -493,8 +512,9 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            3.12ms   3.42ms      291.    78.2KB     15.3
-#> 2 c_ffi      153.27µs 173.11µs     5426.    78.7KB      0
+#> 1 r            3.31ms   3.83ms      254.    78.2KB     13.4
+#> 2 c_ffi      172.54µs  191.6µs     4550.    78.7KB      0
+
 dll_unload(lib_path)
 ```
 
@@ -503,8 +523,8 @@ dll_unload(lib_path)
 Right now there are unimplemented features and limitations including
 uncessary copying, lack of protection and several potential memory
 leaks. The interface can and should be refined further. Our types are C
-pointers never collected. Furthermore we will vendor libffi in future
-releases to avoid dependency issues.
+pointers never. Furthermore we will vendor libffi in future releases to
+avoid dependency issues.
 
 ## License
 

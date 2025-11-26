@@ -384,29 +384,29 @@ slow_convolve <- function(a, b) {
   ab <- double(length(a) + length(b) - 1)
   for (i in seq_along(a)) {
     for (j in seq_along(b)) {
-      ab[i+j-1] <- ab[i+j-1] + a[i] * b[j]
+      ab[i + j - 1] <- ab[i + j - 1] + a[i] * b[j]
     }
   }
   ab
 }
 
-# C code for convolution (valid for FFI)
+# C code for convolution (matches R)
 conv_code <- '
 void c_convolve(const double* signal, int n_signal, const double* kernel, int n_kernel, double* out) {
-    int n_out = n_signal + n_kernel - 1;
-    for (int i = 0; i < n_out; ++i) {
-        out[i] = 0.0;
-        for (int j = 0; j < n_kernel; ++j) {
-            int k = i - j;
-            if (k >= 0 && k < n_signal) {
-                out[i] += signal[k] * kernel[j];
-            }
-        }
+  int n_out = n_signal + n_kernel - 1;
+  for (int i = 0; i < n_out; ++i) {
+    out[i] = 0.0;
+    for (int j = 0; j < n_kernel; ++j) {
+      int k = i - j;
+      if (k >= 0 && k < n_signal) {
+        out[i] += signal[k] * kernel[j];  // kernel already reversed in R
+      }
     }
+  }
 }
 '
 
-set.seed(42)
+set.seed(1995)
 signal <- rnorm(10000)
 kernel <- c(0.2, 0.5, 0.3)
 n_signal <- length(signal)
@@ -417,37 +417,55 @@ n_out <- n_signal + n_kernel - 1
 signal_ptr <- ffi_alloc(ffi_double(), n_signal)
 kernel_ptr <- ffi_alloc(ffi_double(), n_kernel)
 out_ptr <- ffi_alloc(ffi_double(), n_out)
+
 ffi_fill_typed_buffer(signal_ptr, signal, ffi_double())
-ffi_fill_typed_buffer(kernel_ptr, kernel, ffi_double())
+signal_back <- ffi_copy_array(signal_ptr, n_signal, ffi_double())
+all.equal(as.numeric(signal), as.numeric(signal_back))
+
+# Reverse kernel before filling buffer for C
+kernel_rev <- rev(kernel)
+ffi_fill_typed_buffer(kernel_ptr, kernel_rev, ffi_double())
+kernel_back <- ffi_copy_array(kernel_ptr, n_kernel, ffi_double())
+all.equal(as.numeric(kernel_rev), as.numeric(kernel_back))
 
 # Compile and load C convolution
 lib_path <- dll_compile_and_load(conv_code, "bench_conv", cflags = "-O3")
-c_conv_fn <- dll_ffi_symbol("c_convolve", ffi_void(), ffi_pointer(), ffi_int(), ffi_pointer(), ffi_int(), ffi_pointer())
+c_conv_fn <- dll_ffi_symbol(
+  "c_convolve",
+  ffi_void(),
+  ffi_pointer(), ffi_int(),
+  ffi_pointer(), ffi_int(),
+  ffi_pointer()
+)
 
 # Run C convolution via FFI
-c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr)
+c_conv_fn(signal_ptr, as.integer(n_signal), kernel_ptr, as.integer(n_kernel), out_ptr)
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
 r_result <- slow_convolve(signal, kernel)
 
-# Check results are similar
+# Check results
 all.equal(as.numeric(c_result), as.numeric(r_result))
 
 # Benchmark
 benchmark_result <- bench::mark(
   r = slow_convolve(signal, kernel),
-  c_ffi = { c_conv_fn(signal_ptr, n_signal, kernel_ptr, n_kernel, out_ptr); ffi_copy_array(out_ptr, n_out, ffi_double()) },
+  c_ffi = {
+    c_conv_fn(signal_ptr, as.integer(n_signal), kernel_ptr, as.integer(n_kernel), out_ptr)
+    ffi_copy_array(out_ptr, n_out, ffi_double())
+  },
   check = FALSE,
   iterations = 20
 )
 benchmark_result
+
 dll_unload(lib_path)
 ```
 
 ## Limitations and issues
 
-Right now there are unimplemented features and limitations including uncessary copying, lack of protection and several potential memory leaks. The interface can and should be refined further. Our types are C pointers never collected. Furthermore we will vendor libffi in future releases to avoid dependency issues.
+Right now there are unimplemented features and limitations including uncessary copying, lack of protection and several potential memory leaks. The interface can and should be refined further. Our types are C pointers never. Furthermore we will vendor libffi in future releases to avoid dependency issues.
 
 ## License
 
