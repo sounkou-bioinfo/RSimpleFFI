@@ -1,10 +1,16 @@
-# RSimpleFFI Core Functions
+
+#####################################
+#
+# FFI CIF
+#
+######################################
 
 #' Prepare FFI call interface
 #' @param return_type FFIType for return value
 #' @param ... FFIType objects for arguments
 #' @export
 ffi_cif <- function(return_type, ...) {
+  
   if (!S7::S7_inherits(return_type, FFIType)) {
     stop("return_type must be an FFIType object")
   }
@@ -33,6 +39,13 @@ ffi_cif <- function(return_type, ...) {
     ref = cif_ref
   )
 }
+
+
+#####################################
+#
+# FFI Symbols
+#
+######################################
 
 #' Get native symbol reference
 #' @param name Character name of the symbol
@@ -99,6 +112,14 @@ ffi_symbol_from_address <- function(address, name = "anonymous") {
   )
 }
 
+
+#####################################
+#
+# FFI CALLS
+#
+######################################
+
+
 #' Make FFI function call
 #' @param cif CIF object defining the call interface
 #' @param symbol NativeSymbol or character name of function
@@ -106,6 +127,8 @@ ffi_symbol_from_address <- function(address, name = "anonymous") {
 #' @export
 ffi_call <- S7::new_generic("ffi_call", c("cif", "symbol"))
 
+# NativeSymbol variant
+#' @export
 S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(cif, symbol, ...) {
   args <- list(...)
   expected_args <- length(cif@arg_types)
@@ -117,6 +140,8 @@ S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(cif, symbol, ...) {
   .Call("R_ffi_call", cif@ref, symbol@address, args)
 }
 
+# symbol as character name variant
+#' @export
 S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
   cif,
   symbol,
@@ -126,6 +151,13 @@ S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
   ffi_call(cif, sym, ...)
 }
 
+
+#####################################
+#
+# FFI Function Wrappers
+#
+######################################
+
 #' Create a reusable FFI function wrapper
 #' @param name Character name of the function
 #' @param return_type FFIType for return value
@@ -133,6 +165,7 @@ S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
 #' @param library Character name of library (optional)
 #' @export
 ffi_function <- function(name, return_type, ..., library = NULL) {
+  
   # Create CIF and symbol
   cif <- ffi_cif(return_type, ...)
   symbol <- ffi_symbol(name, library)

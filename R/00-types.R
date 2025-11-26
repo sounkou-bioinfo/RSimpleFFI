@@ -1,4 +1,8 @@
-# RSimpleFFI S7 Classes and Types
+#####################################
+#
+# FFIType  Basic Types
+#
+######################################
 
 # Core FFI Type class
 #' FFI Type representation
@@ -25,6 +29,12 @@ FFIType <- S7::new_class(
   }
 )
 
+#####################################
+#
+# FFIType Struct Subclass
+#
+######################################
+
 # Structure type extends FFIType
 #' FFI Structure Type
 #' @param fields Character vector of field names
@@ -49,6 +59,11 @@ StructType <- S7::new_class(
   }
 )
 
+#####################################
+#
+# FFIType Array Subclass
+#
+######################################
 # Array type extends FFIType
 #' FFI Array Type
 #' @param element_type FFIType of array elements
@@ -84,6 +99,7 @@ ffi_array_type <- function(element_type, length) {
   }
   ref <- .Call("R_create_array_ffi_type", element_type@ref, as.integer(length))
   size <- .Call("R_get_ffi_type_size", ref)
+
   ArrayType(
     name = paste0("array[", element_type@name, ", ", length, "]"),
     size = size,
@@ -91,7 +107,15 @@ ffi_array_type <- function(element_type, length) {
     element_type = element_type,
     length = as.integer(length)
   )
+  
 }
+
+
+#####################################
+#
+# CALL Context class
+#
+######################################
 
 # Call Interface
 #' FFI Call Interface (CIF)
@@ -111,10 +135,19 @@ CIF <- S7::new_class(
     if (!all(sapply(self@arg_types, function(x) S7::S7_inherits(x, FFIType)))) {
       "All argument types must be FFIType objects"
     }
+    if( !S7::S7_inherits(self@return_type, FFIType)) {
+      "return_type must be an FFIType object"
+    }
   }
 )
 
-# Native Symbol
+#####################################
+#
+# Native Symbol class
+#
+# TODO : add validation and properties refinement
+######################################
+
 #' Native Symbol Reference
 #' @param name Character name of the symbol
 #' @param address External pointer to the symbol
@@ -130,12 +163,23 @@ NativeSymbol <- S7::new_class(
   )
 )
 
-# Built-in type creation
+
+#####################################
+#
+# Utility Functions
+#
+# 
+######################################
+
+
+##### Built-in type creation
+
 #' Create built-in FFI type
 #' @param name Character name of built-in type
 #' @export
 create_builtin_type <- S7::new_generic("create_builtin_type", "name")
 
+#' @export
 S7::method(create_builtin_type, S7::class_character) <- function(name) {
   valid_types <- c(
     # Basic types
@@ -194,13 +238,10 @@ S7::method(create_builtin_type, S7::class_character) <- function(name) {
   FFIType(name = name, size = size, ref = ref)
 }
 
-# Convenient type constructors
-#' Create an FFI type for R raw vectors (byte arrays)
-#'
+
 #' @export
 ffi_raw <- function() create_builtin_type("raw")
 
-# Basic types
 #' @export
 ffi_void <- function() create_builtin_type("void")
 
@@ -435,8 +476,6 @@ S7::method(
   invisible(ptr)
 }
 
-###
-###
 
 # Type information
 #' Get size of FFI type in bytes
