@@ -1,3 +1,5 @@
+#' @docType package
+#' @keywords internal
 
 #####################################
 #
@@ -5,6 +7,8 @@
 #
 ######################################
 
+#' @name ffi_cif
+#' @title Prepare FFI call interface
 #' Prepare FFI call interface
 #' @param return_type FFIType for return value
 #' @param ... FFIType objects for arguments
@@ -142,10 +146,9 @@ S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(cif, symbol, ...) {
 # symbol as character name variant
 #' @export
 S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
-  cif,
-  symbol,
-  ...
-) {
+    cif,
+    symbol,
+    ...) {
   sym <- ffi_symbol(symbol)
   ffi_call(cif, sym, ...)
 }
@@ -164,7 +167,6 @@ S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
 #' @param library Character name of library (optional)
 #' @export
 ffi_function <- function(name, return_type, ..., library = NULL) {
-  
   # Create CIF and symbol
   cif <- ffi_cif(return_type, ...)
   symbol <- ffi_symbol(name, library)

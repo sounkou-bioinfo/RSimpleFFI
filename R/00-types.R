@@ -1,3 +1,6 @@
+#' @docType package
+#' @keywords internal
+
 #####################################
 #
 # FFIType  Basic Types
@@ -5,6 +8,8 @@
 ######################################
 
 # Core FFI Type class
+#' @name FFIType
+#' @title FFI Type representation
 #' FFI Type representation
 #' @param name Character name of the type
 #' @param size Integer size in bytes
@@ -107,7 +112,6 @@ ffi_array_type <- function(element_type, length) {
     element_type = element_type,
     length = as.integer(length)
   )
-  
 }
 
 
@@ -135,7 +139,7 @@ CIF <- S7::new_class(
     if (!all(sapply(self@arg_types, function(x) S7::S7_inherits(x, FFIType)))) {
       "All argument types must be FFIType objects"
     }
-    if( !S7::S7_inherits(self@return_type, FFIType)) {
+    if (!S7::S7_inherits(self@return_type, FFIType)) {
       "return_type must be an FFIType object"
     }
   }
@@ -168,17 +172,22 @@ NativeSymbol <- S7::new_class(
 #
 # Utility Functions
 #
-# 
+#
 ######################################
 
 
 ##### Built-in type creation
 
 #' Create built-in FFI type
+#'
 #' @param name Character name of built-in type
+#' @param ... Additional arguments (not used)
+#' @return An FFIType object
 #' @export
 create_builtin_type <- S7::new_generic("create_builtin_type", "name")
 
+#' Boolean FFI type
+#' @return FFIType object for bool
 #' @export
 S7::method(create_builtin_type, S7::class_character) <- function(name) {
   valid_types <- c(
@@ -239,92 +248,148 @@ S7::method(create_builtin_type, S7::class_character) <- function(name) {
 }
 
 
+#' Char FFI type
+#' @return FFIType object for char
 #' @export
 ffi_raw <- function() create_builtin_type("raw")
 
+#' Double FFI type
+#' @return FFIType object for double
 #' @export
 ffi_void <- function() create_builtin_type("void")
 
+#' Float FFI type
+#' @return FFIType object for float
 #' @export
 ffi_int <- function() create_builtin_type("int")
 
+#' Int FFI type
+#' @return FFIType object for int
 #' @export
 ffi_double <- function() create_builtin_type("double")
 
+#' Int16 FFI type
+#' @return FFIType object for int16
 #' @export
 ffi_float <- function() create_builtin_type("float")
 
+#' Int32 FFI type
+#' @return FFIType object for int32
 #' @export
 ffi_pointer <- function() create_builtin_type("pointer")
 
+#' Int64 FFI type
+#' @return FFIType object for int64
 #' @export
 ffi_string <- function() create_builtin_type("string")
 
 # Signed integer types
+#' Int8 FFI type
+#' @return FFIType object for int8
 #' @export
 ffi_int8 <- function() create_builtin_type("int8")
 
+#' Long FFI type
+#' @return FFIType object for long
 #' @export
 ffi_int16 <- function() create_builtin_type("int16")
 
+#' Long double FFI type
+#' @return FFIType object for long double
 #' @export
 ffi_int32 <- function() create_builtin_type("int32")
 
+#' Long long FFI type
+#' @return FFIType object for long long
 #' @export
 ffi_int64 <- function() create_builtin_type("int64")
 
+#' Pointer FFI type
+#' @return FFIType object for pointer
 #' @export
 ffi_char <- function() create_builtin_type("char")
 
+#' Raw FFI type
+#' @return FFIType object for raw
 #' @export
 ffi_short <- function() create_builtin_type("short")
 
+#' Short FFI type
+#' @return FFIType object for short
 #' @export
 ffi_long <- function() create_builtin_type("long")
 
+#' Size_t FFI type
+#' @return FFIType object for size_t
 #' @export
 ffi_longlong <- function() create_builtin_type("longlong")
 
 # Unsigned integer types
+#' Ssize_t FFI type
+#' @return FFIType object for ssize_t
 #' @export
 ffi_uint <- function() create_builtin_type("uint")
 
+#' String FFI type
+#' @return FFIType object for string
 #' @export
 ffi_uint8 <- function() create_builtin_type("uint8")
 
+#' Uchar FFI type
+#' @return FFIType object for uchar
 #' @export
 ffi_uint16 <- function() create_builtin_type("uint16")
 
+#' Uint FFI type
+#' @return FFIType object for uint
 #' @export
 ffi_uint32 <- function() create_builtin_type("uint32")
 
+#' Uint16 FFI type
+#' @return FFIType object for uint16
 #' @export
 ffi_uint64 <- function() create_builtin_type("uint64")
 
+#' Uint32 FFI type
+#' @return FFIType object for uint32
 #' @export
 ffi_uchar <- function() create_builtin_type("uchar")
 
+#' Uint64 FFI type
+#' @return FFIType object for uint64
 #' @export
 ffi_ushort <- function() create_builtin_type("ushort")
 
+#' Uint8 FFI type
+#' @return FFIType object for uint8
 #' @export
 ffi_ulong <- function() create_builtin_type("ulong")
 
+#' Ulong FFI type
+#' @return FFIType object for ulong
 #' @export
 ffi_ulonglong <- function() create_builtin_type("ulonglong")
 
 # Additional floating point
+#' Ulonglong FFI type
+#' @return FFIType object for ulonglong
 #' @export
 ffi_longdouble <- function() create_builtin_type("longdouble")
 
 # Platform-specific size types
+#' Ushort FFI type
+#' @return FFIType object for ushort
 #' @export
 ffi_size_t <- function() create_builtin_type("size_t")
 
+#' Void FFI type
+#' @return FFIType object for void
 #' @export
 ffi_ssize_t <- function() create_builtin_type("ssize_t")
 
 # Boolean
+#' Wide char FFI type
+#' @return FFIType object for wchar_t
 #' @export
 ffi_bool <- function() create_builtin_type("bool")
 
@@ -365,14 +430,16 @@ ffi_struct <- function(...) {
     fields = field_names,
     field_types = unname(fields)
   )
-  
 }
 
 
 #' Get field value from FFI structure
+#'
 #' @param ptr External pointer to structure
 #' @param field Character field name or integer field index
 #' @param struct_type StructType object
+#' @param ... Additional arguments (not used)
+#' @return Field value
 #' @export
 ffi_get_field <- S7::new_generic(
   "ffi_get_field",
@@ -416,10 +483,13 @@ S7::method(
 }
 
 #' Set field value in FFI structure
+#'
 #' @param ptr External pointer to structure
 #' @param field Character field name or integer field index
 #' @param value Value to set
 #' @param struct_type StructType object
+#' @param ... Additional arguments (not used)
+#' @return Updated pointer
 #' @export
 ffi_set_field <- S7::new_generic(
   "ffi_set_field",
@@ -479,6 +549,10 @@ S7::method(
 
 # Type information
 #' Get size of FFI type in bytes
+#'
+#' @param type FFIType object
+#' @param ... Additional arguments (not used)
+#' @return Size in bytes
 #' @export
 ffi_sizeof <- S7::new_generic("ffi_sizeof", "type")
 

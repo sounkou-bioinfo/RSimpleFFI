@@ -1,3 +1,5 @@
+##' @docType package
+##' @keywords internal
 if (getRversion() >= "2.15.1") {
   utils::globalVariables("ArrayType")
 }
@@ -126,7 +128,7 @@ S7::method(print, NativeSymbol) <- function(x, ...) {
 #' @return Character vector of length 1, or NULL if pointer is NULL
 #' @export
 pointer_to_string <- function(ptr) {
-  if(!is.null(ptr) && !inherits(ptr, "externalptr")) {
+  if (!is.null(ptr) && !inherits(ptr, "externalptr")) {
     stop("ptr must be an external pointer or NULL")
   }
   if (is.null(ptr)) {

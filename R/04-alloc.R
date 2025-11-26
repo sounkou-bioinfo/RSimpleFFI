@@ -1,7 +1,8 @@
-#' Allocate a buffer for a given FFI type
-#'
-#' Allocates a buffer for n elements of the given FFIType (e.g., int, double, etc).
-#' Returns an external pointer tagged with the type.
+#' @docType package
+#' @keywords internal
+#' @name ffi_alloc
+#' @title Allocate a buffer for a given FFI type
+#' @description Allocates a buffer for n elements of the given FFIType (e.g., int, double, etc). Returns an external pointer tagged with the type.
 #' @param type FFIType object
 #' @param n Number of elements to allocate (default 1)
 #' @return External pointer to buffer

@@ -1,6 +1,8 @@
 # Package loading and initialization
 
+#' @keywords internal
 #' @import S7
+"_PACKAGE"
 #' @useDynLib RSimpleFFI, .registration=TRUE
 #' @rawNamespace if (getRversion() < "4.3.0") importFrom("S7", "@")
 NULL

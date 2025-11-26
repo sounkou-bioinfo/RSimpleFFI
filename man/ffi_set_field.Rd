@@ -14,6 +14,11 @@ ffi_set_field(ptr, field, value, struct_type, ...)
 \item{value}{Value to set}
 
 \item{struct_type}{StructType object}
+
+\item{...}{Additional arguments (not used)}
+}
+\value{
+Updated pointer
 }
 \description{
 Set field value in FFI structure

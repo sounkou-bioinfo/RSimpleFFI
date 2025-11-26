@@ -1,3 +1,7 @@
+#' @docType package
+#' @keywords internal
+#' @name dll_load
+#' @title Load a shared library/DLL
 #' Load a shared library/DLL
 #'
 #' @param filename Path to the shared library
@@ -300,8 +304,8 @@ dll_compile_and_load <- function(
 
 # ---- OS detection ----
 .is_windows <- tolower(Sys.info()[["sysname"]]) == "windows"
-.is_macos   <- tolower(Sys.info()[["sysname"]]) == "darwin"
-.is_linux   <- tolower(Sys.info()[["sysname"]]) == "linux"
+.is_macos <- tolower(Sys.info()[["sysname"]]) == "darwin"
+.is_linux <- tolower(Sys.info()[["sysname"]]) == "linux"
 
 .system_paths <- function() {
   if (.is_windows) {
@@ -317,7 +321,7 @@ dll_compile_and_load <- function(
       "/usr/lib64",
       "/usr/lib/x86_64-linux-gnu",
       "/usr/local/lib",
-      "/usr/local/lib32", #wsl
+      "/usr/local/lib32", # wsl
       "/usr/local/lib64"
     ))
   } else if (.is_linux) {
@@ -328,7 +332,7 @@ dll_compile_and_load <- function(
       "/usr/lib64",
       "/usr/lib/x86_64-linux-gnu",
       "/usr/local/lib",
-      "/usr/local/lib32", #wsl
+      "/usr/local/lib32", # wsl
       "/usr/local/lib64"
     ))
   } else {
@@ -336,30 +340,31 @@ dll_compile_and_load <- function(
   }
 }
 
-#' Load system library (like libc, libm, etc.)
-#'
-#' @param lib_name Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)
-#' @return Library handle or NULL if not found
-#' @export
+##' Load system library (like libc, libm, etc.)
+##'
+##' @param lib_name Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)
+##' @param verbose Print loading information (default FALSE)
+##' @return Library handle or NULL if not found
+##' @export
 dll_load_system <- function(lib_name, verbose = FALSE) {
   # Common system library paths
   system_paths <- .system_paths()
   for (path in system_paths) {
     full_path <- file.path(path, lib_name)
     if (file.exists(full_path)) {
-        message("Loading system library from: ", full_path)
-    
+      message("Loading system library from: ", full_path)
+
       tryCatch(
         {
           handle <- dll_load(full_path, verbose = verbose)
           return(handle)
         },
         error = function(e) {
-         warning("Failed to load from ", full_path, ": ", e$message)
+          warning("Failed to load from ", full_path, ": ", e$message)
         }
       )
       return()
-  }
+    }
   }
   warning("System library not found: ", lib_name)
   NULL

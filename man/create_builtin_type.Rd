@@ -8,6 +8,11 @@ create_builtin_type(name, ...)
 }
 \arguments{
 \item{name}{Character name of built-in type}
+
+\item{...}{Additional arguments (not used)}
+}
+\value{
+An FFIType object
 }
 \description{
 Create built-in FFI type

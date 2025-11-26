@@ -6,6 +6,14 @@
 \usage{
 ffi_sizeof(type, ...)
 }
+\arguments{
+\item{type}{FFIType object}
+
+\item{...}{Additional arguments (not used)}
+}
+\value{
+Size in bytes
+}
 \description{
 Get size of FFI type in bytes
 }
