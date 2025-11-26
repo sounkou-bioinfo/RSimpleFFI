@@ -1,0 +1,30 @@
+
+#!/bin/sh
+# configure script to build and install libffi to inst/libffi for Unix and MinGW
+set -e
+THISDir=`dirname $0`
+THISDir=`realpath ${THISDir}`
+MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
+CC=`"${R_HOME}/bin/R" CMD config CC`
+CC=$(echo "${CC}" | awk '{print $1}')
+AR=`"${R_HOME}/bin/R" CMD config AR`
+RANLIB=`"${R_HOME}/bin/R" CMD config RANLIB`
+LIBFFI_SRC="${THISDir}/src/libffi"
+LIBFFI_DEST="${THISDir}/inst/libffi"
+if [ -d "$LIBFFI_SRC" ]; then
+    cd "$LIBFFI_SRC"
+    echo "$PWD"
+    ./configure --disable-docs --prefix="$PWD/build"  \
+    CFLAGS="-fPIC -Wno-deprecated-declarations" \
+        CC="$CC" AR="$AR" RANLIB="$RANLIB"
+    $MAKE 
+    $MAKE install
+    cd ../..
+    mkdir -p "$LIBFFI_DEST"
+    cp -r "$LIBFFI_SRC/build/lib/"* "$LIBFFI_DEST"/
+    cp -r "$LIBFFI_SRC/build/include/"* "$LIBFFI_DEST"/
+    echo "libffi built and installed to $LIBFFI_DEST"
+else
+    echo "libffi source directory not found: $LIBFFI_SRC" >&2
+    exit 1
+fi

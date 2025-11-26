@@ -3,7 +3,8 @@
 *.so
 *.dll
 *.dylib
-
+inst/libffi
+src/libffi/build
 # R specific
 .Rhistory
 .RData

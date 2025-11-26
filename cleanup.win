@@ -1,0 +1,14 @@
+#!/bin/sh
+# cleanup.win script to remove built libffi files and build artifacts (MinGW)
+set -e
+LIBFFI_DEST="inst/libffi"
+LIBFFI_BUILD="src/libffi/build"
+
+if [ -d "$LIBFFI_DEST" ]; then
+    rm -rf "$LIBFFI_DEST"
+    echo "Removed $LIBFFI_DEST"
+fi
+if [ -d "$LIBFFI_BUILD" ]; then
+    rm -rf "$LIBFFI_BUILD"
+    echo "Removed $LIBFFI_BUILD"
+fi

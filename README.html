@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+@font-face {
+font-family: octicons-link;
+src: url(data:font/woff;charset=utf-8;base64,d09GRgABAAAAAAZwABAAAAAACFQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABEU0lHAAAGaAAAAAgAAAAIAAAAAUdTVUIAAAZcAAAACgAAAAoAAQAAT1MvMgAAAyQAAABJAAAAYFYEU3RjbWFwAAADcAAAAEUAAACAAJThvmN2dCAAAATkAAAABAAAAAQAAAAAZnBnbQAAA7gAAACyAAABCUM+8IhnYXNwAAAGTAAAABAAAAAQABoAI2dseWYAAAFsAAABPAAAAZwcEq9taGVhZAAAAsgAAAA0AAAANgh4a91oaGVhAAADCAAAABoAAAAkCA8DRGhtdHgAAAL8AAAADAAAAAwGAACfbG9jYQAAAsAAAAAIAAAACABiATBtYXhwAAACqAAAABgAAAAgAA8ASm5hbWUAAAToAAABQgAAAlXu73sOcG9zdAAABiwAAAAeAAAAME3QpOBwcmVwAAAEbAAAAHYAAAB/aFGpk3jaTY6xa8JAGMW/O62BDi0tJLYQincXEypYIiGJjSgHniQ6umTsUEyLm5BV6NDBP8Tpts6F0v+k/0an2i+itHDw3v2+9+DBKTzsJNnWJNTgHEy4BgG3EMI9DCEDOGEXzDADU5hBKMIgNPZqoD3SilVaXZCER3/I7AtxEJLtzzuZfI+VVkprxTlXShWKb3TBecG11rwoNlmmn1P2WYcJczl32etSpKnziC7lQyWe1smVPy/Lt7Kc+0vWY/gAgIIEqAN9we0pwKXreiMasxvabDQMM4riO+qxM2ogwDGOZTXxwxDiycQIcoYFBLj5K3EIaSctAq2kTYiw+ymhce7vwM9jSqO8JyVd5RH9gyTt2+J/yUmYlIR0s04n6+7Vm1ozezUeLEaUjhaDSuXHwVRgvLJn1tQ7xiuVv/ocTRF42mNgZGBgYGbwZOBiAAFGJBIMAAizAFoAAABiAGIAznjaY2BkYGAA4in8zwXi+W2+MjCzMIDApSwvXzC97Z4Ig8N/BxYGZgcgl52BCSQKAA3jCV8CAABfAAAAAAQAAEB42mNgZGBg4f3vACQZQABIMjKgAmYAKEgBXgAAeNpjYGY6wTiBgZWBg2kmUxoDA4MPhGZMYzBi1AHygVLYQUCaawqDA4PChxhmh/8ODDEsvAwHgMKMIDnGL0x7gJQCAwMAJd4MFwAAAHjaY2BgYGaA4DAGRgYQkAHyGMF8NgYrIM3JIAGVYYDT+AEjAwuDFpBmA9KMDEwMCh9i/v8H8sH0/4dQc1iAmAkALaUKLgAAAHjaTY9LDsIgEIbtgqHUPpDi3gPoBVyRTmTddOmqTXThEXqrob2gQ1FjwpDvfwCBdmdXC5AVKFu3e5MfNFJ29KTQT48Ob9/lqYwOGZxeUelN2U2R6+cArgtCJpauW7UQBqnFkUsjAY/kOU1cP+DAgvxwn1chZDwUbd6CFimGXwzwF6tPbFIcjEl+vvmM/byA48e6tWrKArm4ZJlCbdsrxksL1AwWn/yBSJKpYbq8AXaaTb8AAHja28jAwOC00ZrBeQNDQOWO//sdBBgYGRiYWYAEELEwMTE4uzo5Zzo5b2BxdnFOcALxNjA6b2ByTswC8jYwg0VlNuoCTWAMqNzMzsoK1rEhNqByEyerg5PMJlYuVueETKcd/89uBpnpvIEVomeHLoMsAAe1Id4AAAAAAAB42oWQT07CQBTGv0JBhagk7HQzKxca2sJCE1hDt4QF+9JOS0nbaaYDCQfwCJ7Au3AHj+LO13FMmm6cl7785vven0kBjHCBhfpYuNa5Ph1c0e2Xu3jEvWG7UdPDLZ4N92nOm+EBXuAbHmIMSRMs+4aUEd4Nd3CHD8NdvOLTsA2GL8M9PODbcL+hD7C1xoaHeLJSEao0FEW14ckxC+TU8TxvsY6X0eLPmRhry2WVioLpkrbp84LLQPGI7c6sOiUzpWIWS5GzlSgUzzLBSikOPFTOXqly7rqx0Z1Q5BAIoZBSFihQYQOOBEdkCOgXTOHA07HAGjGWiIjaPZNW13/+lm6S9FT7rLHFJ6fQbkATOG1j2OFMucKJJsxIVfQORl+9Jyda6Sl1dUYhSCm1dyClfoeDve4qMYdLEbfqHf3O/AdDumsjAAB42mNgYoAAZQYjBmyAGYQZmdhL8zLdDEydARfoAqIAAAABAAMABwAKABMAB///AA8AAQAAAAAAAAAAAAAAAAABAAAAAA==) format('woff');
+}
+body {
+-webkit-text-size-adjust: 100%;
+text-size-adjust: 100%;
+color: #333;
+font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+font-size: 16px;
+line-height: 1.6;
+word-wrap: break-word;
+}
+a {
+background-color: transparent;
+}
+a:active,
+a:hover {
+outline: 0;
+}
+strong {
+font-weight: bold;
+}
+h1 {
+font-size: 2em;
+margin: 0.67em 0;
+}
+img {
+border: 0;
+}
+hr {
+box-sizing: content-box;
+height: 0;
+}
+pre {
+overflow: auto;
+}
+code,
+kbd,
+pre {
+font-family: monospace, monospace;
+font-size: 1em;
+}
+input {
+color: inherit;
+font: inherit;
+margin: 0;
+}
+html input[disabled] {
+cursor: default;
+}
+input {
+line-height: normal;
+}
+input[type="checkbox"] {
+box-sizing: border-box;
+padding: 0;
+}
+table {
+border-collapse: collapse;
+border-spacing: 0;
+}
+td,
+th {
+padding: 0;
+}
+* {
+box-sizing: border-box;
+}
+input {
+font: 13px / 1.4 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+a {
+color: #4078c0;
+text-decoration: none;
+}
+a:hover,
+a:active {
+text-decoration: underline;
+}
+hr {
+height: 0;
+margin: 15px 0;
+overflow: hidden;
+background: transparent;
+border: 0;
+border-bottom: 1px solid #ddd;
+}
+hr:before {
+display: table;
+content: "";
+}
+hr:after {
+display: table;
+clear: both;
+content: "";
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 15px;
+margin-bottom: 15px;
+line-height: 1.1;
+}
+h1 {
+font-size: 30px;
+}
+h2 {
+font-size: 21px;
+}
+h3 {
+font-size: 16px;
+}
+h4 {
+font-size: 14px;
+}
+h5 {
+font-size: 12px;
+}
+h6 {
+font-size: 11px;
+}
+blockquote {
+margin: 0;
+}
+ul,
+ol {
+padding: 0;
+margin-top: 0;
+margin-bottom: 0;
+}
+ol ol,
+ul ol {
+list-style-type: lower-roman;
+}
+ul ul ol,
+ul ol ol,
+ol ul ol,
+ol ol ol {
+list-style-type: lower-alpha;
+}
+dd {
+margin-left: 0;
+}
+code {
+font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+font-size: 12px;
+}
+pre {
+margin-top: 0;
+margin-bottom: 0;
+font: 12px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+.select::-ms-expand {
+opacity: 0;
+}
+.octicon {
+font: normal normal normal 16px/1 octicons-link;
+display: inline-block;
+text-decoration: none;
+text-rendering: auto;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+}
+.octicon-link:before {
+content: '\f05c';
+}
+.markdown-body:before {
+display: table;
+content: "";
+}
+.markdown-body:after {
+display: table;
+clear: both;
+content: "";
+}
+.markdown-body>*:first-child {
+margin-top: 0 !important;
+}
+.markdown-body>*:last-child {
+margin-bottom: 0 !important;
+}
+a:not([href]) {
+color: inherit;
+text-decoration: none;
+}
+.anchor {
+display: inline-block;
+padding-right: 2px;
+margin-left: -18px;
+}
+.anchor:focus {
+outline: none;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 1em;
+margin-bottom: 16px;
+font-weight: bold;
+line-height: 1.4;
+}
+h1 .octicon-link,
+h2 .octicon-link,
+h3 .octicon-link,
+h4 .octicon-link,
+h5 .octicon-link,
+h6 .octicon-link {
+color: #000;
+vertical-align: middle;
+visibility: hidden;
+}
+h1:hover .anchor,
+h2:hover .anchor,
+h3:hover .anchor,
+h4:hover .anchor,
+h5:hover .anchor,
+h6:hover .anchor {
+text-decoration: none;
+}
+h1:hover .anchor .octicon-link,
+h2:hover .anchor .octicon-link,
+h3:hover .anchor .octicon-link,
+h4:hover .anchor .octicon-link,
+h5:hover .anchor .octicon-link,
+h6:hover .anchor .octicon-link {
+visibility: visible;
+}
+h1 {
+padding-bottom: 0.3em;
+font-size: 2.25em;
+line-height: 1.2;
+border-bottom: 1px solid #eee;
+}
+h1 .anchor {
+line-height: 1;
+}
+h2 {
+padding-bottom: 0.3em;
+font-size: 1.75em;
+line-height: 1.225;
+border-bottom: 1px solid #eee;
+}
+h2 .anchor {
+line-height: 1;
+}
+h3 {
+font-size: 1.5em;
+line-height: 1.43;
+}
+h3 .anchor {
+line-height: 1.2;
+}
+h4 {
+font-size: 1.25em;
+}
+h4 .anchor {
+line-height: 1.2;
+}
+h5 {
+font-size: 1em;
+}
+h5 .anchor {
+line-height: 1.1;
+}
+h6 {
+font-size: 1em;
+color: #777;
+}
+h6 .anchor {
+line-height: 1.1;
+}
+p,
+blockquote,
+ul,
+ol,
+dl,
+table,
+pre {
+margin-top: 0;
+margin-bottom: 16px;
+}
+hr {
+height: 4px;
+padding: 0;
+margin: 16px 0;
+background-color: #e7e7e7;
+border: 0 none;
+}
+ul,
+ol {
+padding-left: 2em;
+}
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+margin-top: 0;
+margin-bottom: 0;
+}
+li>p {
+margin-top: 16px;
+}
+dl {
+padding: 0;
+}
+dl dt {
+padding: 0;
+margin-top: 16px;
+font-size: 1em;
+font-style: italic;
+font-weight: bold;
+}
+dl dd {
+padding: 0 16px;
+margin-bottom: 16px;
+}
+blockquote {
+padding: 0 15px;
+color: #777;
+border-left: 4px solid #ddd;
+}
+blockquote>:first-child {
+margin-top: 0;
+}
+blockquote>:last-child {
+margin-bottom: 0;
+}
+table {
+display: block;
+width: 100%;
+overflow: auto;
+word-break: normal;
+word-break: keep-all;
+}
+table th {
+font-weight: bold;
+}
+table th,
+table td {
+padding: 6px 13px;
+border: 1px solid #ddd;
+}
+table tr {
+background-color: #fff;
+border-top: 1px solid #ccc;
+}
+table tr:nth-child(2n) {
+background-color: #f8f8f8;
+}
+img {
+max-width: 100%;
+box-sizing: content-box;
+background-color: #fff;
+}
+code {
+padding: 0;
+padding-top: 0.2em;
+padding-bottom: 0.2em;
+margin: 0;
+font-size: 85%;
+background-color: rgba(0,0,0,0.04);
+border-radius: 3px;
+}
+code:before,
+code:after {
+letter-spacing: -0.2em;
+content: "\00a0";
+}
+pre>code {
+padding: 0;
+margin: 0;
+font-size: 100%;
+word-break: normal;
+white-space: pre;
+background: transparent;
+border: 0;
+}
+.highlight {
+margin-bottom: 16px;
+}
+.highlight pre,
+pre {
+padding: 16px;
+overflow: auto;
+font-size: 85%;
+line-height: 1.45;
+background-color: #f7f7f7;
+border-radius: 3px;
+}
+.highlight pre {
+margin-bottom: 0;
+word-break: normal;
+}
+pre {
+word-wrap: normal;
+}
+pre code {
+display: inline;
+max-width: initial;
+padding: 0;
+margin: 0;
+overflow: initial;
+line-height: inherit;
+word-wrap: normal;
+background-color: transparent;
+border: 0;
+}
+pre code:before,
+pre code:after {
+content: normal;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font-size: 11px;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.pl-c {
+color: #969896;
+}
+.pl-c1,
+.pl-s .pl-v {
+color: #0086b3;
+}
+.pl-e,
+.pl-en {
+color: #795da3;
+}
+.pl-s .pl-s1,
+.pl-smi {
+color: #333;
+}
+.pl-ent {
+color: #63a35c;
+}
+.pl-k {
+color: #a71d5d;
+}
+.pl-pds,
+.pl-s,
+.pl-s .pl-pse .pl-s1,
+.pl-sr,
+.pl-sr .pl-cce,
+.pl-sr .pl-sra,
+.pl-sr .pl-sre {
+color: #183691;
+}
+.pl-v {
+color: #ed6a43;
+}
+.pl-id {
+color: #b52a1d;
+}
+.pl-ii {
+background-color: #b52a1d;
+color: #f8f8f8;
+}
+.pl-sr .pl-cce {
+color: #63a35c;
+font-weight: bold;
+}
+.pl-ml {
+color: #693a17;
+}
+.pl-mh,
+.pl-mh .pl-en,
+.pl-ms {
+color: #1d3e81;
+font-weight: bold;
+}
+.pl-mq {
+color: #008080;
+}
+.pl-mi {
+color: #333;
+font-style: italic;
+}
+.pl-mb {
+color: #333;
+font-weight: bold;
+}
+.pl-md {
+background-color: #ffecec;
+color: #bd2c00;
+}
+.pl-mi1 {
+background-color: #eaffea;
+color: #55a532;
+}
+.pl-mdr {
+color: #795da3;
+font-weight: bold;
+}
+.pl-mo {
+color: #1d3e81;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.task-list-item {
+list-style-type: none;
+}
+.task-list-item+.task-list-item {
+margin-top: 3px;
+}
+.task-list-item input {
+margin: 0 0.35em 0.25em -1.6em;
+vertical-align: middle;
+}
+:checked+.radio-label {
+z-index: 1;
+position: relative;
+border-color: #4078c0;
+}
+.sourceLine {
+display: inline-block;
+}
+code .kw { color: #000000; }
+code .dt { color: #ed6a43; }
+code .dv { color: #009999; }
+code .bn { color: #009999; }
+code .fl { color: #009999; }
+code .ch { color: #009999; }
+code .st { color: #183691; }
+code .co { color: #969896; }
+code .ot { color: #0086b3; }
+code .al { color: #a61717; }
+code .fu { color: #63a35c; }
+code .er { color: #a61717; background-color: #e3d2d2; }
+code .wa { color: #000000; }
+code .cn { color: #008080; }
+code .sc { color: #008080; }
+code .vs { color: #183691; }
+code .ss { color: #183691; }
+code .im { color: #000000; }
+code .va {color: #008080; }
+code .cf { color: #000000; }
+code .op { color: #000000; }
+code .bu { color: #000000; }
+code .ex { color: #000000; }
+code .pp { color: #999999; }
+code .at { color: #008080; }
+code .do { color: #969896; }
+code .an { color: #008080; }
+code .cv { color: #008080; }
+code .in { color: #008080; }
+</style>
+<style>
+body {
+box-sizing: border-box;
+min-width: 200px;
+max-width: 980px;
+margin: 0 auto;
+padding: 45px;
+padding-top: 0px;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="rsimpleffi">RSimpleFFI</h1>
+<!-- badges: start -->
+
+<p><a href="https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml"><img src="data:image/svg+xml; charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzUiIGhlaWdodD0iMjAiPgogIDx0aXRsZT5SLUNNRC1jaGVjay55YW1sIC0gZmFpbGluZzwvdGl0bGU+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndvcmtmbG93LWZpbGwiIHgxPSI1MCUiIHkxPSIwJSIgeDI9IjUwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjNDQ0RDU2IiBvZmZzZXQ9IjAlIj48L3N0b3A+CiAgICAgIDxzdG9wIHN0b3AtY29sb3I9IiMyNDI5MkUiIG9mZnNldD0iMTAwJSI+PC9zdG9wPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic3RhdGUtZmlsbCIgeDE9IjUwJSIgeTE9IjAlIiB4Mj0iNTAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIHN0b3AtY29sb3I9IiNENzNBNDkiIG9mZnNldD0iMCUiPjwvc3RvcD4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iI0NCMjQzMSIgb2Zmc2V0PSIxMDAlIj48L3N0b3A+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZm9udC1mYW1pbHk9IiYjMzk7RGVqYVZ1IFNhbnMmIzM5OyxWZXJkYW5hLEdlbmV2YSxzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIj4KICAgICAgPHBhdGggaWQ9IndvcmtmbG93LWJnIiBkPSJNMCwzIEMwLDEuMzQzMSAxLjM1NTIsMCAzLjAyNzAyNzAzLDAgTDEzMiwwIEwxMzIsMjAgTDMuMDI3MDI3MDMsMjAgQzEuMzU1MiwyMCAwLDE4LjY1NjkgMCwxNyBMMCwzIFoiIGZpbGw9InVybCgjd29ya2Zsb3ctZmlsbCkiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPgogICAgICA8dGV4dCBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIj4KICAgICAgICA8dHNwYW4geD0iMjIuMTk4MTk4MiIgeT0iMTUiIGFyaWEtaGlkZGVuPSJ0cnVlIj5SLUNNRC1jaGVjay55YW1sPC90c3Bhbj4KICAgICAgPC90ZXh0PgogICAgICA8dGV4dCBmaWxsPSIjRkZGRkZGIj4KICAgICAgICA8dHNwYW4geD0iMjIuMTk4MTk4MiIgeT0iMTQiPlItQ01ELWNoZWNrLnlhbWw8L3RzcGFuPgogICAgICA8L3RleHQ+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMzIpIiBmb250LWZhbWlseT0iJiMzOTtEZWphVnUgU2FucyYjMzk7LFZlcmRhbmEsR2VuZXZhLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiPgogICAgICA8cGF0aCBkPSJNMCAwaDQwLjQ3QzQxLjg2OSAwIDQzIDEuMzQzIDQzIDN2MTRjMCAxLjY1Ny0xLjEzMiAzLTIuNTMgM0gwVjB6IiBpZD0ic3RhdGUtYmciIGZpbGw9InVybCgjc3RhdGUtZmlsbCkiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPgogICAgICA8dGV4dCBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiBhcmlhLWhpZGRlbj0idHJ1ZSI+CiAgICAgICAgPHRzcGFuIHg9IjUiIHk9IjE1Ij5mYWlsaW5nPC90c3Bhbj4KICAgICAgPC90ZXh0PgogICAgICA8dGV4dCBmaWxsPSIjRkZGRkZGIj4KICAgICAgICA8dHNwYW4geD0iNSIgeT0iMTQiPmZhaWxpbmc8L3RzcGFuPgogICAgICA8L3RleHQ+CiAgICA8L2c+CiAgICA8cGF0aCBmaWxsPSIjOTU5REE1IiBkPSJNMTEgM2MtMy44NjggMC03IDMuMTMyLTcgN2E2Ljk5NiA2Ljk5NiAwIDAgMCA0Ljc4NiA2LjY0MWMuMzUuMDYyLjQ4Mi0uMTQ4LjQ4Mi0uMzMyIDAtLjE2Ni0uMDEtLjcxOC0uMDEtMS4zMDQtMS43NTguMzI0LTIuMjEzLS40MjktMi4zNTMtLjgyMi0uMDc5LS4yMDItLjQyLS44MjMtLjcxNy0uOTktLjI0NS0uMTMtLjU5NS0uNDU0LS4wMS0uNDYzLjU1Mi0uMDA5Ljk0Ni41MDggMS4wNzcuNzE4LjYzIDEuMDU4IDEuNjM2Ljc2IDIuMDM5LjU3Ny4wNjEtLjQ1NS4yNDUtLjc2MS40NDYtLjkzNi0xLjU1Ny0uMTc1LTMuMTg1LS43NzktMy4xODUtMy40NTYgMC0uNzYyLjI3MS0xLjM5Mi43MTgtMS44ODItLjA3LS4xNzUtLjMxNS0uODkyLjA3LTEuODU1IDAgMCAuNTg2LS4xODMgMS45MjUuNzE4YTYuNSA2LjUgMCAwIDEgMS43NS0uMjM2IDYuNSA2LjUgMCAwIDEgMS43NS4yMzZjMS4zMzgtLjkxIDEuOTI1LS43MTggMS45MjUtLjcxOC4zODUuOTYzLjE0IDEuNjguMDcgMS44NTUuNDQ2LjQ5LjcxNyAxLjExMi43MTcgMS44ODIgMCAyLjY4Ni0xLjYzNiAzLjI4LTMuMTk0IDMuNDU2LjI1NC4yMTkuNDczLjYzOS40NzMgMS4yOTUgMCAuOTM2LS4wMDkgMS42ODktLjAwOSAxLjkyNSAwIC4xODQuMTMxLjQwMi40ODEuMzMyQTcuMDExIDcuMDExIDAgMCAwIDE4IDEwYzAtMy44NjctMy4xMzMtNy03LTd6Ij48L3BhdGg+CiAgPC9nPgo8L3N2Zz4KCg==" alt="R-CMD-check" /></a></p>
+<!-- badges: end -->
+
+<p>A Simple Foreign Function Interface (FFI) for R using libffi.</p>
+<h2 id="overview">Overview</h2>
+<p>RSimpleFFI lets you call C functions from R using the <a href="https://github.com/libffi/libffi">libffi</a> library. It supports
+over 25 different C types including integers, floats, and
+platform-specific types. The package uses S7 classes for type safety and
+handles memory management automatically. It only needs libffi which is
+available on most systems. RSimpleFFI is inspired by the <a href="https://github.com/omegahat/Rffi/">Rffi package</a> by Duncan
+Temple Lang. It builds on the same structure with S7 classes.</p>
+<h2 id="installation">Installation</h2>
+<p>You can install RSimpleFFI from source using the <code>remotes</code>
+package:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_git</span>(<span class="st">&quot;sounkou-bioinfo/RSimpleFFI&quot;</span>)</span></code></pre></div>
+<p>it requires libffi to be installed on your system (we will vendor
+libffi in future releases)</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Ubuntu/Debian</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">sudo</span> apt-get install libffi-dev</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co"># macOS (via Homebrew)</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="ex">brew</span> install libffi</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co"># CentOS/RHEL/Fedora</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">sudo</span> yum install libffi-devel  <span class="co"># or dnf install libffi-devel</span></span></code></pre></div>
+<h2 id="quick-start">Quick Start</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(RSimpleFFI)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co"># Create FFI types</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>int_type <span class="ot">&lt;-</span> <span class="fu">ffi_int</span>()</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>double_type <span class="ot">&lt;-</span> <span class="fu">ffi_double</span>()</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co"># Get a C function symbol (using built-in test function)</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>add_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_add_int&quot;</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co"># Create call interface (CIF)</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(int_type, int_type, int_type)  <span class="co"># return int, takes two ints</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># Call the function</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(cif, add_func, <span class="dv">15</span><span class="dt">L</span>, <span class="dv">27</span><span class="dt">L</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>result</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; [1] 42</span></span></code></pre></div>
+<h2 id="type-system">Type System</h2>
+<p>RSimpleFFI supports many C types including integers, floats, and
+platform-specific types</p>
+<h3 id="basic-types">Basic Types</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>void_type <span class="ot">&lt;-</span> <span class="fu">ffi_void</span>()</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>int_type <span class="ot">&lt;-</span> <span class="fu">ffi_int</span>() </span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>double_type <span class="ot">&lt;-</span> <span class="fu">ffi_double</span>()</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>float_type <span class="ot">&lt;-</span> <span class="fu">ffi_float</span>()</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>pointer_type <span class="ot">&lt;-</span> <span class="fu">ffi_pointer</span>()</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>string_type <span class="ot">&lt;-</span> <span class="fu">ffi_string</span>()</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>int8_type <span class="ot">&lt;-</span> <span class="fu">ffi_int8</span>()</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>uint8_type <span class="ot">&lt;-</span> <span class="fu">ffi_uint8</span>()</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>int16_type <span class="ot">&lt;-</span> <span class="fu">ffi_int16</span>()</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>uint16_type <span class="ot">&lt;-</span> <span class="fu">ffi_uint16</span>()</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>int32_type <span class="ot">&lt;-</span> <span class="fu">ffi_int32</span>() </span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>uint32_type <span class="ot">&lt;-</span> <span class="fu">ffi_uint32</span>()</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>int64_type <span class="ot">&lt;-</span> <span class="fu">ffi_int64</span>()</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>uint64_type <span class="ot">&lt;-</span> <span class="fu">ffi_uint64</span>()</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>size_t_type <span class="ot">&lt;-</span> <span class="fu">ffi_size_t</span>()</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>ssize_t_type <span class="ot">&lt;-</span> <span class="fu">ffi_ssize_t</span>()</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>long_type <span class="ot">&lt;-</span> <span class="fu">ffi_long</span>()</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>ulong_type <span class="ot">&lt;-</span> <span class="fu">ffi_ulong</span>()</span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>longdouble_type <span class="ot">&lt;-</span> <span class="fu">ffi_longdouble</span>()</span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>bool_type <span class="ot">&lt;-</span> <span class="fu">ffi_bool</span>()</span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>wchar_type <span class="ot">&lt;-</span> <span class="fu">ffi_wchar_t</span>()</span></code></pre></div>
+<h3 id="typed-buffers">Typed Buffers</h3>
+<p>We can allocate typed buffers using <code>ffi_alloc()</code> and
+read/write data using <code>ffi_copy_array()</code> and
+<code>ffi_fill_typed_buffer()</code></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Allocate a buffer for 10 integers</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>int_type <span class="ot">&lt;-</span> <span class="fu">ffi_int</span>()</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>int_buf <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(int_type, <span class="dv">10</span><span class="dt">L</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># Read back as R vector (using ffi_copy_array)</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">ffi_copy_array</span>(int_buf, <span class="dv">10</span><span class="dt">L</span>, int_type)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;  [1] 0 0 0 0 0 0 0 0 0 0</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># You can use ffi_alloc for any builtin type:</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>double_type <span class="ot">&lt;-</span> <span class="fu">ffi_double</span>()</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>double_buf <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(double_type, <span class="dv">5</span><span class="dt">L</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="fu">ffi_copy_array</span>(double_buf, <span class="dv">5</span><span class="dt">L</span>, double_type)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; [1] 0 0 0 0 0</span></span></code></pre></div>
+<h3 id="array-types-arraytype">Array Types (ArrayType)</h3>
+<p>Array types can be created using <code>ffi_array_type()</code> and
+used with <code>ffi_alloc()</code> and
+<code>ffi_copy_array_type()</code>. They provide a convenient way to
+handle fixed-size arrays and passed them to C functions via
+pointers.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Allocate an array of 4 integers</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>int_type <span class="ot">&lt;-</span> <span class="fu">ffi_int</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>arr_type <span class="ot">&lt;-</span> <span class="fu">ffi_array_type</span>(int_type, <span class="dv">4</span><span class="dt">L</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>arr_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(arr_type)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co"># Write values into the buffer using ffi_fill_typed_buffer</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>vals <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">c</span>(<span class="dv">10</span><span class="dt">L</span>, <span class="dv">20</span><span class="dt">L</span>, <span class="dv">30</span><span class="dt">L</span>, <span class="dv">40</span><span class="dt">L</span>))</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="fu">ffi_fill_typed_buffer</span>(arr_ptr, vals, int_type)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co"># Read back as R vector</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">ffi_copy_array_type</span>(arr_ptr, arr_type)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>result</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; [1] 10 20 30 40</span></span></code></pre></div>
+<h3 id="struct-types">Struct Types</h3>
+<p>You can define and use C struct types using
+<code>ffi_struct()</code>, <code>ffi_alloc()</code>,
+<code>ffi_get_field()</code>, and <code>ffi_set_field()</code></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co"># Define a struct type: struct Point { int x; double y; }</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>point_type <span class="ot">&lt;-</span> <span class="fu">ffi_struct</span>(<span class="at">x =</span> <span class="fu">ffi_int</span>(), <span class="at">y =</span> <span class="fu">ffi_double</span>())</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co"># use the print methods for no</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">print</span>(point_type)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; StructType(fields=[x, y], size=16)</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; Fields:</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;   x: FFIType(int, size=4)</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;   y: FFIType(double, size=8)</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co"># Allocate a struct instance</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>point_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(point_type)</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co"># Set fields</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="fu">ffi_set_field</span>(point_ptr, <span class="st">&quot;x&quot;</span>, <span class="dv">42</span><span class="dt">L</span>, point_type)</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="fu">ffi_set_field</span>(point_ptr, <span class="st">&quot;y&quot;</span>, <span class="fl">3.14</span>, point_type)</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co"># Get fields</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>x_val <span class="ot">&lt;-</span> <span class="fu">ffi_get_field</span>(point_ptr, <span class="st">&quot;x&quot;</span>, point_type)</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>y_val <span class="ot">&lt;-</span> <span class="fu">ffi_get_field</span>(point_ptr, <span class="st">&quot;y&quot;</span>, point_type)</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>x_val </span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; [1] 42</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>y_val </span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; [1] 3.14</span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co"># You can also use integer field indices (1-based):</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="fu">ffi_set_field</span>(point_ptr, <span class="dv">1</span><span class="dt">L</span>, <span class="dv">100</span><span class="dt">L</span>, point_type)  </span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="fu">ffi_get_field</span>(point_ptr, <span class="dv">2</span><span class="dt">L</span>, point_type)       </span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; [1] 3.14</span></span></code></pre></div>
+<p>You can define more complex structs by adding more fields and using
+any supported FFI type.</p>
+<h2 id="function-calling">Function Calling</h2>
+<h3 id="basic-function-calls">Basic Function Calls</h3>
+<p>The package comes with some built-in C test functions for testing,
+they are defined in <a href="src/test_functions.c">src/test_functions.c</a></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>void_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_void_function&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>void_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(void_type)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">ffi_call</span>(void_cif, void_func)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>factorial_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_factorial&quot;</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>factorial_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(int_type, int_type)</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>factorial_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(factorial_cif, factorial_func, <span class="dv">5</span><span class="dt">L</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>factorial_result</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; [1] 120</span></span></code></pre></div>
+<h4 id="testing-integer-types">Testing Integer Types</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># test_int8_func: returns input + 1</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>int8_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_int8_func&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>int8_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(int8_type, int8_type)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>int8_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(int8_cif, int8_func, <span class="dv">42</span><span class="dt">L</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>int8_result  <span class="co"># 42 + 1 = 43</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; [1] 43</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co"># test_uint32_func: returns input * 3</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>uint32_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_uint32_func&quot;</span>) </span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>uint32_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(uint32_type, uint32_type)</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>uint32_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(uint32_cif, uint32_func, <span class="dv">123</span><span class="dt">L</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>uint32_result  <span class="co"># 123 * 3 = 369</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; [1] 369</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co"># test_int64_func: returns input * 4</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>int64_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_int64_func&quot;</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>int64_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(int64_type, int64_type)</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>int64_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(int64_cif, int64_func, <span class="dv">999</span><span class="dt">L</span>)</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>int64_result  <span class="co"># 999 * 4 = 3996</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; [1] 3996</span></span></code></pre></div>
+<h4 id="floating-point-types">Floating-Point Types</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>add_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_add_int&quot;</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>add_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(int_type, int_type, int_type)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>int_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(add_cif, add_func, <span class="dv">10</span><span class="dt">L</span>, <span class="dv">5</span><span class="dt">L</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>int_result</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; [1] 15</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>double_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_add_double&quot;</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>double_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(double_type, double_type, double_type)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>double_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(double_cif, double_func, <span class="fl">3.14</span>, <span class="fl">2.86</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>double_result</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt; [1] 6</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>float_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_add_float&quot;</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>float_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(float_type, float_type, float_type)</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>float_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(float_cif, float_func, <span class="fl">1.5</span>, <span class="fl">2.5</span>)</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>float_result</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; [1] 4</span></span></code></pre></div>
+<h4 id="string-output-example">String output example</h4>
+<p>This calls a C function that returns a string (const char*) as
+pointer</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>string_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_return_string&quot;</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>string_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(string_type)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>string_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(string_cif, string_func)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>string_result</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x7864393475c8&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="fu">pointer_to_string</span>(string_result)</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Hello from C!&quot;</span></span></code></pre></div>
+<h4 id="struct-types-1">Struct Types</h4>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Define struct type: struct Point { int x; double y; }</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>point_type <span class="ot">&lt;-</span> <span class="fu">ffi_struct</span>(<span class="at">x =</span> <span class="fu">ffi_int</span>(), <span class="at">y =</span> <span class="fu">ffi_double</span>())</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co"># Allocate and set fields</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>point_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(point_type)</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="fu">ffi_set_field</span>(point_ptr, <span class="st">&quot;x&quot;</span>, <span class="dv">42</span><span class="dt">L</span>, point_type)</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="fu">ffi_set_field</span>(point_ptr, <span class="st">&quot;y&quot;</span>, <span class="fl">3.14</span>, point_type)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co"># Call the built-in C function: int test_get_point_x(Point2D* point)</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>get_point_x_func <span class="ot">&lt;-</span> <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_get_point_x&quot;</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>get_point_x_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(<span class="fu">ffi_int</span>(), <span class="fu">ffi_pointer</span>())</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>result_x <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(get_point_x_cif, get_point_x_func, point_ptr)</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>result_x  </span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; [1] 42</span></span></code></pre></div>
+<h4 id="type-conversions">Type Conversions</h4>
+<p>RSimpleFFI attemps to convert between R and C types automatically</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>int16_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(<span class="fu">ffi_cif</span>(int16_type, int16_type), </span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>                        <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_int16_func&quot;</span>), <span class="dv">1000</span><span class="dt">L</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>int16_result</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt; [1] 2000</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>uint16_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(<span class="fu">ffi_cif</span>(uint16_type, uint16_type),</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>                         <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_uint16_func&quot;</span>), <span class="fl">2000.0</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>uint16_result</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt; [1] 4000</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>bool_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(<span class="fu">ffi_cif</span>(bool_type, bool_type),</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>                       <span class="fu">ffi_symbol</span>(<span class="st">&quot;test_bool_func&quot;</span>), <span class="cn">TRUE</span>)</span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>bool_result</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<h3 id="call-system-libraries-functions-or-external-shared-libraries">Call
+system libraries functions or external shared libraries</h3>
+<p>You can load external shared libraries at runtime using RSimpleFFI’s
+<code>dll_load()</code> and <code>dll_ffi_symbol()</code> functions.
+These are wrappers around R’s native <code>dyn.load()</code> facilities
+that search for shared libraries in system paths when required.</p>
+<h4 id="search-so-files-in-system-paths">Search so files in system
+paths</h4>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># Example: call the C standard library rand() function</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>libc_path <span class="ot">&lt;-</span> <span class="fu">dll_load_system</span>(<span class="st">&quot;libc.so.6&quot;</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co">#&gt; Loading system library from: /usr/lib/x86_64-linux-gnu/libc.so.6</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>rand_func <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(<span class="st">&quot;rand&quot;</span>, <span class="fu">ffi_int</span>())</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>rand_value <span class="ot">&lt;-</span> <span class="fu">rand_func</span>()</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>rand_value</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co">#&gt; [1] 1484951222</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="fu">dll_unload</span>(libc_path)</span></code></pre></div>
+<h4 id="explicitly-load-shared-libraries">Explicitly load shared
+libraries</h4>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># Find the libc shared object (libc is always present)</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>so_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">&quot;/lib/x86_64-linux-gnu&quot;</span>, <span class="at">pattern =</span> <span class="st">&quot;^libc[.]so[.]6$&quot;</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(so_files) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">stop</span>(<span class="st">&quot;libc.so.6 not found&quot;</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>lib_path <span class="ot">&lt;-</span> <span class="fu">dll_load</span>(so_files[<span class="dv">1</span>])</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co"># Allocate a buffer of 8 bytes</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>raw_type <span class="ot">&lt;-</span> <span class="fu">ffi_raw</span>()</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>buf_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(raw_type, <span class="dv">8</span><span class="dt">L</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="fu">rawToChar</span>(<span class="fu">ffi_copy_array</span>(buf_ptr, <span class="dv">8</span><span class="dt">L</span>, raw_type))</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="co">#&gt; [1] &quot;&quot;</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co"># Get memset from libc: void *memset(void *s, int c, size_t n)</span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>memset_fn <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(<span class="st">&quot;memset&quot;</span>, <span class="fu">ffi_pointer</span>(), <span class="fu">ffi_pointer</span>(), <span class="fu">ffi_int</span>(), <span class="fu">ffi_size_t</span>())</span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co"># Fill the buffer with ASCII &#39;A&#39; (0x41)</span></span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="fu">memset_fn</span>(buf_ptr, <span class="fu">as.integer</span>(<span class="dv">0x41</span>), <span class="dv">8</span><span class="dt">L</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x62b4c9886460&gt;</span></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a></span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="co"># Read back the buffer and print as string</span></span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a><span class="fu">rawToChar</span>(<span class="fu">ffi_copy_array</span>(buf_ptr, <span class="dv">8</span><span class="dt">L</span>, raw_type))</span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a><span class="co">#&gt; [1] &quot;AAAAAAAA&quot;</span></span>
+<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a></span>
+<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="fu">pointer_to_string</span>(buf_ptr)</span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt; [1] &quot;AAAAAAAA&quot;</span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
+<h3 id="compile-and-load-c-code">Compile and Load C Code</h3>
+<p>The package provides facilities to load C code on the fly. The
+compiler uses R CMD SHLIB under the hood</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>c_code <span class="ot">&lt;-</span> <span class="st">&#39;</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="st">int add_numbers(int a, int b) {</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="st">    return a + b;</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="st">&#39;</span></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>lib_path <span class="ot">&lt;-</span> <span class="fu">dll_compile_and_load</span>(c_code, <span class="st">&quot;example_lib&quot;</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>int_t <span class="ot">&lt;-</span> <span class="fu">ffi_int</span>()</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>add_fn <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(<span class="st">&quot;add_numbers&quot;</span>, int_t, int_t, int_t)</span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">add_fn</span>(<span class="dv">10</span><span class="dt">L</span>, <span class="dv">5</span><span class="dt">L</span>)</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a>result</span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co">#&gt; [1] 15</span></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>math_code <span class="ot">&lt;-</span> <span class="st">&#39;</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="st">#include &lt;math.h&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="st">double compute_distance(double x1, double y1, double x2, double y2) {</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="st">    double dx = x2 - x1;</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="st">    double dy = y2 - y1;</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="st">    return sqrt(dx*dx + dy*dy);</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="st">&#39;</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>lib_path <span class="ot">&lt;-</span> <span class="fu">dll_compile_and_load</span>(math_code, <span class="st">&quot;math_lib&quot;</span>, <span class="at">libs =</span> <span class="st">&quot;m&quot;</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>double_t <span class="ot">&lt;-</span> <span class="fu">ffi_double</span>()</span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>distance_fn <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(<span class="st">&quot;compute_distance&quot;</span>, double_t, double_t, double_t, double_t, double_t)</span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a>dist <span class="ot">&lt;-</span> <span class="fu">distance_fn</span>(<span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">3.0</span>, <span class="fl">4.0</span>)</span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a>dist</span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="co">#&gt; [1] 5</span></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
+<h2 id="benchmarking">Benchmarking</h2>
+<p>We run some benchmarks to estimate the performance of FFI calls (i.e
+the overhead of calling C functions from R using RSimpleFFI) compared to
+native R C built-in functions.</p>
+<h3 id="r-builtin-c-functions">R builtin C functions</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">10000</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>x_vec <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="dv">1</span>, <span class="dv">100</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>x_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(<span class="fu">ffi_double</span>(), n)</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="fu">ffi_fill_typed_buffer</span>(x_ptr, x_vec, <span class="fu">ffi_double</span>())</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a>out_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(<span class="fu">ffi_double</span>(), n)</span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a>math_code <span class="ot">&lt;-</span> <span class="st">&#39;</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="st">#include &lt;math.h&gt;</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="st">void vec_sqrt(const double* x, double* out, int n) {</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a><span class="st">    for (int i = 0; i &lt; n; ++i) out[i] = sqrt(x[i]);</span></span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a><span class="st">&#39;</span></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>lib_path <span class="ot">&lt;-</span> <span class="fu">dll_compile_and_load</span>(math_code, <span class="st">&quot;bench_vec&quot;</span>, <span class="at">libs =</span> <span class="st">&quot;m&quot;</span>, <span class="at">cflags =</span> <span class="st">&quot;-O3&quot;</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a>vec_sqrt_func <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(<span class="st">&quot;vec_sqrt&quot;</span>, <span class="fu">ffi_void</span>(), <span class="fu">ffi_pointer</span>(), <span class="fu">ffi_pointer</span>(), <span class="fu">ffi_int</span>())</span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a>benchmark_result <span class="ot">&lt;-</span> bench<span class="sc">::</span><span class="fu">mark</span>(</span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a>  <span class="at">native_r =</span> <span class="fu">sqrt</span>(x_vec),</span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a>  <span class="at">ffi_call =</span> { <span class="fu">vec_sqrt_func</span>(x_ptr, out_ptr, n); <span class="fu">ffi_copy_array</span>(out_ptr, n, <span class="fu">ffi_double</span>()) },</span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a>  <span class="at">check =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a>  <span class="at">iterations =</span> <span class="dv">100</span></span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a>)</span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a>benchmark_result</span>
+<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
+<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
+<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="co">#&gt; 1 native_r     12.9µs   28.2µs    35902.    78.2KB        0</span></span>
+<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a><span class="co">#&gt; 2 ffi_call     90.3µs   98.3µs     9802.    78.7KB        0</span></span>
+<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
+<h3 id="interpreted-r-code">Interpreted R Code</h3>
+<p>We compare a pure C convolution (via FFI) to a simple R
+implementation.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># Slow R convolution</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>slow_convolve <span class="ot">&lt;-</span> <span class="cf">function</span>(a, b) {</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>  ab <span class="ot">&lt;-</span> <span class="fu">double</span>(<span class="fu">length</span>(a) <span class="sc">+</span> <span class="fu">length</span>(b) <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(a)) {</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(b)) {</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a>      ab[i <span class="sc">+</span> j <span class="sc">-</span> <span class="dv">1</span>] <span class="ot">&lt;-</span> ab[i <span class="sc">+</span> j <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">+</span> a[i] <span class="sc">*</span> b[j]</span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>    }</span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>  }</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>  ab</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a>}</span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="co"># C code for convolution (matches R)</span></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a>conv_code <span class="ot">&lt;-</span> <span class="st">&#39;</span></span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a><span class="st">#include &lt;stdio.h&gt;</span></span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a><span class="st">void c_convolve(const double* signal, int n_signal, const double* kernel, int n_kernel, double* out) {</span></span>
+<span id="cb19-16"><a href="#cb19-16" tabindex="-1"></a><span class="st">  int n_out = n_signal + n_kernel - 1;</span></span>
+<span id="cb19-17"><a href="#cb19-17" tabindex="-1"></a><span class="st">  for (int i = 0; i &lt; n_out; ++i) {</span></span>
+<span id="cb19-18"><a href="#cb19-18" tabindex="-1"></a><span class="st">    out[i] = 0.0;</span></span>
+<span id="cb19-19"><a href="#cb19-19" tabindex="-1"></a><span class="st">    for (int j = 0; j &lt; n_kernel; ++j) {</span></span>
+<span id="cb19-20"><a href="#cb19-20" tabindex="-1"></a><span class="st">      int k = i - j;</span></span>
+<span id="cb19-21"><a href="#cb19-21" tabindex="-1"></a><span class="st">      if (k &gt;= 0 &amp;&amp; k &lt; n_signal) {</span></span>
+<span id="cb19-22"><a href="#cb19-22" tabindex="-1"></a><span class="st">        //printf(&quot;signal[%d]=%f, kernel[%d]=%f</span><span class="sc">\\</span><span class="st">n&quot;, k, signal[k], j, kernel[j]);</span></span>
+<span id="cb19-23"><a href="#cb19-23" tabindex="-1"></a><span class="st">        out[i] += signal[k] * kernel[j];</span></span>
+<span id="cb19-24"><a href="#cb19-24" tabindex="-1"></a><span class="st">      }</span></span>
+<span id="cb19-25"><a href="#cb19-25" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb19-26"><a href="#cb19-26" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb19-27"><a href="#cb19-27" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb19-28"><a href="#cb19-28" tabindex="-1"></a><span class="st">&#39;</span></span>
+<span id="cb19-29"><a href="#cb19-29" tabindex="-1"></a></span>
+<span id="cb19-30"><a href="#cb19-30" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1995</span>)</span>
+<span id="cb19-31"><a href="#cb19-31" tabindex="-1"></a>signal <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb19-32"><a href="#cb19-32" tabindex="-1"></a>kernel <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.5</span>, <span class="fl">0.3</span>)</span>
+<span id="cb19-33"><a href="#cb19-33" tabindex="-1"></a>n_signal <span class="ot">&lt;-</span> <span class="fu">length</span>(signal)</span>
+<span id="cb19-34"><a href="#cb19-34" tabindex="-1"></a>n_kernel <span class="ot">&lt;-</span> <span class="fu">length</span>(kernel)</span>
+<span id="cb19-35"><a href="#cb19-35" tabindex="-1"></a>n_out <span class="ot">&lt;-</span> n_signal <span class="sc">+</span> n_kernel <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb19-36"><a href="#cb19-36" tabindex="-1"></a></span>
+<span id="cb19-37"><a href="#cb19-37" tabindex="-1"></a><span class="co"># Allocate buffers for FFI</span></span>
+<span id="cb19-38"><a href="#cb19-38" tabindex="-1"></a>signal_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(<span class="fu">ffi_double</span>(), n_signal)</span>
+<span id="cb19-39"><a href="#cb19-39" tabindex="-1"></a>kernel_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(<span class="fu">ffi_double</span>(), n_kernel)</span>
+<span id="cb19-40"><a href="#cb19-40" tabindex="-1"></a>out_ptr <span class="ot">&lt;-</span> <span class="fu">ffi_alloc</span>(<span class="fu">ffi_double</span>(), n_out)</span>
+<span id="cb19-41"><a href="#cb19-41" tabindex="-1"></a></span>
+<span id="cb19-42"><a href="#cb19-42" tabindex="-1"></a><span class="co"># Fill buffers</span></span>
+<span id="cb19-43"><a href="#cb19-43" tabindex="-1"></a><span class="fu">ffi_fill_typed_buffer</span>(signal_ptr, signal, <span class="fu">ffi_double</span>())</span>
+<span id="cb19-44"><a href="#cb19-44" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb19-45"><a href="#cb19-45" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">ffi_copy_array</span>(signal_ptr, <span class="fu">length</span>(signal),</span>
+<span id="cb19-46"><a href="#cb19-46" tabindex="-1"></a><span class="fu">ffi_double</span>()), signal)</span>
+<span id="cb19-47"><a href="#cb19-47" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb19-48"><a href="#cb19-48" tabindex="-1"></a><span class="fu">ffi_fill_typed_buffer</span>(kernel_ptr, kernel, <span class="fu">ffi_double</span>())</span>
+<span id="cb19-49"><a href="#cb19-49" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb19-50"><a href="#cb19-50" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">ffi_copy_array</span>(kernel_ptr, <span class="fu">length</span>(kernel),</span>
+<span id="cb19-51"><a href="#cb19-51" tabindex="-1"></a><span class="fu">ffi_double</span>()), kernel)</span>
+<span id="cb19-52"><a href="#cb19-52" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb19-53"><a href="#cb19-53" tabindex="-1"></a></span>
+<span id="cb19-54"><a href="#cb19-54" tabindex="-1"></a><span class="co"># Compile and load C convolution</span></span>
+<span id="cb19-55"><a href="#cb19-55" tabindex="-1"></a>lib_path <span class="ot">&lt;-</span> <span class="fu">dll_compile_and_load</span>(conv_code, <span class="st">&quot;bench_conv.so&quot;</span>, <span class="at">cflags =</span> <span class="st">&quot;-O3&quot;</span>)</span>
+<span id="cb19-56"><a href="#cb19-56" tabindex="-1"></a>pointer_t <span class="ot">&lt;-</span> <span class="fu">ffi_pointer</span>()</span>
+<span id="cb19-57"><a href="#cb19-57" tabindex="-1"></a>c_conv_fn <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(</span>
+<span id="cb19-58"><a href="#cb19-58" tabindex="-1"></a>  <span class="st">&quot;c_convolve&quot;</span>,</span>
+<span id="cb19-59"><a href="#cb19-59" tabindex="-1"></a>  <span class="fu">ffi_void</span>(),</span>
+<span id="cb19-60"><a href="#cb19-60" tabindex="-1"></a>  pointer_t, <span class="fu">ffi_int</span>(),</span>
+<span id="cb19-61"><a href="#cb19-61" tabindex="-1"></a>  pointer_t, <span class="fu">ffi_int</span>(),</span>
+<span id="cb19-62"><a href="#cb19-62" tabindex="-1"></a>  pointer_t</span>
+<span id="cb19-63"><a href="#cb19-63" tabindex="-1"></a>)</span>
+<span id="cb19-64"><a href="#cb19-64" tabindex="-1"></a></span>
+<span id="cb19-65"><a href="#cb19-65" tabindex="-1"></a><span class="co"># Run C convolution via FFI</span></span>
+<span id="cb19-66"><a href="#cb19-66" tabindex="-1"></a><span class="fu">c_conv_fn</span>(</span>
+<span id="cb19-67"><a href="#cb19-67" tabindex="-1"></a>      signal_ptr, </span>
+<span id="cb19-68"><a href="#cb19-68" tabindex="-1"></a>      <span class="fu">as.integer</span>(n_signal),</span>
+<span id="cb19-69"><a href="#cb19-69" tabindex="-1"></a>      kernel_ptr,</span>
+<span id="cb19-70"><a href="#cb19-70" tabindex="-1"></a>      <span class="fu">as.integer</span>(n_kernel),</span>
+<span id="cb19-71"><a href="#cb19-71" tabindex="-1"></a>      out_ptr)</span>
+<span id="cb19-72"><a href="#cb19-72" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
+<span id="cb19-73"><a href="#cb19-73" tabindex="-1"></a>out_ptr</span>
+<span id="cb19-74"><a href="#cb19-74" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x62b4cd7f5a40&gt;</span></span>
+<span id="cb19-75"><a href="#cb19-75" tabindex="-1"></a>c_result <span class="ot">&lt;-</span> <span class="fu">ffi_copy_array</span>(out_ptr, n_out, <span class="fu">ffi_double</span>())</span>
+<span id="cb19-76"><a href="#cb19-76" tabindex="-1"></a></span>
+<span id="cb19-77"><a href="#cb19-77" tabindex="-1"></a><span class="co"># Run R convolution</span></span>
+<span id="cb19-78"><a href="#cb19-78" tabindex="-1"></a>r_result <span class="ot">&lt;-</span> <span class="fu">slow_convolve</span>(signal, kernel)</span>
+<span id="cb19-79"><a href="#cb19-79" tabindex="-1"></a></span>
+<span id="cb19-80"><a href="#cb19-80" tabindex="-1"></a><span class="co"># Check results</span></span>
+<span id="cb19-81"><a href="#cb19-81" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">ffi_copy_array</span>(signal_ptr, <span class="fu">length</span>(signal),</span>
+<span id="cb19-82"><a href="#cb19-82" tabindex="-1"></a><span class="fu">ffi_double</span>()), signal)</span>
+<span id="cb19-83"><a href="#cb19-83" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb19-84"><a href="#cb19-84" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">ffi_copy_array</span>(kernel_ptr, <span class="fu">length</span>(kernel),</span>
+<span id="cb19-85"><a href="#cb19-85" tabindex="-1"></a><span class="fu">ffi_double</span>()), kernel)</span>
+<span id="cb19-86"><a href="#cb19-86" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb19-87"><a href="#cb19-87" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">as.numeric</span>(c_result), <span class="fu">as.numeric</span>(r_result))</span>
+<span id="cb19-88"><a href="#cb19-88" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb19-89"><a href="#cb19-89" tabindex="-1"></a></span>
+<span id="cb19-90"><a href="#cb19-90" tabindex="-1"></a><span class="fu">ffi_copy_array</span>(out_ptr, n_out, <span class="fu">ffi_double</span>()) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span>
+<span id="cb19-91"><a href="#cb19-91" tabindex="-1"></a><span class="co">#&gt; [1] 0.21215265 0.46328129 0.17953895 0.05081738 0.57361490 0.88130298</span></span>
+<span id="cb19-92"><a href="#cb19-92" tabindex="-1"></a><span class="co"># Benchmark</span></span>
+<span id="cb19-93"><a href="#cb19-93" tabindex="-1"></a>benchmark_result <span class="ot">&lt;-</span> bench<span class="sc">::</span><span class="fu">mark</span>(</span>
+<span id="cb19-94"><a href="#cb19-94" tabindex="-1"></a>  <span class="at">r =</span> <span class="fu">slow_convolve</span>(signal, kernel),</span>
+<span id="cb19-95"><a href="#cb19-95" tabindex="-1"></a>  <span class="at">c_ffi =</span> {</span>
+<span id="cb19-96"><a href="#cb19-96" tabindex="-1"></a>    <span class="fu">c_conv_fn</span>(signal_ptr, <span class="fu">as.integer</span>(n_signal), kernel_ptr, <span class="fu">as.integer</span>(n_kernel), out_ptr)</span>
+<span id="cb19-97"><a href="#cb19-97" tabindex="-1"></a>    <span class="fu">ffi_copy_array</span>(out_ptr, n_out, <span class="fu">ffi_double</span>())</span>
+<span id="cb19-98"><a href="#cb19-98" tabindex="-1"></a>  },</span>
+<span id="cb19-99"><a href="#cb19-99" tabindex="-1"></a>  <span class="at">check =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb19-100"><a href="#cb19-100" tabindex="-1"></a>  <span class="at">iterations =</span> <span class="dv">20</span></span>
+<span id="cb19-101"><a href="#cb19-101" tabindex="-1"></a>)</span>
+<span id="cb19-102"><a href="#cb19-102" tabindex="-1"></a>benchmark_result</span>
+<span id="cb19-103"><a href="#cb19-103" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb19-104"><a href="#cb19-104" tabindex="-1"></a><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
+<span id="cb19-105"><a href="#cb19-105" tabindex="-1"></a><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
+<span id="cb19-106"><a href="#cb19-106" tabindex="-1"></a><span class="co">#&gt; 1 r            2.49ms    2.6ms      364.    78.2KB     19.2</span></span>
+<span id="cb19-107"><a href="#cb19-107" tabindex="-1"></a><span class="co">#&gt; 2 c_ffi        94.8µs  113.3µs     8497.    78.7KB      0</span></span>
+<span id="cb19-108"><a href="#cb19-108" tabindex="-1"></a></span>
+<span id="cb19-109"><a href="#cb19-109" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
+<h2 id="limitations-and-issues">Limitations and issues</h2>
+<p>Right now there are unimplemented features and limitations including
+uncessary copying, lack of protection and several potential memory
+leaks. The interface can and should be refined further. Our types are C
+pointers never. Furthermore we will vendor libffi in future releases to
+avoid dependency issues.</p>
+<h2 id="license">License</h2>
+<p>This project is licensed under the GPL-3 License.</p>
+
+</body>
+</html>

@@ -1,1 +1,2 @@
-PKG_LIBS = -lffi
+PKG_CPPFLAGS = -I../inst/libffi/include -fPIC
+PKG_LIBS = ../inst/libffi/libffi.a

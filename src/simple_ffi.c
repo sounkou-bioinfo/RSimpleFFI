@@ -1,7 +1,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>  // R's dynload facilities
-#include <ffi.h>
+#include "ffi.h"
 #include <string.h>
 #include <stdint.h>
 #include <wchar.h>

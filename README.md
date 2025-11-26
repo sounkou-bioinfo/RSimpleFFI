@@ -256,7 +256,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x786ab904a5c8>
+#> <pointer: 0x7864393475c8>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -317,7 +317,7 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 31482061
+#> [1] 1484951222
 dll_unload(libc_path)
 ```
 
@@ -339,7 +339,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5c2953d6c130>
+#> <pointer: 0x62b4c9886460>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -430,8 +430,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.1µs   28.9µs    34437.    78.2KB        0
-#> 2 ffi_call     90.9µs   97.3µs    10093.    78.7KB        0
+#> 1 native_r     12.9µs   28.2µs    35902.    78.2KB        0
+#> 2 ffi_call     90.3µs   98.3µs     9802.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -513,7 +513,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5c2958729a50>
+#> <pointer: 0x62b4cd7f5a40>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -545,8 +545,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r             2.5ms   2.65ms      366.    78.2KB     19.2
-#> 2 c_ffi        96.9µs 113.73µs     8583.    78.7KB      0
+#> 1 r            2.49ms    2.6ms      364.    78.2KB     19.2
+#> 2 c_ffi        94.8µs  113.3µs     8497.    78.7KB      0
 
 dll_unload(lib_path)
 ```

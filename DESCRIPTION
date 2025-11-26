@@ -7,7 +7,10 @@ Description: Simple Foreign Function Interface for R using libffi and S7 classes
     types (size_t, bool), and floating point types.
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure", 
-    email = "sounkoutoure@gmail.com", role = c("aut", "cre")))
+    email = "sounkoutoure@gmail.com", role = c("aut", "cre")),
+    person( given ="Anthony Green, Red Hat, Inc and others" , role = c("ctb"),
+    comment = "libffi authors and COPYRIGHT holders")
+    )
 License: GPL-3
 Depends: R (>= 4.0.0)
 Imports: S7

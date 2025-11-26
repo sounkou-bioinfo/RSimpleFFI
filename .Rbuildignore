@@ -15,3 +15,5 @@
 ^.*\.log$
 ^tests/testthat\.R$
 ^\.github$
+^\.inst/libffi$
+^src/libffi/build$
