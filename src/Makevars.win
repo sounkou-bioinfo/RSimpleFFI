@@ -3,3 +3,4 @@ LIBFFI_DIR := $(PKG_ROOT)/libffi
 
 PKG_CPPFLAGS = -I$(LIBFFI_DIR)
 PKG_LIBS = -L$(LIBFFI_DIR) -lffi
+# Note: rpath and $ORIGIN are not supported on Windows. DLL search is via PATH or executable location.
