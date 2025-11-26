@@ -1,12 +1,7 @@
-UNAME := $(shell uname)
-ifeq ($(UNAME),Darwin)
-	DYLIB_EXT := dylib
-else
-	DYLIB_EXT := so
-endif
+	
+SRC = $(CURDIR)
+LIBFFI_DIR = $(SRC)/../inst/libffi
+PKG_CFLAGS = -I$(LIBFFI_DIR) -I$(LIBFFI_DIR)/include
+PKG_LIBS = -L$(LIBFFI_DIR)/lib -lffi -Wl,-rpath,'$$ORIGIN/../libffi/lib'
 
-PKG_ROOT = $(CURDIR)/..
-LIBFFI_DIR = $(PKG_ROOT)/libffi
-
-PKG_CFLAGS = -I$(LIBFFI_DIR)  -I$(LIBFFI_DIR)/include
-PKG_LIBS = -L$(LIBFFI_DIR) -lffi -Wl,-rpath,'$$ORIGIN/../libffi'
+all: $(SHLIB)

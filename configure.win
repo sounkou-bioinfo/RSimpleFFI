@@ -21,15 +21,17 @@ echo "Unpacking libffi tarball (if needed) ..."
 if [ -d "$LIBFFI_SRC" ]; then
     cd "$LIBFFI_SRC"
     echo "$PWD"
-    ./configure --disable-docs --prefix="$PWD/build"  \
+    ./configure --disable-docs --includedir="$LIBFFI_DEST/include" \
+    --libdir="$LIBFFI_DEST/lib"  \
+    --prefix="$PWD/build"  \
     CFLAGS="-fPIC -Wno-deprecated-declarations" \
         CC="$CC" AR="$AR" RANLIB="$RANLIB"
+    mkdir -p "$LIBFFI_DEST/lib"
+    mkdir -p "$LIBFFI_DEST/include"
     $MAKE 
     $MAKE install
-    cd ../..
-    mkdir -p "$LIBFFI_DEST"
-    cp -r "$LIBFFI_SRC/build/lib/"* "$LIBFFI_DEST"/
-    cp -r "$LIBFFI_SRC/build/include/"* "$LIBFFI_DEST"/
+    ls -adl "$LIBFFI_DEST/lib"
+    ls -adl "$LIBFFI_DEST/include"
     echo "libffi built and installed to $LIBFFI_DEST"
 else
     echo "libffi source directory not found: $LIBFFI_SRC" >&2
