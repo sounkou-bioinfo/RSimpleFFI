@@ -216,3 +216,10 @@ ffi_loaded_libs <- function() {
 pointer_to_string_safe <- function(ptr) {
   .Call("R_pointer_to_string", ptr)
 }
+
+
+#' Get libffi version string
+#' @export
+libffi_version <- function() {
+  .Call("R_libffi_version")
+}

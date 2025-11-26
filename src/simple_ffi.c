@@ -1024,3 +1024,12 @@ SEXP R_get_pointer_type(SEXP r_ptr) {
     
     return mkString(CHAR(PRINTNAME(tag)));
 }
+
+
+SEXP R_libffi_version() {
+#ifdef FFI_VERSION
+    return mkString(FFI_VERSION);
+#else
+    return mkString("unknown");
+#endif
+}
