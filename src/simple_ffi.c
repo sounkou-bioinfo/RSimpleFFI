@@ -6,7 +6,9 @@
 #include <stdint.h>
 #include <wchar.h>
 #include <math.h>
-
+#if !defined(FFI_VERSION_NUMBER) || FFI_VERSION_NUMBER < 30408
+#error "libffi >= 3.4.8 is required"
+#endif
 // Type mapping structure
 typedef struct {
     const char* name;
