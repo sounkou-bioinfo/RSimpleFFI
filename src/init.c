@@ -18,14 +18,6 @@ SEXP R_copy_array(SEXP ptr, SEXP length, SEXP element_type);
 SEXP R_alloc_buffer(SEXP r_size);
 SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n);
 SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type);
-// Dynamic library loading functions using R's dynload
-SEXP R_dyn_load(SEXP filename, SEXP local, SEXP now);
-SEXP R_dyn_unload(SEXP dll_info);
-SEXP R_dyn_symbol(SEXP dll_info, SEXP symbol_name);
-SEXP R_find_symbol(SEXP symbol_name, SEXP package_name);
-SEXP R_get_dll_info(SEXP dll_info);
-
-//
 
 /* Declare test functions */
 double test_add_double(double a, double b);

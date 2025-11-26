@@ -5,18 +5,14 @@
 \title{Create typed external pointer}
 \usage{
 make_typed_pointer(ptr, type_name)
-
-make_typed_pointer(ptr, type_name)
 }
 \arguments{
 \item{ptr}{External pointer}
 
-\item{type_name}{Character name of the type}
+\item{type_name}{Character string describing the pointer type}
 }
 \value{
 External pointer with type tag
-
-Tagged external pointer
 }
 \description{
 Creates an external pointer with a specific type tag for better type safety,

@@ -7,9 +7,7 @@
 dll_load_system(lib_name, verbose = FALSE)
 }
 \arguments{
-\item{lib_name}{Name of system library (e.g., "c", "m", "pthread")}
-
-\item{verbose}{Print loading information (default FALSE)}
+\item{lib_name}{Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)}
 }
 \value{
 Library handle or NULL if not found

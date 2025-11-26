@@ -10,7 +10,6 @@
 #' @param ... FFIType objects for arguments
 #' @export
 ffi_cif <- function(return_type, ...) {
-  
   if (!S7::S7_inherits(return_type, FFIType)) {
     stop("return_type must be an FFIType object")
   }

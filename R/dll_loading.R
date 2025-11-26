@@ -295,59 +295,72 @@ dll_compile_and_load <- function(
 
   # Load the library
   dll_load(so_file, verbose = verbose)
-} #' Load system library (like libc, libm, etc.)
+}
+
+
+# ---- OS detection ----
+.is_windows <- tolower(Sys.info()[["sysname"]]) == "windows"
+.is_macos   <- tolower(Sys.info()[["sysname"]]) == "darwin"
+.is_linux   <- tolower(Sys.info()[["sysname"]]) == "linux"
+
+.system_paths <- function() {
+  if (.is_windows) {
+    return(c(
+      Sys.getenv("SystemRoot"),
+      file.path(Sys.getenv("SystemRoot"), "System32")
+    ))
+  } else if (.is_macos) {
+    return(c(
+      "/lib",
+      "/lib64",
+      "/usr/lib",
+      "/usr/lib64",
+      "/usr/lib/x86_64-linux-gnu",
+      "/usr/local/lib",
+      "/usr/local/lib32", #wsl
+      "/usr/local/lib64"
+    ))
+  } else if (.is_linux) {
+    return(c(
+      "/lib",
+      "/lib64",
+      "/usr/lib",
+      "/usr/lib64",
+      "/usr/lib/x86_64-linux-gnu",
+      "/usr/local/lib",
+      "/usr/local/lib32", #wsl
+      "/usr/local/lib64"
+    ))
+  } else {
+    return(character(0))
+  }
+}
+
+#' Load system library (like libc, libm, etc.)
 #'
-#' @param lib_name Name of system library (e.g., "c", "m", "pthread")
-#' @param verbose Print loading information (default FALSE)
+#' @param lib_name Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)
 #' @return Library handle or NULL if not found
 #' @export
 dll_load_system <- function(lib_name, verbose = FALSE) {
   # Common system library paths
-  system_paths <- c(
-    paste0("/lib/x86_64-linux-gnu/lib", lib_name, ".so.6"), # Ubuntu/Debian libc
-    paste0("/lib/x86_64-linux-gnu/lib", lib_name, ".so"), # Other libs
-    paste0("/usr/lib/x86_64-linux-gnu/lib", lib_name, ".so"), # Alternative path
-    paste0("/lib64/lib", lib_name, ".so.6"), # RedHat/CentOS libc
-    paste0("/lib64/lib", lib_name, ".so"), # Other libs
-    paste0("/usr/lib64/lib", lib_name, ".so"), # Alternative
-    paste0("/usr/lib/lib", lib_name, ".so"), # Generic
-    paste0("lib", lib_name, ".so") # Just try the name
-  )
-
-  # Try each path
+  system_paths <- .system_paths()
   for (path in system_paths) {
-    if (file.exists(path)) {
+    full_path <- file.path(path, lib_name)
+    if (file.exists(full_path)) {
+        message("Loading system library from: ", full_path)
+    
       tryCatch(
         {
-          result <- dll_load(path, verbose = verbose)
-          if (verbose) {
-            message("Successfully loaded system library:", path, "\n")
-          }
-          return(result)
+          handle <- dll_load(full_path, verbose = verbose)
+          return(handle)
         },
         error = function(e) {
-          if (verbose) {
-            message("Failed to load", path, ":", e$message, "\n")
-          }
+         warning("Failed to load from ", full_path, ": ", e$message)
         }
       )
-    }
+      return()
   }
-
-  # If direct paths fail, try using dlopen with RTLD_DEFAULT
-  # This works for already-loaded system libraries
-  tryCatch(
-    {
-      # Most system libraries are already loaded in the process
-      if (lib_name == "c") {
-        # libc is always available - return a special marker
-        return("SYSTEM_LIBC")
-      }
-      stop("Library not found")
-    },
-    error = function(e) {
-      warning("System library '", lib_name, "' not found or not accessible")
-      return(NULL)
-    }
-  )
+  }
+  warning("System library not found: ", lib_name)
+  NULL
 }

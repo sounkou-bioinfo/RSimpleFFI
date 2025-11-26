@@ -272,47 +272,49 @@ bool_result
 
 You can load external shared libraries at runtime using RSimpleFFI’s
 `dll_load()` and `dll_ffi_symbol()` functions. These are wrappers around
-R’s native `dyn.load()` facilities.
+R’s native `dyn.load()` facilities that search for shared libraries in
+system paths when required.
 
-#### libc example
+#### Search so files in system paths
 
 ``` r
 # Example: call the C standard library rand() function
-libc_handle <- dll_load_system("c")
+libc_path <- dll_load_system("libgcc_s.so.1")
+#> Loading system library from: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 825512403
-dll_unload(libc_handle)
+#> [1] 1034345194
+dll_unload(libc_path)
 ```
 
-#### libcrypto
+#### Explicitly load shared libraries
 
 ``` r
-# Example: loading libcrypto and calling AES_encrypt using pointers
-so_files <- list.files("/usr/lib/x86_64-linux-gnu", pattern = "^libcrypto[.]so.3", full.names = TRUE)
+# Find the libc shared object (libc is always present)
+so_files <- list.files("/usr/lib/x86_64-linux-gnu", pattern = "^libgcc_s.so.1", full.names = TRUE)
 so_files
-#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
-lib_handle <- dll_load(so_files[1])
-lib_handle
-#> [1] "/usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+#> [1] "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1"
+lib_path <- dll_load(so_files[1])
+lib_path
+#> [1] "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1"
 
-
-# Allocate memory for input and output buffers (16 bytes each) using RSimpleFFI's typed allocator
+# Allocate a buffer of 8 bytes
 raw_type <- ffi_raw()
-inbuf_ptr <- ffi_alloc(raw_type, 16L)
-outbuf_ptr <- ffi_alloc(raw_type, 16L)
+buf_ptr <- ffi_alloc(raw_type, 8L)
 
+# Get memset from libc: void *memset(void *s, int c, size_t n)
+memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), ffi_size_t())
 
-# Use a character string as a dummy pointer for the key argument (for demonstration only)
-fake_key <- "dummy_key_ptr"
-# Use ffi_pointer() for all pointer arguments
-aes_encrypt_fn <- dll_ffi_symbol("AES_encrypt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_pointer())
-aes_encrypt_fn(inbuf_ptr, outbuf_ptr, fake_key)
-#> NULL
-ffi_copy_array(outbuf_ptr, 16L, raw_type)
-#>  [1] 27 dd 9f 96 00 9a ca f3 ec 1f f8 48 7f 8e 24 3c
-dll_unload(lib_handle)
+# Set all bytes in the buffer to 0xAB
+memset_fn(buf_ptr, as.integer(0xAB), 8L)
+#> <pointer: 0x5b4fa82d0e60>
+
+# Read back the buffer as a raw vector
+ffi_copy_array(buf_ptr, 8L, raw_type)
+#> [1] ab ab ab ab ab ab ab ab
+
+dll_unload(lib_path)
 ```
 
 ### Compile and Load C Code
@@ -327,14 +329,14 @@ int add_numbers(int a, int b) {
 }
 '
 
-lib_handle <- dll_compile_and_load(c_code, "example_lib")
+lib_path <- dll_compile_and_load(c_code, "example_lib")
 int_t <- ffi_int()
 add_fn <- dll_ffi_symbol("add_numbers", int_t, int_t, int_t)
 result <- add_fn(10L, 5L)
 result
 #> [1] 15
 
-dll_unload(lib_handle)
+dll_unload(lib_path)
 ```
 
 ``` r
@@ -347,14 +349,14 @@ double compute_distance(double x1, double y1, double x2, double y2) {
 }
 '
 
-lib_handle <- dll_compile_and_load(math_code, "math_lib", libs = "m")
+lib_path <- dll_compile_and_load(math_code, "math_lib", libs = "m")
 double_t <- ffi_double()
 distance_fn <- dll_ffi_symbol("compute_distance", double_t, double_t, double_t, double_t, double_t)
 dist <- distance_fn(0.0, 0.0, 3.0, 4.0)
 dist
 #> [1] 5
 
-dll_unload(lib_handle)
+dll_unload(lib_path)
 ```
 
 ## Benchmarking
@@ -379,7 +381,7 @@ void vec_sqrt(const double* x, double* out, int n) {
     for (int i = 0; i < n; ++i) out[i] = sqrt(x[i]);
 }
 '
-lib_handle <- dll_compile_and_load(math_code, "bench_vec", libs = "m", cflags = "-O3")
+lib_path <- dll_compile_and_load(math_code, "bench_vec", libs = "m", cflags = "-O3")
 vec_sqrt_func <- dll_ffi_symbol("vec_sqrt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_int())
 
 benchmark_result <- bench::mark(
@@ -392,9 +394,9 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     14.4µs   34.1µs    28967.    78.2KB      0  
-#> 2 ffi_call    107.4µs  143.3µs     6480.    78.7KB     65.4
-dll_unload(lib_handle)
+#> 1 native_r     13.6µs   31.6µs    30916.    78.2KB      0  
+#> 2 ffi_call    108.3µs  142.1µs     6800.    78.7KB     68.7
+dll_unload(lib_path)
 ```
 
 ``` r
@@ -411,7 +413,7 @@ double vec_sum(const double* x, int n) {
     return s;
 }
 '
-lib_handle <- dll_compile_and_load(sum_code, "bench_sum", cflags = "-O3")
+lib_path <- dll_compile_and_load(sum_code, "bench_sum", cflags = "-O3")
 vec_sum_func <- dll_ffi_symbol("vec_sum", ffi_double(), ffi_pointer(), ffi_int())
 
 benchmark_result <- bench::mark(
@@ -424,9 +426,9 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      7.4µs    7.5µs   125031.        0B        0
-#> 2 ffi_call     23.2µs   26.2µs    35982.        0B        0
-dll_unload(lib_handle)
+#> 1 native_r     7.34µs   7.44µs   133904.        0B        0
+#> 2 ffi_call    23.42µs  25.53µs    36490.        0B        0
+dll_unload(lib_path)
 ```
 
 ## Limitations and issues

@@ -1,3 +1,7 @@
+if (getRversion() >= "2.15.1") {
+  utils::globalVariables("ArrayType")
+}
+
 #' Fill a typed buffer from an R vector (int or double)
 #' @param ptr External pointer to buffer
 #' @param values Integer or double vector
@@ -7,10 +11,7 @@ ffi_fill_typed_buffer <- function(ptr, values, type) {
   .Call("R_fill_typed_buffer", ptr, values, type@ref)
 }
 
-# Register S7 classes for non-standard evaluation (R CMD check)
-if (getRversion() >= "2.15.1") {
-  utils::globalVariables("ArrayType")
-}
+
 #' Allocate a raw memory buffer (external pointer, auto-finalized)
 #'
 #' Allocates a buffer of the given size (in bytes) and returns an external pointer.
@@ -125,6 +126,9 @@ S7::method(print, NativeSymbol) <- function(x, ...) {
 #' @return Character vector of length 1, or NULL if pointer is NULL
 #' @export
 pointer_to_string <- function(ptr) {
+  if(!is.null(ptr) && !inherits(ptr, "externalptr")) {
+    stop("ptr must be an external pointer or NULL")
+  }
   if (is.null(ptr)) {
     return(NULL)
   }
@@ -210,13 +214,3 @@ ffi_loaded_libs <- function() {
 pointer_to_string_safe <- function(ptr) {
   .Call("R_pointer_to_string", ptr)
 }
-
-#' Create typed external pointer with tag
-#' @param ptr External pointer
-#' @param type_name Character name of the type
-#' @return Tagged external pointer
-#' @export
-make_typed_pointer <- function(ptr, type_name) {
-  .Call("R_make_typed_pointer", ptr, type_name)
-}
-
