@@ -249,7 +249,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x75f098859ca0>
+#> <pointer: 0x77ff35607ca0>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -310,10 +310,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1434380928
+#> [1] 170072771
 rand_value <- rand_func()
 rand_value
-#> [1] 249949177
+#> [1] 1935338610
 dll_unload(libc_path)
 ```
 
@@ -335,7 +335,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5a8d04d45320>
+#> <pointer: 0x6503e4cfe2f0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -426,8 +426,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     12.9µs   29.4µs    32787.    78.2KB        0
-#> 2 ffi_call     91.2µs   96.8µs     9989.    78.7KB        0
+#> 1 native_r     12.9µs   28.6µs    34359.    78.2KB        0
+#> 2 ffi_call     88.7µs   93.1µs    10264.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -509,7 +509,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5a8d0b29bd80>
+#> <pointer: 0x6503e96e9370>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -541,8 +541,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.39ms   2.65ms      374.    78.2KB     19.7
-#> 2 c_ffi       96.64µs 110.68µs     8563.    78.7KB      0
+#> 1 r             2.4ms   2.58ms      378.    78.2KB     19.9
+#> 2 c_ffi        97.5µs 111.74µs     8466.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -564,3 +564,6 @@ This project is licensed under the GPL-3 License.
 
 - [libffi
   Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
+
+- [CPython’s ctypes
+  module](https://docs.python.org/3/library/ctypes.html)

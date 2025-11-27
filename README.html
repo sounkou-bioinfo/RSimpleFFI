@@ -801,7 +801,7 @@ pointer</p>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>string_cif <span class="ot">&lt;-</span> <span class="fu">ffi_cif</span>(string_type)</span>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>string_result <span class="ot">&lt;-</span> <span class="fu">ffi_call</span>(string_cif, string_func)</span>
 <span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>string_result</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x75f098859ca0&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x77ff35607ca0&gt;</span></span>
 <span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="fu">pointer_to_string</span>(string_result)</span>
 <span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Hello from C!&quot;</span></span></code></pre></div>
 <h4 id="struct-types-1">Struct Types</h4>
@@ -849,10 +849,10 @@ paths</h4>
 <span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>rand_func <span class="ot">&lt;-</span> <span class="fu">dll_ffi_symbol</span>(<span class="st">&quot;rand&quot;</span>, <span class="fu">ffi_int</span>())</span>
 <span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>rand_value <span class="ot">&lt;-</span> <span class="fu">rand_func</span>()</span>
 <span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>rand_value</span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt; [1] 1434380928</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt; [1] 170072771</span></span>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>rand_value <span class="ot">&lt;-</span> <span class="fu">rand_func</span>()</span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>rand_value</span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; [1] 249949177</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; [1] 1935338610</span></span>
 <span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="fu">dll_unload</span>(libc_path)</span></code></pre></div>
 <h4 id="explicitly-load-shared-libraries">Explicitly load shared
 libraries</h4>
@@ -871,7 +871,7 @@ libraries</h4>
 <span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a></span>
 <span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a><span class="co"># Fill the buffer with ASCII &#39;A&#39; (0x41)</span></span>
 <span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a><span class="fu">memset_fn</span>(buf_ptr, <span class="fu">as.integer</span>(<span class="dv">0x41</span>), <span class="dv">8</span><span class="dt">L</span>)</span>
-<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x5a8d04d45320&gt;</span></span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x6503e4cfe2f0&gt;</span></span>
 <span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a></span>
 <span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a><span class="co"># Read back the buffer and print as string</span></span>
 <span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a><span class="fu">rawToChar</span>(<span class="fu">ffi_copy_array</span>(buf_ptr, <span class="dv">8</span><span class="dt">L</span>, raw_type))</span>
@@ -948,8 +948,8 @@ native R C built-in functions.</p>
 <span id="cb17-26"><a href="#cb17-26" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a><span class="co">#&gt; 1 native_r     12.9µs   29.4µs    32787.    78.2KB        0</span></span>
-<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a><span class="co">#&gt; 2 ffi_call     91.2µs   96.8µs     9989.    78.7KB        0</span></span>
+<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a><span class="co">#&gt; 1 native_r     12.9µs   28.6µs    34359.    78.2KB        0</span></span>
+<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a><span class="co">#&gt; 2 ffi_call     88.7µs   93.1µs    10264.    78.7KB        0</span></span>
 <span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
 <h3 id="interpreted-r-code">Interpreted R Code</h3>
 <p>We compare a pure C convolution (via FFI) to a simple R
@@ -1027,7 +1027,7 @@ implementation.</p>
 <span id="cb18-71"><a href="#cb18-71" tabindex="-1"></a>      out_ptr)</span>
 <span id="cb18-72"><a href="#cb18-72" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
 <span id="cb18-73"><a href="#cb18-73" tabindex="-1"></a>out_ptr</span>
-<span id="cb18-74"><a href="#cb18-74" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x5a8d0b29bd80&gt;</span></span>
+<span id="cb18-74"><a href="#cb18-74" tabindex="-1"></a><span class="co">#&gt; &lt;pointer: 0x6503e96e9370&gt;</span></span>
 <span id="cb18-75"><a href="#cb18-75" tabindex="-1"></a>c_result <span class="ot">&lt;-</span> <span class="fu">ffi_copy_array</span>(out_ptr, n_out, <span class="fu">ffi_double</span>())</span>
 <span id="cb18-76"><a href="#cb18-76" tabindex="-1"></a></span>
 <span id="cb18-77"><a href="#cb18-77" tabindex="-1"></a><span class="co"># Run R convolution</span></span>
@@ -1059,8 +1059,8 @@ implementation.</p>
 <span id="cb18-103"><a href="#cb18-103" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span id="cb18-104"><a href="#cb18-104" tabindex="-1"></a><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span id="cb18-105"><a href="#cb18-105" tabindex="-1"></a><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span id="cb18-106"><a href="#cb18-106" tabindex="-1"></a><span class="co">#&gt; 1 r            2.39ms   2.65ms      374.    78.2KB     19.7</span></span>
-<span id="cb18-107"><a href="#cb18-107" tabindex="-1"></a><span class="co">#&gt; 2 c_ffi       96.64µs 110.68µs     8563.    78.7KB      0</span></span>
+<span id="cb18-106"><a href="#cb18-106" tabindex="-1"></a><span class="co">#&gt; 1 r             2.4ms   2.58ms      378.    78.2KB     19.9</span></span>
+<span id="cb18-107"><a href="#cb18-107" tabindex="-1"></a><span class="co">#&gt; 2 c_ffi        97.5µs 111.74µs     8466.    78.7KB      0</span></span>
 <span id="cb18-108"><a href="#cb18-108" tabindex="-1"></a></span>
 <span id="cb18-109"><a href="#cb18-109" tabindex="-1"></a><span class="fu">dll_unload</span>(lib_path)</span></code></pre></div>
 <h2 id="limitations-and-issues">Limitations and issues</h2>
@@ -1075,6 +1075,8 @@ pointers never finzalized.</p>
 <li><p><a href="https://github.com/omegahat/Rffi">Rffi</a></p></li>
 <li><p><a href="http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html">libffi
 Examples</a></p></li>
+<li><p><a href="https://docs.python.org/3/library/ctypes.html">CPython’s
+ctypes module</a></p></li>
 </ul>
 
 </body>
