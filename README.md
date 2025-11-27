@@ -27,19 +27,10 @@ You can install RSimpleFFI from source using the `remotes` package:
 remotes::install_git("sounkou-bioinfo/RSimpleFFI")
 ```
 
-it requires libffi to be installed on your system (we will vendor libffi
-in future releases)
-
-``` bash
-# Ubuntu/Debian
-sudo apt-get install libffi-dev
-
-# macOS (via Homebrew)
-brew install libffi
-
-# CentOS/RHEL/Fedora
-sudo yum install libffi-devel  # or dnf install libffi-devel
-```
+it requires libffi to be installed on windows along with pkg-config :
+this is always the case with recent
+[RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html).
+On unix libffi is always built from source.
 
 ## Quick Start
 
@@ -258,7 +249,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x711f4a4a2ca0>
+#> <pointer: 0x75f098859ca0>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -319,7 +310,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 614348628
+#> [1] 1434380928
+rand_value <- rand_func()
+rand_value
+#> [1] 249949177
 dll_unload(libc_path)
 ```
 
@@ -341,7 +335,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x62f48aad5c70>
+#> <pointer: 0x5a8d04d45320>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -432,8 +426,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.1µs   28.8µs    34500.    78.2KB        0
-#> 2 ffi_call       90µs   95.4µs    10255.    78.7KB        0
+#> 1 native_r     12.9µs   29.4µs    32787.    78.2KB        0
+#> 2 ffi_call     91.2µs   96.8µs     9989.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -515,7 +509,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x62f491226a80>
+#> <pointer: 0x5a8d0b29bd80>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -547,8 +541,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.43ms   2.67ms      369.    78.2KB     19.4
-#> 2 c_ffi       96.01µs 110.78µs     8560.    78.7KB      0
+#> 1 r            2.39ms   2.65ms      374.    78.2KB     19.7
+#> 2 c_ffi       96.64µs 110.68µs     8563.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -558,9 +552,15 @@ dll_unload(lib_path)
 Right now there are unimplemented features and limitations including
 uncessary copying, lack of protection and several potential memory
 leaks. The interface can and should be refined further. Our types are C
-pointers never. Furthermore we will vendor libffi in future releases to
-avoid dependency issues.
+pointers never finzalized.
 
 ## License
 
 This project is licensed under the GPL-3 License.
+
+# References
+
+- [Rffi](https://github.com/omegahat/Rffi)
+
+- [libffi
+  Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
