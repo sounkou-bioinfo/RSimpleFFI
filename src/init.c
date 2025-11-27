@@ -3,6 +3,8 @@
 #include <R_ext/Rdynload.h>
 #include <stdint.h>
 
+#include <stdbool.h>
+
 /* Declare external functions */
 SEXP R_get_builtin_ffi_type(SEXP name);
 SEXP R_get_ffi_type_size(SEXP type_ptr);
