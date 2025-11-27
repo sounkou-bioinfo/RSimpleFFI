@@ -3,7 +3,7 @@
 library(testthat)
 library(RSimpleFFI)
 
-context("ArrayType and array FFI")
+#context("ArrayType and array FFI")
 
 test_that("ArrayType can be created and has correct properties", {
   int_t <- ffi_int()

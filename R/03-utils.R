@@ -93,29 +93,29 @@ S7::method(format, NativeSymbol) <- function(x, ...) {
 # Print methods for proper output capture in tests
 #' @export
 S7::method(print, FFIType) <- function(x, ...) {
-  cat(format(x), "\n", sep = "")
+  message(format(x), "\n", sep = "")
   invisible(x)
 }
 
 #' @export
 S7::method(print, StructType) <- function(x, ...) {
-  cat(format(x), "\n", sep = "")
-  cat("Fields:", "\n", sep = "")
+  message(format(x), "\n", sep = "")
+  message("Fields:", "\n", sep = "")
   for (i in seq_along(x@fields)) {
-    cat("  ", x@fields[i], ": ", x@field_types[[i]]@name, "\n", sep = "")
+    message("  ", x@fields[i], ": ", x@field_types[[i]]@name, "\n", sep = "")
   }
   invisible(x)
 }
 
 #' @export
 S7::method(print, CIF) <- function(x, ...) {
-  cat(format(x), "\n", sep = "")
+  message(format(x), "\n", sep = "")
   invisible(x)
 }
 
 #' @export
 S7::method(print, NativeSymbol) <- function(x, ...) {
-  cat(format(x), "\n", sep = "")
+  message(format(x), "\n", sep = "")
   invisible(x)
 }
 
