@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <wchar.h>
 #include <math.h>
-#if !defined(FFI_VERSION_NUMBER) || FFI_VERSION_NUMBER < < 30400
+#if !defined(FFI_VERSION_NUMBER) || FFI_VERSION_NUMBER < 30400
 #error "libffi >= 3.4.0 is required"
 #endif
 // Type mapping structure
