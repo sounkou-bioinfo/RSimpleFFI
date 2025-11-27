@@ -156,6 +156,92 @@ static ffi_type_map_t builtin_ffi_types[] = {
 
 */
 
+// Get built-in FFI type by name
+SEXP R_get_builtin_ffi_type(SEXP r_name) {
+    const char* name = CHAR(STRING_ELT(r_name, 0));
+    
+    for (int i = 0; builtin_ffi_types[i].name; i++) {
+        if (strcmp(name, builtin_ffi_types[i].name) == 0) {
+            // we let these leak
+            SEXP extPtr = R_MakeExternalPtr(builtin_ffi_types[i].type, R_NilValue, R_NilValue);
+            return extPtr;
+        }
+    }
+    
+    return R_NilValue;
+}
+
+// Get FFI type size in bytes
+SEXP R_get_ffi_type_size(SEXP r_type) {
+    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
+    if (!type) {
+        Rf_error("Invalid FFI type pointer");
+    }
+    return ScalarInteger((int)type->size);
+}
+
+
+static void struct_type_finalizer(SEXP extPtr) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(extPtr);
+    if (struct_type) {
+        if (struct_type->elements) free(struct_type->elements);
+        free(struct_type);
+        R_ClearExternalPtr(extPtr);
+    }
+}
+
+// Create structure FFI type
+SEXP R_create_struct_ffi_type(SEXP r_field_types) {
+    int num_fields = LENGTH(r_field_types);
+    if (num_fields == 0) {
+        Rf_error("Structure must have at least one field");
+    }
+    
+    // Allocate array for field types (+ NULL terminator)
+    ffi_type** field_types = (ffi_type**)calloc(num_fields + 1, sizeof(ffi_type*));
+    if (!field_types) {
+        Rf_error("Memory allocation failed");
+    }
+    
+    // Extract field types from R list
+    for (int i = 0; i < num_fields; i++) {
+        SEXP field = VECTOR_ELT(r_field_types, i);
+        field_types[i] = (ffi_type*)R_ExternalPtrAddr(field);
+        if (!field_types[i]) {
+            free(field_types);
+            Rf_error("Invalid field type at index %d", i + 1);
+        }
+    }
+    field_types[num_fields] = NULL;  // NULL terminator
+    
+    // Create structure type
+    ffi_type* struct_type = (ffi_type*)malloc(sizeof(ffi_type));
+    if (!struct_type) {
+        free(field_types);
+        Rf_error("Memory allocation failed");
+    }
+    
+    struct_type->size = 0;  // Will be computed by libffi
+    struct_type->alignment = 0;  // Will be computed by libffi  
+    struct_type->type = FFI_TYPE_STRUCT;
+    struct_type->elements = field_types;
+    
+    // Create a dummy CIF to force libffi to compute struct size
+    ffi_cif dummy_cif;
+    ffi_status status = ffi_prep_cif(&dummy_cif, FFI_DEFAULT_ABI, 0, struct_type, NULL);
+    if (status != FFI_OK) {
+        free(field_types);
+        free(struct_type);
+        Rf_error("Failed to compute struct layout");
+    }
+    
+   SEXP extPtr = R_MakeExternalPtr(struct_type, R_NilValue, R_NilValue);
+    PROTECT(extPtr);
+    R_RegisterCFinalizerEx(extPtr, struct_type_finalizer, TRUE);
+    UNPROTECT(1);
+    return extPtr;
+}
+
 
 
 /*
@@ -257,141 +343,21 @@ SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type) {
 
 
 
-// Get built-in FFI type by name
-SEXP R_get_builtin_ffi_type(SEXP r_name) {
-    const char* name = CHAR(STRING_ELT(r_name, 0));
-    
-    for (int i = 0; builtin_ffi_types[i].name; i++) {
-        if (strcmp(name, builtin_ffi_types[i].name) == 0) {
-            // we let these leak
-            SEXP extPtr = R_MakeExternalPtr(builtin_ffi_types[i].type, R_NilValue, R_NilValue);
-            return extPtr;
-        }
-    }
-    
-    return R_NilValue;
-}
-
-// Get FFI type size in bytes
-SEXP R_get_ffi_type_size(SEXP r_type) {
-    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
-    if (!type) {
-        Rf_error("Invalid FFI type pointer");
-    }
-    return ScalarInteger((int)type->size);
-}
 
 
-static void struct_type_finalizer(SEXP extPtr) {
-    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(extPtr);
-    if (struct_type) {
-        if (struct_type->elements) free(struct_type->elements);
-        free(struct_type);
-        R_ClearExternalPtr(extPtr);
-    }
-}
 
-// Create structure FFI type
-SEXP R_create_struct_ffi_type(SEXP r_field_types) {
-    int num_fields = LENGTH(r_field_types);
-    if (num_fields == 0) {
-        Rf_error("Structure must have at least one field");
-    }
-    
-    // Allocate array for field types (+ NULL terminator)
-    ffi_type** field_types = (ffi_type**)calloc(num_fields + 1, sizeof(ffi_type*));
-    if (!field_types) {
-        Rf_error("Memory allocation failed");
-    }
-    
-    // Extract field types from R list
-    for (int i = 0; i < num_fields; i++) {
-        SEXP field = VECTOR_ELT(r_field_types, i);
-        field_types[i] = (ffi_type*)R_ExternalPtrAddr(field);
-        if (!field_types[i]) {
-            free(field_types);
-            Rf_error("Invalid field type at index %d", i + 1);
-        }
-    }
-    field_types[num_fields] = NULL;  // NULL terminator
-    
-    // Create structure type
-    ffi_type* struct_type = (ffi_type*)malloc(sizeof(ffi_type));
-    if (!struct_type) {
-        free(field_types);
-        Rf_error("Memory allocation failed");
-    }
-    
-    struct_type->size = 0;  // Will be computed by libffi
-    struct_type->alignment = 0;  // Will be computed by libffi  
-    struct_type->type = FFI_TYPE_STRUCT;
-    struct_type->elements = field_types;
-    
-    // Create a dummy CIF to force libffi to compute struct size
-    ffi_cif dummy_cif;
-    ffi_status status = ffi_prep_cif(&dummy_cif, FFI_DEFAULT_ABI, 0, struct_type, NULL);
-    if (status != FFI_OK) {
-        free(field_types);
-        free(struct_type);
-        Rf_error("Failed to compute struct layout");
-    }
-    
-   SEXP extPtr = R_MakeExternalPtr(struct_type, R_NilValue, R_NilValue);
-    PROTECT(extPtr);
-    R_RegisterCFinalizerEx(extPtr, struct_type_finalizer, TRUE);
-    UNPROTECT(1);
-    return extPtr;
-}
-
-
-// Prepare FFI call interface (CIF)
-SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
-    ffi_type* return_type = (ffi_type*)R_ExternalPtrAddr(r_return_type);
-    if (!return_type) {
-        Rf_error("Invalid return type");
-    }
-    
-    int num_args = LENGTH(r_arg_types);
-    ffi_type** arg_types = NULL;
-    
-    if (num_args > 0) {
-        arg_types = (ffi_type**)malloc(sizeof(ffi_type*) * num_args);
-        if (!arg_types) {
-            Rf_error("Memory allocation failed");
-        }
-        
-        for (int i = 0; i < num_args; i++) {
-            SEXP arg_type = VECTOR_ELT(r_arg_types, i);
-            arg_types[i] = (ffi_type*)R_ExternalPtrAddr(arg_type);
-            if (!arg_types[i]) {
-                // previous allocation may leek here
-                // we are not sure here because arg_types_i may be reused
-                // and is normally managed by R                
-                free(arg_types);
-                Rf_error("Invalid argument type at index %d", i + 1);
-            }
-        }
-    }
-    
-    // Allocate and prepare CIF
-    ffi_cif* cif = (ffi_cif*)malloc(sizeof(ffi_cif));
-    if (!cif) {
-        if (arg_types) free(arg_types);
-        Rf_error("Memory allocation failed");
-    }
-    
-    ffi_status status = ffi_prep_cif(cif, FFI_DEFAULT_ABI, num_args, return_type, arg_types);
-    if (status != FFI_OK) {
-        free(cif);
-        if (arg_types) free(arg_types);
-        Rf_error("Failed to prepare FFI call interface (status: %d)", status);
-    }
-    // TO DO add tags to the cif for the return type and arg type converstions
-    return R_MakeExternalPtr(cif, R_NilValue, R_NilValue);
-}
+/*
+*
+*
+* Conversion between R values and native values
+*
+*
+*/
 
 // Convert R value to native value for FFI call
+// TODO: ADD STRUCT SUPPORT MORE RELIABLY THAN THE GENERIC POINTERS
 void* convert_r_to_native(SEXP r_val, ffi_type* type) {
+    
     switch (type->type) {
         case FFI_TYPE_VOID:
             return NULL;
@@ -440,7 +406,6 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
 
         case FFI_TYPE_SINT32:
             if (TYPEOF(r_val) == INTSXP) {
-                // Direct pointer to R's integer data - safe with PROTECT
                 return INTEGER(r_val);
             } else if (TYPEOF(r_val) == REALSXP) {
                 double val = REAL(r_val)[0];
@@ -704,6 +669,7 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
 }
 
 // Convert native return value to R value
+// Right now structs are returned as generic pointers
 SEXP convert_native_to_r(void* value, ffi_type* type) {
     switch (type->type) {
         case FFI_TYPE_VOID:
@@ -757,6 +723,17 @@ SEXP convert_native_to_r(void* value, ffi_type* type) {
             // Users should use explicit string conversion functions when needed
             return R_MakeExternalPtr(ptr, Rf_install("generic_pointer"), R_NilValue);
         }
+
+        // TODO : structs should be handled more reliably
+        // we could build on the the fly SStructType objects
+        // by going through the elements of ffi_type->elements recursively
+        case FFI_TYPE_STRUCT: {
+            void* ptr = value;
+            if (ptr == NULL) {
+                return R_NilValue;
+            }
+            return R_MakeExternalPtr(ptr, Rf_install("struct_pointer"), R_NilValue);
+        }
         
         default:
             // Check if this is one of our custom types and handle accordingly
@@ -787,6 +764,16 @@ SEXP convert_native_to_r(void* value, ffi_type* type) {
     }
 }
 
+
+/*
+**
+**
+** FFI function calls
+****
+
+*/
+
+
 // Context structure for cleanup on error
 typedef struct {
     int protected_count;
@@ -799,6 +786,53 @@ static void ffi_call_cleanup(void* data, Rboolean jump) {
         UNPROTECT(ctx->protected_count);
     }
 }
+
+// Prepare FFI call interface (CIF)
+SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
+    ffi_type* return_type = (ffi_type*)R_ExternalPtrAddr(r_return_type);
+    if (!return_type) {
+        Rf_error("Invalid return type");
+    }
+    
+    int num_args = LENGTH(r_arg_types);
+    ffi_type** arg_types = NULL;
+    
+    if (num_args > 0) {
+        arg_types = (ffi_type**)malloc(sizeof(ffi_type*) * num_args);
+        if (!arg_types) {
+            Rf_error("Memory allocation failed");
+        }
+        
+        for (int i = 0; i < num_args; i++) {
+            SEXP arg_type = VECTOR_ELT(r_arg_types, i);
+            arg_types[i] = (ffi_type*)R_ExternalPtrAddr(arg_type);
+            if (!arg_types[i]) {
+                // previous allocation may leek here
+                // we are not sure here because arg_types_i may be reused
+                // and is normally managed by R                
+                free(arg_types);
+                Rf_error("Invalid argument type at index %d", i + 1);
+            }
+        }
+    }
+    
+    // Allocate and prepare CIF
+    ffi_cif* cif = (ffi_cif*)malloc(sizeof(ffi_cif));
+    if (!cif) {
+        if (arg_types) free(arg_types);
+        Rf_error("Memory allocation failed");
+    }
+    
+    ffi_status status = ffi_prep_cif(cif, FFI_DEFAULT_ABI, num_args, return_type, arg_types);
+    if (status != FFI_OK) {
+        free(cif);
+        if (arg_types) free(arg_types);
+        Rf_error("Failed to prepare FFI call interface (status: %d)", status);
+    }
+    // TO DO add tags to the cif for the return type and arg type converstions
+    return R_MakeExternalPtr(cif, R_NilValue, R_NilValue);
+}
+
 
 // Internal function that does the actual work
 static SEXP do_ffi_call_internal(void* data) {
@@ -875,6 +909,17 @@ SEXP R_ffi_call(SEXP r_cif, SEXP r_func_ptr, SEXP r_args) {
     
     return R_UnwindProtect(do_ffi_call_internal, args, ffi_call_cleanup, &ctx, NULL);
 }
+
+
+
+
+/*
+*
+*
+* MISC FUNCTIONS
+*
+*/
+
 
 // Allocate structure memory
 SEXP R_alloc_struct(SEXP r_struct_type) {
@@ -978,7 +1023,7 @@ SEXP R_is_null_pointer(SEXP r_ptr) {
 
 
 
-// Copy array from native memory (basic implementation)
+// Copy array from native memory to R vector
 SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
     void* ptr = R_ExternalPtrAddr(r_ptr);
     int length = INTEGER(r_length)[0];
@@ -1055,7 +1100,19 @@ SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name) {
     return R_MakeExternalPtr(ptr, Rf_install(type_name), R_NilValue);
 }
 
+
+
+// Get libffi version
+SEXP R_libffi_version() {
+#ifdef FFI_VERSION_STRING
+    return mkString(FFI_VERSION_STRING);
+#else
+    return mkString("unknown");
+#endif
+}
+
 // Get the type tag of an external pointer
+
 SEXP R_get_pointer_type(SEXP r_ptr) {
     if (TYPEOF(r_ptr) != EXTPTRSXP) {
         Rf_error("Expected external pointer");
@@ -1067,13 +1124,4 @@ SEXP R_get_pointer_type(SEXP r_ptr) {
     }
     
     return mkString(CHAR(PRINTNAME(tag)));
-}
-
-
-SEXP R_libffi_version() {
-#ifdef FFI_VERSION_STRING
-    return mkString(FFI_VERSION_STRING);
-#else
-    return mkString("unknown");
-#endif
 }
