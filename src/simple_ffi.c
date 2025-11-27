@@ -6,8 +6,10 @@
 #include <stdint.h>
 #include <wchar.h>
 #include <math.h>
-#if !defined(FFI_VERSION_NUMBER) || FFI_VERSION_NUMBER < 30000
-#error "libffi >= 3.0.0 is required"
+#if defined(FFI_VERSION_NUMBER)
+#  if FFI_VERSION_NUMBER < 30000
+#    error "libffi >= 3.0.0 is required"
+#  endif
 #endif
 // Type mapping structure
 typedef struct {
