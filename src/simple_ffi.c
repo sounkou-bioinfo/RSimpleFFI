@@ -6,8 +6,8 @@
 #include <stdint.h>
 #include <wchar.h>
 #include <math.h>
-#if !defined(FFI_VERSION_NUMBER) || FFI_VERSION_NUMBER < 30400
-#error "libffi >= 3.4.0 is required"
+#if !defined(FFI_VERSION_NUMBER) || FFI_VERSION_NUMBER < 30000
+#error "libffi >= 3.0.0 is required"
 #endif
 // Type mapping structure
 typedef struct {
@@ -105,14 +105,14 @@ SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n) {
 
 
 // Finalizer for freeing array ffi_type and its elements
-static void array_type_finalizer(SEXP extPtr) {
-    ffi_type* array_type = (ffi_type*)R_ExternalPtrAddr(extPtr);
-    if (array_type) {
-        if (array_type->elements) free(array_type->elements);
-        free(array_type);
-        R_ClearExternalPtr(extPtr);
-    }
-}
+//static void array_type_finalizer(SEXP extPtr) {
+ //   ffi_type* array_type = (ffi_type*)R_ExternalPtrAddr(extPtr);
+  //  if (array_type) {
+   //     if (array_type->elements) free(array_type->elements);
+    //    free(array_type);
+     //   R_ClearExternalPtr(extPtr);
+    //}
+//}
 // Create array FFI type
 SEXP R_create_array_ffi_type(SEXP r_element_type, SEXP r_length) {
     ffi_type* element_type = (ffi_type*)R_ExternalPtrAddr(r_element_type);
