@@ -6,5 +6,10 @@ if ! pkg-config --exists libffi; then
     echo "libffi not found. Please ensure Rtools45 is installed and libffi is available." >&2
     exit 1
 fi
-echo "Using system libffi from Rtools45."
-exit 0
+echo "Using system libffi from Rtools"
+REQUIRED_VERSION="3.0.0"
+INSTALLED_VERSION=$(pkg-config --modversion libffi 2>/dev/null)
+
+if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$INSTALLED_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]; then
+  echo "libffi version $INSTALLED_VERSION is too old. Require at least $REQUIRED_VERSION."
+fi
