@@ -1,6 +1,16 @@
+/*
+ * simple_ffi.c
+ *
+ * Core FFI type and memory management for RSimpleFFI
+ *
+ * Author: Sounkou Mahamane Toure
+ * Licensed under GPL-3
+ * Changelog:
+ */
+
 #include <R.h>
 #include <Rinternals.h>
-#include <R_ext/Rdynload.h>  // R's dynload facilities
+#include <R_ext/Rdynload.h> 
 #include "ffi.h"
 #include <string.h>
 #include <stdint.h>
@@ -11,14 +21,31 @@
 #    error "libffi >= 3.0.0 is required"
 #  endif
 #endif
-// Type mapping structure
+
+
+
+/*
+*
+*
+* Bunch of type definitions and mappings
+* 
+* The structs are used to configure call context for libffi
+*/
+
+
+
+
 typedef struct {
     const char* name;
-    ffi_type* type;
+    ffi_type* type; // pointer to libffi type object
 } ffi_type_map_t;
+
+
 
 // Global table of built-in FFI types
 // Custom FFI type objects for platform-dependent types
+// these are static variables that should never be freed
+
 static ffi_type ffi_type_size_t_custom = { 
     sizeof(size_t), 
     sizeof(void*),  // alignment 
@@ -73,6 +100,73 @@ static ffi_type ffi_type_string_custom = {
 };
 
 
+static ffi_type_map_t builtin_ffi_types[] = {
+    {"void", &ffi_type_void},
+    {"int", &ffi_type_sint32},
+    {"double", &ffi_type_double},
+    {"float", &ffi_type_float},
+    {"pointer", &ffi_type_pointer},
+    {"string", &ffi_type_string_custom},
+    {"raw", &ffi_type_raw_custom},
+    
+    // Extended integer types
+    {"int8", &ffi_type_sint8},
+    {"int16", &ffi_type_sint16},
+    {"int32", &ffi_type_sint32},
+    {"int64", &ffi_type_sint64},
+    {"uint8", &ffi_type_uint8},
+    {"uint16", &ffi_type_uint16},
+    {"uint32", &ffi_type_uint32},
+    {"uint64", &ffi_type_uint64},
+    
+    // Long types (map to appropriate sized types)
+    {"long", sizeof(long) == 8 ? &ffi_type_sint64 : &ffi_type_sint32},
+    {"ulong", sizeof(unsigned long) == 8 ? &ffi_type_uint64 : &ffi_type_uint32},
+    
+    // Floating point variants
+    {"longdouble", &ffi_type_longdouble},
+    
+    // Platform-dependent types
+    {"size_t", &ffi_type_size_t_custom},
+    {"ssize_t", &ffi_type_ssize_t_custom}, 
+    {"bool", &ffi_type_bool_custom},
+    {"wchar_t", &ffi_type_wchar_t_custom},
+    
+    // Missing ctypes compatibility types
+    // some typdefs are required here
+    {"char", &ffi_type_sint8},           // c_char
+    {"uchar", &ffi_type_uint8},          // c_ubyte  
+    {"short", &ffi_type_sint16},         // c_short
+    {"ushort", &ffi_type_uint16},        // c_ushort
+    {"uint", &ffi_type_uint32},          // c_uint
+    {"longlong", sizeof(long long) == 8 ? &ffi_type_sint64 : &ffi_type_sint32},  // c_longlong
+    {"ulonglong", sizeof(unsigned long long) == 8 ? &ffi_type_uint64 : &ffi_type_uint32}, // c_ulonglong
+    {NULL, NULL}
+};
+
+
+
+/*
+
+*
+*
+* Type creation and management
+*
+*
+
+*/
+
+
+
+/*
+
+*
+*
+*
+* Memory management
+*
+*/
+
 // Finalizer for freeing malloc'd memory
 static void buffer_finalizer(SEXP extPtr) {
     void* ptr = R_ExternalPtrAddr(extPtr);
@@ -106,16 +200,6 @@ SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n) {
 }
 
 
-// Finalizer for freeing array ffi_type and its elements
-//static void array_type_finalizer(SEXP extPtr) {
- //   ffi_type* array_type = (ffi_type*)R_ExternalPtrAddr(extPtr);
-  //  if (array_type) {
-   //     if (array_type->elements) free(array_type->elements);
-    //    free(array_type);
-     //   R_ClearExternalPtr(extPtr);
-    //}
-//}
-// Create array FFI type
 SEXP R_create_array_ffi_type(SEXP r_element_type, SEXP r_length) {
     ffi_type* element_type = (ffi_type*)R_ExternalPtrAddr(r_element_type);
     if (!element_type) Rf_error("Invalid element type pointer");
@@ -170,50 +254,6 @@ SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type) {
     }
     return R_NilValue;
 }
-
-
-static ffi_type_map_t builtin_ffi_types[] = {
-    {"void", &ffi_type_void},
-    {"int", &ffi_type_sint32},
-    {"double", &ffi_type_double},
-    {"float", &ffi_type_float},
-    {"pointer", &ffi_type_pointer},
-    {"string", &ffi_type_string_custom},
-    {"raw", &ffi_type_raw_custom},
-    
-    // Extended integer types
-    {"int8", &ffi_type_sint8},
-    {"int16", &ffi_type_sint16},
-    {"int32", &ffi_type_sint32},
-    {"int64", &ffi_type_sint64},
-    {"uint8", &ffi_type_uint8},
-    {"uint16", &ffi_type_uint16},
-    {"uint32", &ffi_type_uint32},
-    {"uint64", &ffi_type_uint64},
-    
-    // Long types (map to appropriate sized types)
-    {"long", sizeof(long) == 8 ? &ffi_type_sint64 : &ffi_type_sint32},
-    {"ulong", sizeof(unsigned long) == 8 ? &ffi_type_uint64 : &ffi_type_uint32},
-    
-    // Floating point variants
-    {"longdouble", &ffi_type_longdouble},
-    
-    // Platform-dependent types
-    {"size_t", &ffi_type_size_t_custom},
-    {"ssize_t", &ffi_type_ssize_t_custom}, 
-    {"bool", &ffi_type_bool_custom},
-    {"wchar_t", &ffi_type_wchar_t_custom},
-    
-    // Missing ctypes compatibility types
-    {"char", &ffi_type_sint8},           // c_char
-    {"uchar", &ffi_type_uint8},          // c_ubyte  
-    {"short", &ffi_type_sint16},         // c_short
-    {"ushort", &ffi_type_uint16},        // c_ushort
-    {"uint", &ffi_type_uint32},          // c_uint
-    {"longlong", sizeof(long long) == 8 ? &ffi_type_sint64 : &ffi_type_sint32},  // c_longlong
-    {"ulonglong", sizeof(unsigned long long) == 8 ? &ffi_type_uint64 : &ffi_type_uint32}, // c_ulonglong
-    {NULL, NULL}
-};
 
 
 

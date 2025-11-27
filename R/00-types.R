@@ -425,6 +425,7 @@ ffi_struct <- function(...) {
   }
 
   # Validate all fields are FFIType objects
+  # TODO : we cannot have nested structs yet really even this check allows it
   if (!all(sapply(fields, function(f) S7::S7_inherits(f, FFIType)))) {
     stop("All struct fields must be FFIType objects")
   }
