@@ -2,6 +2,7 @@
 % Please edit documentation in R/zzz.R
 \docType{package}
 \name{RSimpleFFI-package}
+\alias{RSimpleFFI}
 \alias{RSimpleFFI-package}
 \title{RSimpleFFI: Simple Foreign Function Interface using 'S7' and 'libffi'}
 \description{

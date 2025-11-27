@@ -1,9 +1,6 @@
-#' @docType package
-#' @keywords internal
 #' @name dll_load
 #' @title Load a shared library/DLL
 #' Load a shared library/DLL
-#'
 #' @param filename Path to the shared library
 #' @param now Whether to resolve all symbols immediately (default TRUE)
 #' @param local Keep symbols local to avoid namespace pollution (default TRUE)
@@ -340,12 +337,13 @@ dll_compile_and_load <- function(
   }
 }
 
-##' Load system library (like libc, libm, etc.)
-##'
-##' @param lib_name Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)
-##' @param verbose Print loading information (default FALSE)
-##' @return Library handle or NULL if not found
-##' @export
+#' @name dll_load_system
+#' @title Load system library
+#' Load a system shared library/DLL by searching common system paths.
+#' @param lib_name Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)
+#' @param verbose Print loading information (default FALSE)
+#' @return Library handle or NULL if not found
+#' @export
 dll_load_system <- function(lib_name, verbose = FALSE) {
   # Common system library paths
   system_paths <- .system_paths()

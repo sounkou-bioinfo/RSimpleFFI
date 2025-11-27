@@ -2,7 +2,8 @@
 % Please edit documentation in R/dll_loading.R
 \name{dll_load_system}
 \alias{dll_load_system}
-\title{Load system library (like libc, libm, etc.)}
+\title{Load system library
+Load a system shared library/DLL by searching common system paths.}
 \usage{
 dll_load_system(lib_name, verbose = FALSE)
 }
@@ -15,5 +16,6 @@ dll_load_system(lib_name, verbose = FALSE)
 Library handle or NULL if not found
 }
 \description{
-Load system library (like libc, libm, etc.)
+Load system library
+Load a system shared library/DLL by searching common system paths.
 }
