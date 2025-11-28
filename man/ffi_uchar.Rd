@@ -12,7 +12,3 @@ FFIType object for uchar
 \description{
 Uchar FFI type
 }
-\section{Types}{
-NA
-}
-

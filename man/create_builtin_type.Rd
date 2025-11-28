@@ -21,9 +21,3 @@ Create built-in FFI type
 
 create_builtin_type
 }
-\section{Types}{
-NA
-
-NA
-}
-

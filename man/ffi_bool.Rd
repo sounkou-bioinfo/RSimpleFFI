@@ -12,7 +12,3 @@ FFIType object for bool
 \description{
 Bool FFI type
 }
-\section{Types}{
-NA
-}
-

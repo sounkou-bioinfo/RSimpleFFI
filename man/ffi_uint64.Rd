@@ -12,7 +12,3 @@ FFIType object for uint64
 \description{
 Uint64 FFI type
 }
-\section{Types}{
-NA
-}
-

@@ -12,7 +12,3 @@ FFIType object for uint8
 \description{
 Uint8 FFI type
 }
-\section{Types}{
-NA
-}
-

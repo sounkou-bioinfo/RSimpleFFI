@@ -23,7 +23,3 @@ Updated pointer
 \description{
 Set field value in FFI structure
 }
-\section{Types}{
-NA
-}
-

@@ -12,7 +12,3 @@ FFIType object for longdouble
 \description{
 longdouble FFI type
 }
-\section{Types}{
-NA
-}
-

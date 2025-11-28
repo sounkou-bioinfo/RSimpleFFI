@@ -12,7 +12,3 @@ FFIType object for uint16
 \description{
 Uint16 FFI type
 }
-\section{Types}{
-NA
-}
-

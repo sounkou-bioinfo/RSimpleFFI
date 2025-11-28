@@ -12,7 +12,3 @@ FFIType object for longlong
 \description{
 long long FFI type
 }
-\section{Types}{
-NA
-}
-

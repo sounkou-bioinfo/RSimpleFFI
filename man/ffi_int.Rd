@@ -12,7 +12,3 @@ FFIType object for float
 \description{
 Float FFI type
 }
-\section{Types}{
-NA
-}
-

@@ -12,7 +12,3 @@ FFIType object for ssize_t
 \description{
 Ssize_t FFI type
 }
-\section{Types}{
-NA
-}
-

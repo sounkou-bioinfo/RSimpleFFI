@@ -12,7 +12,3 @@ FFIType object for ulong
 \description{
 ulong FFI type
 }
-\section{Types}{
-NA
-}
-

@@ -12,7 +12,3 @@ FFIType object for int
 \description{
 Int FFI type
 }
-\section{Types}{
-NA
-}
-

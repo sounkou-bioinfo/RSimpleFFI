@@ -12,7 +12,3 @@ FFIType object for string
 \description{
 String FFI type
 }
-\section{Types}{
-NA
-}
-

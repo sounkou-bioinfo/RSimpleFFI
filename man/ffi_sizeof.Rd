@@ -17,7 +17,3 @@ Size in bytes
 \description{
 Get size of FFI type in bytes
 }
-\section{Types}{
-NA
-}
-

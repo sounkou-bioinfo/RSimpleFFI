@@ -29,7 +29,3 @@ An ArrayType object
 \description{
 FFI Array Type
 }
-\section{Types}{
-NA
-}
-

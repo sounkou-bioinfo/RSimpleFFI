@@ -12,7 +12,3 @@ FFIType object for pointer
 \description{
 pointer FFI type
 }
-\section{Types}{
-NA
-}
-

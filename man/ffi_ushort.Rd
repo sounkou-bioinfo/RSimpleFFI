@@ -12,7 +12,3 @@ FFIType object for ushort
 \description{
 Ushort FFI type
 }
-\section{Types}{
-NA
-}
-

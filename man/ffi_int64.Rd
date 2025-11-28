@@ -12,7 +12,3 @@ FFIType object for int64
 \description{
 Int64 FFI type
 }
-\section{Types}{
-NA
-}
-

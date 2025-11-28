@@ -19,7 +19,3 @@ An FFIType object
 \description{
 FFI Type representation
 }
-\section{Types}{
-NA
-}
-

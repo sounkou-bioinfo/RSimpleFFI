@@ -12,7 +12,3 @@ FFIType char type
 \description{
 Char FFI type
 }
-\section{Types}{
-NA
-}
-

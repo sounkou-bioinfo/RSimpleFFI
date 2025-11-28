@@ -12,7 +12,3 @@ FFIType object for int16
 \description{
 Int16 FFI type
 }
-\section{Types}{
-NA
-}
-

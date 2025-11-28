@@ -15,7 +15,3 @@ StructType object
 \description{
 Create FFI structure type
 }
-\section{Types}{
-NA
-}
-

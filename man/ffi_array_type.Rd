@@ -17,7 +17,3 @@ An ArrayType object
 \description{
 Create an FFI array type
 }
-\section{Types}{
-NA
-}
-

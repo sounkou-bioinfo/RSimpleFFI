@@ -12,7 +12,3 @@ FFIType object for uint32
 \description{
 Uint32 FFI type
 }
-\section{Types}{
-NA
-}
-

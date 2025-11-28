@@ -12,7 +12,3 @@ FFIType object for double
 \description{
 Double FFI type
 }
-\section{Types}{
-NA
-}
-

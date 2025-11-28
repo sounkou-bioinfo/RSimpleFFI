@@ -21,7 +21,3 @@ Field value
 \description{
 Get field value from FFI structure
 }
-\section{Types}{
-NA
-}
-

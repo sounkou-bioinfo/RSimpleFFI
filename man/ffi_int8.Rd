@@ -12,7 +12,3 @@ FFIType object for int8
 \description{
 Int8 FFI type
 }
-\section{Types}{
-NA
-}
-

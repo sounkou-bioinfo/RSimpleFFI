@@ -12,7 +12,3 @@ FFIType object for int32
 \description{
 Int32 FFI type
 }
-\section{Types}{
-NA
-}
-

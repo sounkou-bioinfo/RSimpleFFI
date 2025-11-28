@@ -19,7 +19,3 @@ A NativeSymbol object
 \description{
 Native Symbol Reference
 }
-\section{Types}{
-NA
-}
-

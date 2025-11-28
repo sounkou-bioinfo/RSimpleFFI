@@ -19,7 +19,3 @@ An CIF object
 \description{
 FFI Call Interface (CIF)
 }
-\section{Types}{
-NA
-}
-

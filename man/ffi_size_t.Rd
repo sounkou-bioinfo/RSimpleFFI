@@ -12,7 +12,3 @@ FFIType object for size_t
 \description{
 Size_t FFI type
 }
-\section{Types}{
-NA
-}
-
