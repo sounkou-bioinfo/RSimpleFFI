@@ -4,6 +4,7 @@
 #' @param type FFIType object
 #' @param ... Additional arguments
 #' @return External pointer to buffer
+#' @rdname alloc
 #' @export
 ffi_alloc <- S7::new_generic("ffi_alloc", "type")
 
