@@ -15,8 +15,8 @@ A Simple Foreign Function Interface (FFI) for R using libffi.
 RSimpleFFI lets you call C functions from R using the
 [libffi](https://github.com/libffi/libffi) library. It supports several
 C types including integers, floats, and platform-specific types. It only
-needs libffi which is available on most systems and its vendored for
-unix. RSimpleFFI is inspired by the [Rffi
+needs libffi which is available on most systems and is vendored in this
+package for unix systems. RSimpleFFI is inspired by the [Rffi
 package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It
 builds on the same structure with S7 classes.
 
@@ -38,7 +38,7 @@ remotes::install_git("sounkou-bioinfo/RSimpleFFI")
 on windows, it requires libffi to be installed along with pkg-config :
 this is always the case with recent
 [RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html).
-On unix libffi is always built from source.
+On Unix-alikes libffi is always built from source.
 
 ## Quick Start
 
@@ -51,7 +51,7 @@ libffi_version()
 int_type <- ffi_int()
 double_type <- ffi_double()
 
-# Get a C function symbol (using built-in test function)
+# Get a C function symbol (using built-in test function compiled with the package)
 add_func <- ffi_symbol("test_add_int")
 
 # Create call interface (CIF)
@@ -257,7 +257,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x7ce458b73ca0>
+#> <pointer: 0x7c71f3be8ca0>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -318,10 +318,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1363844925
+#> [1] 1177290096
 rand_value <- rand_func()
 rand_value
-#> [1] 848828779
+#> [1] 1686865756
 dll_unload(libc_path)
 ```
 
@@ -343,7 +343,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5f02c3663260>
+#> <pointer: 0x6084ff27c020>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -434,8 +434,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   28.7µs    34227.    78.2KB        0
-#> 2 ffi_call     89.9µs     95µs    10087.    78.7KB        0
+#> 1 native_r     13.1µs     29µs    35619.    78.2KB        0
+#> 2 ffi_call     90.9µs   95.8µs     9967.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -517,7 +517,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5f02c9630c50>
+#> <pointer: 0x6085056145f0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -549,8 +549,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.48ms   2.58ms      372.    78.2KB     19.6
-#> 2 c_ffi       98.84µs  113.4µs     8458.    78.7KB      0
+#> 1 r            2.48ms   2.67ms      366.    78.2KB     19.3
+#> 2 c_ffi       98.14µs 119.39µs     7886.    78.7KB      0
 
 dll_unload(lib_path)
 ```

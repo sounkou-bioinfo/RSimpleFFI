@@ -21,7 +21,7 @@ A Simple Foreign Function Interface (FFI) for R using libffi.
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and its vendored for unix. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
+RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and is vendored in this package for unix systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
 
 ## Installation
 
@@ -38,7 +38,7 @@ remotes::install_git("sounkou-bioinfo/RSimpleFFI")
 
 ```
 
-on windows, it requires libffi to be installed  along with pkg-config : this is always the case with recent [RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html). On unix libffi is always built from source.
+on windows, it requires libffi to be installed  along with pkg-config : this is always the case with recent [RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html). On Unix-alikes libffi is always built from source.
 
 
 ## Quick Start
@@ -51,7 +51,7 @@ libffi_version()
 int_type <- ffi_int()
 double_type <- ffi_double()
 
-# Get a C function symbol (using built-in test function)
+# Get a C function symbol (using built-in test function compiled with the package)
 add_func <- ffi_symbol("test_add_int")
 
 # Create call interface (CIF)
