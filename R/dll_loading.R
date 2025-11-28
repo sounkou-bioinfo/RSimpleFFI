@@ -1,11 +1,11 @@
 #' @name dll_load
 #' @title Load a shared library/DLL
-#' Load a shared library/DLL
 #' @param filename Path to the shared library
 #' @param now Whether to resolve all symbols immediately (default TRUE)
 #' @param local Keep symbols local to avoid namespace pollution (default TRUE)
 #' @param verbose Print loading information (default FALSE)
 #' @return Library handle (character string of loaded library path)
+#' @rdname dynamic_library_management
 #' @export
 dll_load <- function(filename, now = TRUE, local = TRUE, verbose = FALSE) {
   if (!file.exists(filename)) {
@@ -31,9 +31,11 @@ dll_load <- function(filename, now = TRUE, local = TRUE, verbose = FALSE) {
 }
 
 #' Unload a shared library/DLL
-#'
+#' @name dll_unload
 #' @param handle Library handle (path) returned by dll_load()
 #' @param verbose Print unloading information (default FALSE)
+#' @return dyn.unload result invisibly
+#' @rdname dynamic_library_management
 #' @export
 dll_unload <- function(handle, verbose = FALSE) {
   if (!is.character(handle)) {
@@ -62,6 +64,7 @@ dll_unload <- function(handle, verbose = FALSE) {
 #' @param symbol_name Name of the symbol to find
 #' @param package Package name where symbol is registered (optional)
 #' @return Symbol information including address as external pointer
+#' @rdname dynamic_library_management
 #' @export
 dll_symbol <- function(symbol_name, package = NULL) {
   if (!is.character(symbol_name) || length(symbol_name) != 1) {
@@ -196,6 +199,7 @@ dll_info <- function(handle) {
 #' @param verbose Print compilation output (default FALSE)
 #' @param cflags Additional compiler flags (e.g., "-O2", "-O3")
 #' @return Library handle that can be used with dll_* functions
+#' @rdname dynamic_library_management
 #' @export
 dll_compile_and_load <- function(
     code,
@@ -343,6 +347,7 @@ dll_compile_and_load <- function(
 #' @param lib_name Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)
 #' @param verbose Print loading information (default FALSE)
 #' @return Library handle or NULL if not found
+#' @rdname dynamic_library_management
 #' @export
 dll_load_system <- function(lib_name, verbose = FALSE) {
   # Common system library paths

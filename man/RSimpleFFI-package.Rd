@@ -6,7 +6,7 @@
 \alias{RSimpleFFI-package}
 \title{RSimpleFFI: Simple Foreign Function Interface using 'S7' and 'libffi'}
 \description{
-Simple Foreign Function Interface for R using libffi and S7 classes. Supports calling C functions with proper type conversion and memory management. Includes standard C types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), and floating point types.
+Simple Foreign Function Interface for 'R' using 'libffi' and 'S7' classes. Supports calling 'C' functions with some type conversion. Includes standard 'C' types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), and floating point types.
 }
 \seealso{
 Useful links:
