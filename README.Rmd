@@ -14,6 +14,8 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)
+
+[![mangoro status badge](https://sounkou-bioinfo.r-universe.dev/mangoro/badges/version)](https://sounkou-bioinfo.r-universe.dev/mangoro)
 <!-- badges: end -->
 
 A Simple Foreign Function Interface (FFI) for R using libffi.
@@ -21,17 +23,24 @@ A Simple Foreign Function Interface (FFI) for R using libffi.
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports over 25 different C types including integers, floats, and platform-specific types. The package uses S7 classes for type safety and handles memory management automatically. It only needs libffi which is available on most systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
+RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and his vendored for unix. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
 
 ## Installation
 
-You can install RSimpleFFI from source using the `remotes` package:
+You can install RSimpleFFI from source using the `remotes` package or via r-universe
 
 ```{r eval=FALSE}
+# r-universe
+
+install.packages('RSimpleFFI', repos = c('https://sounkou-bioinfo.r-universe.dev', 'https://cloud.r-project.org'))
+
+# remotes
+
 remotes::install_git("sounkou-bioinfo/RSimpleFFI")
+
 ```
 
-it requires libffi to be installed on windows along with pkg-config : this is always the case with recent [RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html). On unix libffi is always built from source.
+on windows, it requires libffi to be installed  along with pkg-config : this is always the case with recent [RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html). On unix libffi is always built from source.
 
 
 ## Quick Start
@@ -135,7 +144,7 @@ You can define and use C struct types  using `ffi_struct()`, `ffi_alloc()`, `ffi
 # Define a struct type: struct Point { int x; double y; }
 point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
 
-# use the print methods for no
+# use the print methods to not segfault for now
 print(point_type)
 
 # Allocate a struct instance
@@ -484,7 +493,7 @@ dll_unload(lib_path)
 
 ## Limitations and issues
 
-Right now there are unimplemented features and limitations including uncessary copying, lack of protection and several potential memory leaks. The interface can and should be refined further. Our types are C pointers never finzalized.
+Right now, there are unimplemented features and limitations, including unnecessary copying, lack of protection, and several potential memory leaks. The interface can and should be refined further. Our type objects are C pointers (to static variables for basic types) that are never finalized. Additionally, the type coercions are not C99-conformant, and we do not support complex types. The more "dynamic" calling interface via the closure API of libffi is not included. We do not provide any facility to create interfaces from C files like the [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit).
 
 ## License
 

@@ -33,3 +33,5 @@ src/symbols.rds
 # Temporary files
 *.tmp
 *.log
+# reamdme output
+README.html
