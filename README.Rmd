@@ -13,9 +13,7 @@ knitr::opts_chunk$set(
 # RSimpleFFI
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)
-
-[![mangoro status badge](https://sounkou-bioinfo.r-universe.dev/mangoro/badges/version)](https://sounkou-bioinfo.r-universe.dev/mangoro)
+[![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)[![mangoro status badge](https://sounkou-bioinfo.r-universe.dev/mangoro/badges/version)](https://sounkou-bioinfo.r-universe.dev/mangoro)
 <!-- badges: end -->
 
 A Simple Foreign Function Interface (FFI) for R using libffi.
@@ -23,7 +21,7 @@ A Simple Foreign Function Interface (FFI) for R using libffi.
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and his vendored for unix. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
+RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and its vendored for unix. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
 
 ## Installation
 
