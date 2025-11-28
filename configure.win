@@ -9,7 +9,8 @@ fi
 echo "Using system libffi from Rtools"
 REQUIRED_VERSION="3.0.0"
 INSTALLED_VERSION=$(pkg-config --modversion libffi 2>/dev/null)
-
+# this is wrong in the general case, but who cares !
 if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$INSTALLED_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]; then
   echo "libffi version $INSTALLED_VERSION is too old. Require at least $REQUIRED_VERSION."
+  echo "use the package at your own risk !!!"
 fi

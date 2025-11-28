@@ -1,6 +1,6 @@
 
 #!/bin/sh
-# configure script to build and install libffi to inst/libffi for Unix and MinGW
+# configure script to build and install libffi to inst/libffi for Unix
 set -e
 
 THISDir=`dirname $0`
