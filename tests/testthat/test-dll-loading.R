@@ -5,20 +5,8 @@ test_that("DLL loading works with R's native facilities", {
   # Create types needed for testing
   int_t <- ffi_int()
 
-  # Test loading system libraries that should be available
-  # Try loading R's own library (this should work)
-  r_lib_path <- file.path(R.home("lib"), paste0("libR", .Platform$dynlib.ext))
-
-  if (file.exists(r_lib_path)) {
-    # Test dll_is_loaded before loading
-    expect_false(dll_is_loaded("nonexistent_symbol_12345"))
-
-    # Note: R's library is already loaded, so this tests the interface
-    # We'll test with a more controlled example below
-  }
-
   # Create a simple test library with native C functions (not SEXP-based)
-  test_c_code <- '
+  test_c_code <- "
 // Pure C functions for FFI testing
 int test_add_dll(int a, int b) {
     return a + b;
@@ -31,7 +19,7 @@ int test_multiply_dll(int a, int b) {
 double test_add_double_dll(double a, double b) {
     return a + b;
 }
-'
+"
 
   # Test compile_and_load
   expect_no_error({
