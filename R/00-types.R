@@ -28,6 +28,8 @@ FFIType <- S7::new_class(
       "@size must be length 1"
     } else if (self@size <= 0) {
       "@size must be positive"
+    } else if (!inherits(self@ref, "externalptr")) {
+      "@ref must be an external pointer"
     }
   }
 )

@@ -404,6 +404,19 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
             }
         }
 
+        case FFI_TYPE_STRUCT: {
+            // Accept only external pointer for struct field value
+            if (TYPEOF(r_val) == EXTPTRSXP) {
+                void* struct_ptr = R_ExternalPtrAddr(r_val);
+                if (!struct_ptr) {
+                    Rf_error("NULL external pointer for struct field");
+                }
+                // Return pointer to struct data
+                return struct_ptr;
+            } else {
+                Rf_error("Cannot convert R value to native struct: must be external pointer");
+            }
+        }
         case FFI_TYPE_SINT32:
             if (TYPEOF(r_val) == INTSXP) {
                 return INTEGER(r_val);

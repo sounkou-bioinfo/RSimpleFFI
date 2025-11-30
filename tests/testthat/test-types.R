@@ -86,10 +86,11 @@ test_that("Invalid type names are rejected", {
 })
 
 test_that("Type validation works", {
-  # Valid type
-  expect_silent({
-    t <- FFIType(name = "test", size = 8L, ref = NULL)
-  })
+  # Invalid ref (must be external pointer)
+  expect_error(
+    FFIType(name = "test", size = 8L, ref = NULL),
+    "@ref must be an external pointer"
+  )
 
   # Invalid name (not length 1)
   expect_error(
