@@ -176,6 +176,11 @@ dll_info <- function(handle) {
   }
 
   if (is.null(lib_info)) {
+    message("Library not found in loaded DLLs: ", handle)
+    message("Currently loaded DLLs:")
+    for (dll in loaded) {
+      message(" - ", dll[["path"]])
+    }
     stop("Library not found in loaded DLLs: ", handle)
   }
 

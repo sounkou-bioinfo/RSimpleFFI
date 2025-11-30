@@ -1,6 +1,3 @@
-library(RSimpleFFI)
-
-
 # Test compile_and_load
 comp_dir <- file.path(tempdir(), "persistent_dll_dir")
 dir.create(comp_dir, showWarnings = FALSE, recursive = TRUE)
