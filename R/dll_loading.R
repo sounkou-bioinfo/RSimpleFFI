@@ -211,7 +211,7 @@ dll_compile_and_load <- function(
   # Create temporary directory and files
   temp_dir <- tempfile("dll_compile_")
   dir.create(temp_dir, recursive = TRUE)
-  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
+  # on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
   # Change to temp directory for compilation
   old_wd <- getwd()
   setwd(temp_dir)
