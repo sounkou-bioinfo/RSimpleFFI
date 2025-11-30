@@ -256,7 +256,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x76b928b3dd50>
+#> <pointer: 0x704c8da08d50>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -317,10 +317,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 425445618
+#> [1] 776220823
 rand_value <- rand_func()
 rand_value
-#> [1] 629545289
+#> [1] 465678871
 dll_unload(libc_path)
 ```
 
@@ -342,7 +342,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5efaea6d08f0>
+#> <pointer: 0x602b7cea08f0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -433,8 +433,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   28.9µs    33324.    78.2KB        0
-#> 2 ffi_call       95µs  100.1µs     9631.    78.7KB        0
+#> 1 native_r       13µs   28.1µs    35685.    78.2KB        0
+#> 2 ffi_call     95.1µs   99.7µs     9754.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -516,7 +516,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5efaefb596e0>
+#> <pointer: 0x602b823296e0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -548,8 +548,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.45ms   2.65ms      371.    78.2KB     19.5
-#> 2 c_ffi      102.76µs 118.21µs     8112.    78.7KB      0
+#> 1 r             2.5ms   2.67ms      362.    78.2KB     19.0
+#> 2 c_ffi       101.4µs 116.43µs     8025.    78.7KB      0
 
 dll_unload(lib_path)
 ```

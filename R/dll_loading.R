@@ -264,7 +264,7 @@ dll_compile_and_load <- function(
 
   # Build R CMD SHLIB command
   r_cmd <- file.path(R.home("bin/R"))
-  cmd_args <- c("CMD", "SHLIB", "-o", so_file, c_file)
+  cmd_args <- c("CMD", "SHLIB", "-o", basename(so_file), basename(c_file))
 
 
 
