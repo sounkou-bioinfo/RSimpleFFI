@@ -151,8 +151,7 @@ You can define and use C struct types using `ffi_struct()`,
 # Define a struct type: struct Point { int x; double y; }
 point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
 
-# use the print methods to not segfault for now
-print(point_type)
+point_type
 #> StructType(fields=[x, y], size=16)
 #> Fields:
 #>   x: FFIType(int, size=4)
@@ -174,8 +173,8 @@ y_val
 #> [1] 3.14
 # You can also use integer field indices (1-based):
 ffi_set_field(point_ptr, 1L, 100L, point_type)  
-ffi_get_field(point_ptr, 2L, point_type)       
-#> [1] 3.14
+ffi_get_field(point_ptr, 1L, point_type)       
+#> [1] 100
 ```
 
 You can define more complex structs by adding more fields and using any
@@ -257,7 +256,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x7a21b4773d50>
+#> <pointer: 0x74d118b26d50>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -318,10 +317,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 282653550
+#> [1] 1737417453
 rand_value <- rand_func()
 rand_value
-#> [1] 256553630
+#> [1] 243508900
 dll_unload(libc_path)
 ```
 
@@ -343,7 +342,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x57401ff869e0>
+#> <pointer: 0x5a409ba3fd00>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -434,8 +433,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   28.1µs    35877.    78.2KB        0
-#> 2 ffi_call     92.5µs   99.9µs     9811.    78.7KB        0
+#> 1 native_r       13µs   28.9µs    34669.    78.2KB        0
+#> 2 ffi_call     94.9µs   99.9µs     9836.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -517,7 +516,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5740262de3b0>
+#> <pointer: 0x5a40a09fa6e0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -549,8 +548,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.47ms    2.7ms      368.    78.2KB     19.4
-#> 2 c_ffi       100.2µs  116.5µs     8165.    78.7KB      0
+#> 1 r            2.46ms   2.67ms      368.    78.2KB     19.4
+#> 2 c_ffi       99.58µs  119.1µs     8107.    78.7KB      0
 
 dll_unload(lib_path)
 ```

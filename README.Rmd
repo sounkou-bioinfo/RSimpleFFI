@@ -142,8 +142,7 @@ You can define and use C struct types  using `ffi_struct()`, `ffi_alloc()`, `ffi
 # Define a struct type: struct Point { int x; double y; }
 point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
 
-# use the print methods to not segfault for now
-print(point_type)
+point_type
 
 # Allocate a struct instance
 point_ptr <- ffi_alloc(point_type)
@@ -159,7 +158,7 @@ x_val
 y_val 
 # You can also use integer field indices (1-based):
 ffi_set_field(point_ptr, 1L, 100L, point_type)  
-ffi_get_field(point_ptr, 2L, point_type)       
+ffi_get_field(point_ptr, 1L, point_type)       
 ```
 
 You can define more complex structs by adding more fields and using any supported FFI type.
