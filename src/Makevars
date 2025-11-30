@@ -3,7 +3,9 @@ LIBFFI_DIR = $(SRC)/../inst/libffi
 PKG_CFLAGS = -I$(LIBFFI_DIR) -I$(LIBFFI_DIR)/include
 
 ifeq ($(shell uname), Darwin)
-  PKG_LIBS = -L$(LIBFFI_DIR)/lib -lffi -Wl,-rpath,@loader_path/../libffi/lib
+  # on macos to avoid _abort linking issue and warnings
+  # we link to the dylib directly and set rpath
+  PKG_LIBS = -L$(LIBFFI_DIR)/lib -l:libffi.dylib -Wl,-rpath,@loader_path/../libffi/lib
 else
   PKG_LIBS = -L$(LIBFFI_DIR)/lib -lffi -Wl,-rpath,'$$ORIGIN/../libffi/lib'
 endif
