@@ -161,6 +161,39 @@ ffi_set_field(point_ptr, 1L, 100L, point_type)
 ffi_get_field(point_ptr, 1L, point_type)       
 ```
 
+structs can be nested
+
+```{r}
+# Define inner and outer struct types
+inner_type <- ffi_struct(x = ffi_int32(), y = ffi_double())
+outer_type <- ffi_struct(id = ffi_int32(), point = inner_type, label = ffi_string())
+
+# Allocate memory for the outer_type struct
+buf <- ffi_alloc_buffer(ffi_sizeof(outer_type))
+
+# Set fields in the outer struct
+ffi_set_field(buf, "id", 42L, outer_type)
+ffi_set_field(buf, "label", "example", outer_type)
+
+# Access the nested struct within the parent buffer
+point_ptr <- ffi_get_field(buf, "point", outer_type)
+ffi_set_field(point_ptr, "x", 10L, inner_type)
+ffi_set_field(point_ptr, "y", 3.14, inner_type)
+
+# Get fields from the outer struct
+id <- ffi_get_field(buf, "id", outer_type)
+label <- ffi_get_field(buf, "label", outer_type)
+
+# Get fields from the nested struct
+x <- ffi_get_field(point_ptr, "x", inner_type)
+y <- ffi_get_field(point_ptr, "y", inner_type)
+# Show results
+id
+x
+y
+pointer_to_string(label)
+
+```
 You can define more complex structs by adding more fields and using any supported FFI type.
 
 
@@ -282,9 +315,7 @@ You can load external shared libraries at runtime using RSimpleFFI's `dll_load()
 libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
-rand_value
 rand_value <- rand_func()
-rand_value
 dll_unload(libc_path)
 ```
 

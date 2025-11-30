@@ -177,6 +177,43 @@ ffi_get_field(point_ptr, 1L, point_type)
 #> [1] 100
 ```
 
+structs can be nested
+
+``` r
+# Define inner and outer struct types
+inner_type <- ffi_struct(x = ffi_int32(), y = ffi_double())
+outer_type <- ffi_struct(id = ffi_int32(), point = inner_type, label = ffi_string())
+
+# Allocate memory for the outer_type struct
+buf <- ffi_alloc_buffer(ffi_sizeof(outer_type))
+
+# Set fields in the outer struct
+ffi_set_field(buf, "id", 42L, outer_type)
+ffi_set_field(buf, "label", "example", outer_type)
+
+# Access the nested struct within the parent buffer
+point_ptr <- ffi_get_field(buf, "point", outer_type)
+ffi_set_field(point_ptr, "x", 10L, inner_type)
+ffi_set_field(point_ptr, "y", 3.14, inner_type)
+
+# Get fields from the outer struct
+id <- ffi_get_field(buf, "id", outer_type)
+label <- ffi_get_field(buf, "label", outer_type)
+
+# Get fields from the nested struct
+x <- ffi_get_field(point_ptr, "x", inner_type)
+y <- ffi_get_field(point_ptr, "y", inner_type)
+# Show results
+id
+#> [1] 42
+x
+#> [1] 10
+y
+#> [1] 3.14
+pointer_to_string(label)
+#> [1] "example"
+```
+
 You can define more complex structs by adding more fields and using any
 supported FFI type.
 
@@ -256,7 +293,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x71a1ec5f3d50>
+#> <pointer: 0x7158f420ad38>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -316,11 +353,7 @@ libc_path <- dll_load_system("libc.so.6")
 #> Loading system library from: /usr/lib/x86_64-linux-gnu/libc.so.6
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
-rand_value
-#> [1] 186938384
 rand_value <- rand_func()
-rand_value
-#> [1] 620499116
 dll_unload(libc_path)
 ```
 
@@ -342,7 +375,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5e776bf36400>
+#> <pointer: 0x5ad0cdb08130>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -433,8 +466,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs     29µs    33226.    78.2KB        0
-#> 2 ffi_call     97.6µs    105µs     9247.    78.7KB        0
+#> 1 native_r     12.8µs   28.3µs    36824.    78.2KB        0
+#> 2 ffi_call     90.7µs   93.7µs    10229.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -516,7 +549,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5e77708746f0>
+#> <pointer: 0x5ad0cff1fd40>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -548,8 +581,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.46ms   2.57ms      374.    78.2KB     19.7
-#> 2 c_ffi      102.44µs 120.23µs     8043.    78.7KB      0
+#> 1 r            2.48ms    2.6ms      378.    78.2KB     19.9
+#> 2 c_ffi      115.63µs  120.7µs     7648.    78.7KB      0
 
 dll_unload(lib_path)
 ```
