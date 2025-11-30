@@ -317,7 +317,8 @@ dll_compile_and_load <- function(
   }
 
   # Load the library
-  dll_load(so_file, verbose = verbose)
+  so_file_norm <- normalizePath(so_file, winslash = "/", mustWork = TRUE)
+  dll_load(so_file_norm, verbose = verbose)
 }
 
 
