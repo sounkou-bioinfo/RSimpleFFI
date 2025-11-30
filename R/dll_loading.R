@@ -212,13 +212,14 @@ dll_compile_and_load <- function(
   temp_dir <- tempfile("dll_compile_")
   dir.create(temp_dir, recursive = TRUE)
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
-
+  # Change to temp directory for compilation
+  old_wd <- getwd()
+  setwd(temp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
   c_file <- file.path(temp_dir, paste0(name, ".c"))
   so_file <- file.path(temp_dir, paste0(name, .Platform$dynlib.ext))
-
   # Write C code to file
-  writeLines(code, c_file)
-
+  writeLines(code, basename(c_file))
   # Create Makevars file for compilation options
   makevars_content <- character(0)
 
@@ -260,19 +261,30 @@ dll_compile_and_load <- function(
   }
 
   # Build R CMD SHLIB command
-  r_cmd <- file.path(R.home("bin"), "R")
+  r_cmd <- file.path(R.home("bin/R"))
   cmd_args <- c("CMD", "SHLIB", "-o", so_file, c_file)
 
-  # Change to temp directory for compilation
-  old_wd <- getwd()
-  setwd(temp_dir)
-  on.exit(setwd(old_wd), add = TRUE)
+
 
   # Compile using R CMD SHLIB
   if (verbose) {
-    output <- system2(r_cmd, cmd_args, stdout = TRUE, stderr = TRUE)
+    tryCatch(
+      {
+        output <- system2(r_cmd, cmd_args, stdout = "", stderr = "")
+      },
+      error = function(e) {
+        stop("Compilation failed: ", e$message)
+      }
+    )
   } else {
-    output <- system2(r_cmd, cmd_args, stdout = TRUE, stderr = TRUE)
+    tryCatch(
+      {
+        output <- system2(r_cmd, cmd_args, stdout = TRUE, stderr = TRUE)
+      },
+      error = function(e) {
+        stop("Compilation failed: ", e$message)
+      }
+    )
   }
 
   # Get status
