@@ -246,7 +246,7 @@ dll_compile_and_load <- function(
 
   # Write Makevars file if we have options
   if (length(makevars_content) > 0) {
-    makevars_file <- file.path(temp_dir, "Makevars")
+    makevars_file <- file.path(compilation_directory, "Makevars")
     writeLines(makevars_content, makevars_file)
 
     # Set R_MAKEVARS_USER to point to our Makevars
