@@ -119,7 +119,6 @@ ffi_symbol_from_address <- function(address, name = "anonymous") {
 #
 ######################################
 
-
 #' Make FFI function call
 #' @param cif CIF object defining the call interface
 #' @param symbol NativeSymbol or character name of function
@@ -143,9 +142,10 @@ S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(cif, symbol, ...) {
 # symbol as character name variant
 #' @export
 S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
-    cif,
-    symbol,
-    ...) {
+  cif,
+  symbol,
+  ...
+) {
   sym <- ffi_symbol(symbol)
   ffi_call(cif, sym, ...)
 }

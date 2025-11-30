@@ -189,7 +189,6 @@ NativeSymbol <- S7::new_class(
 #
 ######################################
 
-
 ##### Built-in type creation
 
 #' Create built-in FFI type

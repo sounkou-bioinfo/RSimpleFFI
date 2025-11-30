@@ -202,12 +202,13 @@ dll_info <- function(handle) {
 #' @rdname dynamic_library_management
 #' @export
 dll_compile_and_load <- function(
-    code,
-    name = "temp_dll",
-    includes = NULL,
-    libs = NULL,
-    verbose = FALSE,
-    cflags = NULL) {
+  code,
+  name = "temp_dll",
+  includes = NULL,
+  libs = NULL,
+  verbose = FALSE,
+  cflags = NULL
+) {
   # Create temporary directory and files
   temp_dir <- tempfile("dll_compile_")
   dir.create(temp_dir, recursive = TRUE)
@@ -266,8 +267,6 @@ dll_compile_and_load <- function(
   r_cmd <- file.path(R.home("bin/R"))
   cmd_args <- c("CMD", "SHLIB", "-o", basename(so_file), basename(c_file))
 
-
-
   # Compile using R CMD SHLIB
   if (verbose) {
     tryCatch(
@@ -294,7 +293,6 @@ dll_compile_and_load <- function(
   if (is.null(status)) {
     status <- 0
   }
-
 
   # Handle compilation output
   if (verbose || status != 0) {
