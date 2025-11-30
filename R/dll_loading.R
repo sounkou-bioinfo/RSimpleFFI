@@ -220,6 +220,8 @@ dll_compile_and_load <- function(
   so_file <- file.path(temp_dir, paste0(name, .Platform$dynlib.ext))
   # Write C code to file
   writeLines(code, basename(c_file))
+  c_file <- normalizePath(c_file, winslash = "\\", mustWork = TRUE)
+  so_file <- normalizePath(so_file, winslash = "\\", mustWork = FALSE)
   # Create Makevars file for compilation options
   makevars_content <- character(0)
 
