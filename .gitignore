@@ -35,3 +35,4 @@ src/symbols.rds
 *.log
 # reamdme output
 README.html
+docs

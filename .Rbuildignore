@@ -17,3 +17,6 @@
 ^\.github$
 ^\.inst/libffi$
 ^src/libffi/build$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
