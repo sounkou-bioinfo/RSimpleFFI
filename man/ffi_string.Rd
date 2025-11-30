@@ -12,3 +12,4 @@ FFIType object for string
 \description{
 String FFI type
 }
+\keyword{Types}

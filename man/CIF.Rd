@@ -19,3 +19,4 @@ An CIF object
 \description{
 FFI Call Interface (CIF)
 }
+\keyword{Types}

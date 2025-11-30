@@ -12,3 +12,4 @@ FFIType object for int16
 \description{
 Int16 FFI type
 }
+\keyword{Types}

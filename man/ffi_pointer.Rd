@@ -12,3 +12,4 @@ FFIType object for pointer
 \description{
 pointer FFI type
 }
+\keyword{Types}

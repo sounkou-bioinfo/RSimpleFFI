@@ -12,3 +12,4 @@ FFIType object for ulonglong
 \description{
 ulonglong FFI type
 }
+\keyword{Types}

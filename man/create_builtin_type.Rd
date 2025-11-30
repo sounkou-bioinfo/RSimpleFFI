@@ -21,3 +21,4 @@ Create built-in FFI type
 
 create_builtin_type
 }
+\keyword{Types}

@@ -29,3 +29,4 @@ An ArrayType object
 \description{
 FFI Array Type
 }
+\keyword{Types}

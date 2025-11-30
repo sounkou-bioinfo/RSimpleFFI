@@ -15,3 +15,4 @@ StructType object
 \description{
 Create FFI structure type
 }
+\keyword{Types}

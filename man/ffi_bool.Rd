@@ -12,3 +12,4 @@ FFIType object for bool
 \description{
 Bool FFI type
 }
+\keyword{Types}

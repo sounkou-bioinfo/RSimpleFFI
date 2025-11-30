@@ -12,3 +12,4 @@ FFIType object for int8
 \description{
 Int8 FFI type
 }
+\keyword{Types}

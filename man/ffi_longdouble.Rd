@@ -12,3 +12,4 @@ FFIType object for longdouble
 \description{
 longdouble FFI type
 }
+\keyword{Types}

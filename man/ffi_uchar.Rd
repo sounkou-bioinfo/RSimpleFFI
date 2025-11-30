@@ -12,3 +12,4 @@ FFIType object for uchar
 \description{
 Uchar FFI type
 }
+\keyword{Types}

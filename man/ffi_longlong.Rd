@@ -12,3 +12,4 @@ FFIType object for longlong
 \description{
 long long FFI type
 }
+\keyword{Types}

@@ -12,3 +12,4 @@ FFIType object for short
 \description{
 short FFI type
 }
+\keyword{Types}

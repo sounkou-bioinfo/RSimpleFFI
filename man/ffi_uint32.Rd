@@ -12,3 +12,4 @@ FFIType object for uint32
 \description{
 Uint32 FFI type
 }
+\keyword{Types}

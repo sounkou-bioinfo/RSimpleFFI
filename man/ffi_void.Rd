@@ -12,3 +12,4 @@ FFIType object for double
 \description{
 Double FFI type
 }
+\keyword{Types}

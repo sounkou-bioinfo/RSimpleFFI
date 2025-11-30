@@ -12,3 +12,4 @@ FFIType object for ushort
 \description{
 Ushort FFI type
 }
+\keyword{Types}

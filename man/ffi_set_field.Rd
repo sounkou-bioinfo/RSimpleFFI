@@ -23,3 +23,4 @@ Updated pointer
 \description{
 Set field value in FFI structure
 }
+\keyword{Types}

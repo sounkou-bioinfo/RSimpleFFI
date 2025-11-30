@@ -12,3 +12,4 @@ FFIType object for int
 \description{
 Int FFI type
 }
+\keyword{Types}

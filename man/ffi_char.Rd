@@ -12,3 +12,4 @@ FFIType char type
 \description{
 Char FFI type
 }
+\keyword{Types}

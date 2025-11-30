@@ -19,3 +19,4 @@ An FFIType object
 \description{
 FFI Type representation
 }
+\keyword{Types}

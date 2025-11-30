@@ -12,3 +12,4 @@ FFIType object for uint8
 \description{
 Uint8 FFI type
 }
+\keyword{Types}

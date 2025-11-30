@@ -17,3 +17,4 @@ Size in bytes
 \description{
 Get size of FFI type in bytes
 }
+\keyword{Types}

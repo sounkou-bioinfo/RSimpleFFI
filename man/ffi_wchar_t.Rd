@@ -12,3 +12,4 @@ FFIType object for wchar_t
 \description{
 Wide char FFI type
 }
+\keyword{Types}

@@ -12,3 +12,4 @@ FFIType object for ssize_t
 \description{
 ssize_t FFI type
 }
+\keyword{Types}

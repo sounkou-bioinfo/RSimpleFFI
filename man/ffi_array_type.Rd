@@ -17,3 +17,4 @@ An ArrayType object
 \description{
 Create an FFI array type
 }
+\keyword{Types}
