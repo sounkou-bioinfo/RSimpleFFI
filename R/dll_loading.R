@@ -213,8 +213,8 @@ dll_compile_and_load <- function(
   dir.create(temp_dir, recursive = TRUE)
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
 
-  c_file <- file.path(temp_dir, paste0(name, ".c"))
-  so_file <- file.path(temp_dir, paste0(name, .Platform$dynlib.ext))
+  c_file <- normalizePath(file.path(temp_dir, paste0(name, ".c")), winslash = "\\", mustWork = FALSE)
+  so_file <- normalizePath(file.path(temp_dir, paste0(name, .Platform$dynlib.ext)), winslash = "\\", mustWork = FALSE)
 
   # Write C code to file
   writeLines(code, c_file)
