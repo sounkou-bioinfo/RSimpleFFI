@@ -12,6 +12,7 @@ Simple Foreign Function Interface for 'R' using 'libffi' and 'S7' classes. Suppo
 Useful links:
 \itemize{
   \item \url{https://github.com/sounkou-bioinfo/RSimpleFFI}
+  \item \url{https://sounkou-bioinfo.github.io/RSimpleFFI/}
   \item Report bugs at \url{https://github.com/sounkou-bioinfo/RSimpleFFI/issues}
 }
 

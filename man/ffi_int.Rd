@@ -2,14 +2,14 @@
 % Please edit documentation in R/00-types.R
 \name{ffi_int}
 \alias{ffi_int}
-\title{Float FFI type}
+\title{int FFI type}
 \usage{
 ffi_int()
 }
 \value{
-FFIType object for float
+FFIType object for int
 }
 \description{
-Float FFI type
+int FFI type
 }
 \keyword{Types}

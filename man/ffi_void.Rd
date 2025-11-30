@@ -2,14 +2,14 @@
 % Please edit documentation in R/00-types.R
 \name{ffi_void}
 \alias{ffi_void}
-\title{Double FFI type}
+\title{void FFI type}
 \usage{
 ffi_void()
 }
 \value{
-FFIType object for double
+FFIType object for void
 }
 \description{
-Double FFI type
+void FFI type
 }
 \keyword{Types}

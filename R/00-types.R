@@ -275,26 +275,26 @@ S7::method(create_builtin_type, S7::class_character) <- function(name) {
 #' @export
 ffi_raw <- function() create_builtin_type("raw")
 
-#' Double FFI type
-#' @return FFIType object for double
+#' void FFI type
+#' @return FFIType object for void
 #' @keywords Types
 #' @export
 ffi_void <- function() create_builtin_type("void")
 
-#' Float FFI type
-#' @return FFIType object for float
+#' int FFI type
+#' @return FFIType object for int
 #' @keywords Types
 #' @export
 ffi_int <- function() create_builtin_type("int")
 
-#' Int FFI type
-#' @return FFIType object for int
+#' double FFI type
+#' @return FFIType object for double
 #' @keywords Types
 #' @export
 ffi_double <- function() create_builtin_type("double")
 
-#' Int16 FFI type
-#' @return FFIType object for int16
+#' float  FFI type
+#' @return FFIType object for float
 #' @keywords Types
 #' @export
 ffi_float <- function() create_builtin_type("float")

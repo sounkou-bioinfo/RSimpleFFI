@@ -2,14 +2,14 @@
 % Please edit documentation in R/00-types.R
 \name{ffi_double}
 \alias{ffi_double}
-\title{Int FFI type}
+\title{double FFI type}
 \usage{
 ffi_double()
 }
 \value{
-FFIType object for int
+FFIType object for double
 }
 \description{
-Int FFI type
+double FFI type
 }
 \keyword{Types}
