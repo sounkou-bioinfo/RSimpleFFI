@@ -198,27 +198,28 @@ dll_info <- function(handle) {
 #' @param libs Additional libraries to link
 #' @param verbose Print compilation output (default FALSE)
 #' @param cflags Additional compiler flags (e.g., "-O2", "-O3")
+#' @param compilation_directory Directory to use for compilation (default temp dir)
 #' @return Library handle that can be used with dll_* functions
 #' @rdname dynamic_library_management
 #' @export
 dll_compile_and_load <- function(
-  code,
-  name = "temp_dll",
-  includes = NULL,
-  libs = NULL,
-  verbose = FALSE,
-  cflags = NULL
-) {
+    code,
+    name = "temp_dll",
+    includes = NULL,
+    libs = NULL,
+    verbose = FALSE,
+    cflags = NULL,
+    compilation_directory = tempfile("dll_compile_")) {
   # Create temporary directory and files
-  temp_dir <- tempfile("dll_compile_")
-  dir.create(temp_dir, recursive = TRUE)
-  # on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
+  if (!dir.exists(compilation_directory)) {
+    dir.create(compilation_directory, recursive = TRUE)
+  }
   # Change to temp directory for compilation
   old_wd <- getwd()
-  setwd(temp_dir)
+  setwd(compilation_directory)
   on.exit(setwd(old_wd), add = TRUE)
-  c_file <- file.path(temp_dir, paste0(name, ".c"))
-  so_file <- file.path(temp_dir, paste0(name, .Platform$dynlib.ext))
+  c_file <- file.path(compilation_directory, paste0(name, ".c"))
+  so_file <- file.path(compilation_directory, paste0(name, .Platform$dynlib.ext))
   # Write C code to file
   writeLines(code, basename(c_file))
   c_file <- normalizePath(c_file, winslash = "\\", mustWork = TRUE)

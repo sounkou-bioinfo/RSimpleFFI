@@ -20,7 +20,8 @@ dll_compile_and_load(
   includes = NULL,
   libs = NULL,
   verbose = FALSE,
-  cflags = NULL
+  cflags = NULL,
+  compilation_directory = tempfile("dll_compile_")
 )
 
 dll_load_system(lib_name, verbose = FALSE)
@@ -49,6 +50,8 @@ dll_load_system(lib_name, verbose = FALSE)
 \item{libs}{Additional libraries to link}
 
 \item{cflags}{Additional compiler flags (e.g., "-O2", "-O3")}
+
+\item{compilation_directory}{Directory to use for compilation (default temp dir)}
 
 \item{lib_name}{Name of system library (e.g., libc.so.6, libm.dylib, kernel32.dll)}
 }

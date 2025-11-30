@@ -1,4 +1,10 @@
 library(RSimpleFFI)
+
+
+# Test compile_and_load
+comp_dir <- file.path(tempdir(), "persistent_dll_dir")
+dir.create(comp_dir, showWarnings = FALSE, recursive = TRUE)
+
 test_that("DLL loading works with R's native facilities", {
   # DLL loading test - no skips!
 
@@ -20,10 +26,8 @@ double test_add_double_dll(double a, double b) {
     return a + b;
 }
 "
-
-  # Test compile_and_load
   expect_no_error({
-    lib_handle <- dll_compile_and_load(test_c_code, "test_dll")
+    lib_handle <- dll_compile_and_load(test_c_code, "test_dll", compilation_directory = comp_dir)
   })
 
   # Test dll_info
