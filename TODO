@@ -7,37 +7,3 @@ This should requires some more serious reworking of the C type creation infracst
 # allow allocate array of structs
 
 # closure
-
-
-SEXP struct_to_r_object(void* ptr, ffi_type* struct_type, SEXP r_type_info) {
-    int nfields = ...; // count fields in struct_type->elements
-    SEXP field_values = PROTECT(allocVector(VECSXP, nfields));
-    SEXP field_names = PROTECT(allocVector(STRSXP, nfields));
-    for (int i = 0; i < nfields; i++) {
-        size_t offset = calculate_field_offset(struct_type, i);
-        ffi_type* field_type = struct_type->elements[i];
-        void* field_ptr = (char*)ptr + offset;
-        SEXP r_field_val = convert_native_to_r(field_ptr, field_type, ...);
-        SET_VECTOR_ELT(field_values, i, r_field_val);
-        SET_STRING_ELT(field_names, i, ...); // get name from r_type_info
-    }
-    setAttrib(field_values, R_NamesSymbol, field_names);
-    // Construct S7 object here, e.g.:
-    // SEXP s7_obj = PROTECT(newS7Object("StructDefinition", ...));
-    // or call an R function to wrap the list as S7
-    UNPROTECT(2);
-    return s7_obj;
-}
-
-
-void r_object_to_struct(SEXP r_obj, ffi_type* struct_type, void* ptr, SEXP r_type_info) {
-    int nfields = ...;
-    for (int i = 0; i < nfields; i++) {
-        size_t offset = calculate_field_offset(struct_type, i);
-        ffi_type* field_type = struct_type->elements[i];
-        SEXP r_field_val = ...; // extract from r_obj by name/slot
-        void* field_ptr = (char*)ptr + offset;
-        void* native_val = convert_r_to_native(r_field_val, field_type, ...);
-        memcpy(field_ptr, native_val, field_type->size);
-    }
-}

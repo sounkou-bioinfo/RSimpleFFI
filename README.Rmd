@@ -315,7 +315,9 @@ You can load external shared libraries at runtime using RSimpleFFI's `dll_load()
 libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
+rand_value
 rand_value <- rand_func()
+rand_value
 dll_unload(libc_path)
 ```
 
