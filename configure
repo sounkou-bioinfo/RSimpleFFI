@@ -3,6 +3,7 @@
 # configure script to build and install libffi to inst/libffi for Unix
 set -e
 
+> config.log
 THISDir=`dirname $0`
 THISDir=`realpath ${THISDir}`
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
@@ -14,13 +15,13 @@ LIBFFI_SRC="${THISDir}/src/libffi"
 LIBFFI_DEST="${THISDir}/inst/libffi"
 
 # Unpack libffi tarball if needed
-echo "Unpacking libffi tarball (if needed) ..."
+echo "Unpacking libffi tarball to ${LIBFFI_SRC} ..." >> config.log
 "${R_HOME}/bin/Rscript" "${THISDir}/tools/vendorlibffi.R" unpack
-
 
 if [ -d "$LIBFFI_SRC" ]; then
     cd "$LIBFFI_SRC"
     echo "$PWD"
+    echo "Configuring and building libffi ..." >> config.log
     ./configure --disable-docs --includedir="$LIBFFI_DEST/include" \
     --libdir="$LIBFFI_DEST/lib"  \
     --prefix="$LIBFFI_DEST/build"  \
@@ -28,11 +29,11 @@ if [ -d "$LIBFFI_SRC" ]; then
         CC="$CC" AR="$AR" RANLIB="$RANLIB"
     mkdir -p "$LIBFFI_DEST/lib"
     mkdir -p "$LIBFFI_DEST/include"
-    $MAKE 
-    $MAKE install
-    ls -adl $LIBFFI_DEST/lib/*
-    ls -adl $LIBFFI_DEST/include/*
-    echo "libffi built and installed to $LIBFFI_DEST"
+    echo "Running make ..." >> config.log
+    $MAKE >> config.log 2>&1
+    echo "Running make install ..." >> config.log
+    $MAKE install >> config.log 2>&1
+    echo "libffi built and installed to $LIBFFI_DEST" >> config.log
     rm -rf "$LIBFFI_DEST/build"
 else
     echo "Error: libffi source directory $LIBFFI_SRC does not exist."

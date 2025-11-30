@@ -13,7 +13,7 @@
 ^Thumbs\.db$
 ^.*\.tmp$
 ^.*\.log$
-^tests/testthat\.R$
+#^tests/testthat\.R$
 ^\.github$
 ^\.inst/libffi$
 ^src/libffi/build$
