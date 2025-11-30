@@ -99,6 +99,7 @@ double test_point2d_distance(Point2D* p1, Point2D* p2) {
 }
 
 void test_move_point2d(Point2D* p, int dx, int dy) {
+    Rprintf("p pointer: %p\n", p);
     p->x += dx;
     p->y += dy;
 }
