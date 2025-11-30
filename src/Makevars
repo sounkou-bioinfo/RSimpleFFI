@@ -3,7 +3,7 @@ LIBFFI_DIR = $(SRC)/../inst/libffi
 PKG_CFLAGS = -I$(LIBFFI_DIR) -I$(LIBFFI_DIR)/include
 
 ifeq ($(shell uname), Darwin)
-  PKG_LIBS = $(LIBFFI_DIR)/lib/libffi.dylib -Wl,-rpath,@loader_path/../libffi/lib
+  PKG_LIBS = -L$(LIBFFI_DIR)/lib -lffi -Wl,-rpath,@loader_path/../libffi/lib
 else
   PKG_LIBS = -L$(LIBFFI_DIR)/lib -lffi -Wl,-rpath,'$$ORIGIN/../libffi/lib'
 endif
