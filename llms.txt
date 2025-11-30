@@ -675,17 +675,17 @@ This project is licensed under the GPL-3 License.
 - [`ffi_copy_array_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array_type.md)
   : Copy array from native memory (ArrayType version)
 - [`ffi_double()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.md)
-  : Int FFI type
+  : double FFI type
 - [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
   : Fill a typed buffer from an R vector (int or double)
 - [`ffi_float()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_float.md)
-  : Int16 FFI type
+  : float FFI type
 - [`ffi_function()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_function.md)
   : Create a reusable FFI function wrapper
 - [`ffi_get_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_get_field.md)
   : Get field value from FFI structure
 - [`ffi_int()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int.md)
-  : Float FFI type
+  : int FFI type
 - [`ffi_int16()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int16.md)
   : Int16 FFI type
 - [`ffi_int32()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int32.md)
@@ -743,7 +743,7 @@ This project is licensed under the GPL-3 License.
 - [`ffi_ushort()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.md)
   : Ushort FFI type
 - [`ffi_void()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.md)
-  : Double FFI type
+  : void FFI type
 - [`ffi_wchar_t()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_wchar_t.md)
   : Wide char FFI type
 - [`get_pointer_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_pointer_type.md)

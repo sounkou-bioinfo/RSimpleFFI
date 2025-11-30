@@ -11,6 +11,8 @@ Useful links:
 
 - <https://github.com/sounkou-bioinfo/RSimpleFFI>
 
+- <https://sounkou-bioinfo.github.io/RSimpleFFI/>
+
 - Report bugs at <https://github.com/sounkou-bioinfo/RSimpleFFI/issues>
 
 ## Author

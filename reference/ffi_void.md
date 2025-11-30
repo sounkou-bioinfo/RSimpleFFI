@@ -1,6 +1,6 @@
-# Double FFI type
+# void FFI type
 
-Double FFI type
+void FFI type
 
 ## Usage
 
@@ -10,4 +10,4 @@ ffi_void()
 
 ## Value
 
-FFIType object for double
+FFIType object for void

@@ -1,6 +1,6 @@
-# Int16 FFI type
+# float FFI type
 
-Int16 FFI type
+float FFI type
 
 ## Usage
 
@@ -10,4 +10,4 @@ ffi_float()
 
 ## Value
 
-FFIType object for int16
+FFIType object for float

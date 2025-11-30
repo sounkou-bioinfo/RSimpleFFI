@@ -1,6 +1,6 @@
-# Int FFI type
+# double FFI type
 
-Int FFI type
+double FFI type
 
 ## Usage
 
@@ -10,4 +10,4 @@ ffi_double()
 
 ## Value
 
-FFIType object for int
+FFIType object for double

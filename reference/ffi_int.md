@@ -1,6 +1,6 @@
-# Float FFI type
+# int FFI type
 
-Float FFI type
+int FFI type
 
 ## Usage
 
@@ -10,4 +10,4 @@ ffi_int()
 
 ## Value
 
-FFIType object for float
+FFIType object for int
