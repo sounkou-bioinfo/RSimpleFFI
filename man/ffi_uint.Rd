@@ -2,14 +2,14 @@
 % Please edit documentation in R/00-types.R
 \name{ffi_uint}
 \alias{ffi_uint}
-\title{Ssize_t FFI type}
+\title{uint FFI type}
 \usage{
 ffi_uint()
 }
 \value{
-FFIType object for ssize_t
+FFIType object for uint
 }
 \description{
-Ssize_t FFI type
+uint FFI type
 }
 \keyword{Types}

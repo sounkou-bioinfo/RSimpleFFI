@@ -361,8 +361,8 @@ ffi_long <- function() create_builtin_type("long")
 ffi_longlong <- function() create_builtin_type("longlong")
 
 # Unsigned integer types
-#' Ssize_t FFI type
-#' @return FFIType object for ssize_t
+#' uint FFI type
+#' @return FFIType object for uint
 #' @keywords Types
 #' @export
 ffi_uint <- function() create_builtin_type("uint")
@@ -470,7 +470,6 @@ ffi_struct <- function(...) {
   }
 
   # Validate all fields are FFIType objects
-  # TODO : we cannot have nested structs yet really even this check allows it
   if (!all(sapply(fields, function(f) S7::S7_inherits(f, FFIType)))) {
     stop("All struct fields must be FFIType objects")
   }
