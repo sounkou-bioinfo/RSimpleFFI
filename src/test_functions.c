@@ -398,3 +398,20 @@ int test_varargs_mixed(const char* prefix, int nargs, ...) {
     va_end(va);
     return sum;
 }
+
+/* Truly mixed varargs: alternating int and double
+ * format: int count, then pairs of (int, double) */
+double test_varargs_mixed_types(int npairs, ...) {
+    double sum = 0;
+    va_list va;
+    va_start(va, npairs);
+    
+    for (int i = 0; i < npairs; i++) {
+        int ival = va_arg(va, int);
+        double dval = va_arg(va, double);
+        sum += (double)ival + dval;
+    }
+    
+    va_end(va);
+    return sum;
+}

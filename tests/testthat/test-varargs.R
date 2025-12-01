@@ -126,3 +126,29 @@ test_that("varargs different counts work", {
         expect_equal(result, n * 10, info = paste("n =", n))
     }
 })
+
+test_that("varargs with truly mixed types works", {
+    # test_varargs_mixed_types(int npairs, ...) expects alternating int, double
+    sym <- ffi_symbol("test_varargs_mixed_types")
+
+    # 2 pairs: (10, 1.5) + (20, 2.5) = 34
+    cif <- ffi_cif_var(ffi_double(),
+        nfixedargs = 1L,
+        ffi_int(),
+        ffi_int(), ffi_double(),
+        ffi_int(), ffi_double()
+    )
+    result <- ffi_call(cif, sym, 2L, 10L, 1.5, 20L, 2.5)
+    expect_equal(result, 34)
+
+    # 3 pairs: (1, 0.1) + (2, 0.2) + (3, 0.3) = 6.6
+    cif3 <- ffi_cif_var(ffi_double(),
+        nfixedargs = 1L,
+        ffi_int(),
+        ffi_int(), ffi_double(),
+        ffi_int(), ffi_double(),
+        ffi_int(), ffi_double()
+    )
+    result3 <- ffi_call(cif3, sym, 3L, 1L, 0.1, 2L, 0.2, 3L, 0.3)
+    expect_equal(result3, 6.6)
+})

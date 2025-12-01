@@ -92,6 +92,7 @@ int test_sizeof_point2d(void);
 double test_varargs_sum(int nargs, ...);
 double test_varargs_sum_doubles(int nargs, ...);
 int test_varargs_mixed(const char* prefix, int nargs, ...);
+double test_varargs_mixed_types(int npairs, ...);
 
 /* pointer utility functions */
 SEXP R_pointer_to_string(SEXP r_ptr);
@@ -194,6 +195,7 @@ static const R_CMethodDef CEntries[] = {
     {"test_varargs_sum", (DL_FUNC) &test_varargs_sum, 1},
     {"test_varargs_sum_doubles", (DL_FUNC) &test_varargs_sum_doubles, 1},
     {"test_varargs_mixed", (DL_FUNC) &test_varargs_mixed, 2},
+    {"test_varargs_mixed_types", (DL_FUNC) &test_varargs_mixed_types, 1},
     {NULL, NULL, 0}
 };
 
