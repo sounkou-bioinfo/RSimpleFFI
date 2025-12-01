@@ -512,10 +512,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1159250725
+#> [1] 1489749637
 rand_value <- rand_func()
 rand_value
-#> [1] 1697928059
+#> [1] 1715004248
 dll_unload(libc_path)
 ```
 
@@ -537,7 +537,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x61ae6e24f9e0>
+#> <pointer: 0x596816d8dbf0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -628,8 +628,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     12.8µs   28.2µs    34967.    78.2KB        0
-#> 2 ffi_call     96.1µs    100µs     9757.    78.7KB        0
+#> 1 native_r     12.9µs     29µs    36253.    78.2KB        0
+#> 2 ffi_call     96.3µs    103µs     9580.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -711,7 +711,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x61ae70ed3670>
+#> <pointer: 0x59681a8899d0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -743,8 +743,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.47ms   2.56ms      376.    78.2KB     19.8
-#> 2 c_ffi      105.51µs 131.11µs     7434.    78.7KB      0
+#> 1 r            2.45ms   2.54ms      377.    78.2KB     19.8
+#> 2 c_ffi       109.9µs 128.38µs     7417.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -813,7 +813,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764616245
+#> [1] 1764617770
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
