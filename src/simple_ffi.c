@@ -1193,6 +1193,129 @@ SEXP R_copy_array(SEXP r_ptr, SEXP r_length, SEXP r_element_type) {
     return result;
 }
 
+
+// ============================================================================
+// ARRAY OF STRUCTS SUPPORT
+// ============================================================================
+
+// Allocate contiguous array of N structures
+SEXP R_alloc_struct_array(SEXP r_struct_type, SEXP r_n) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    int n = asInteger(r_n);
+    
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
+        Rf_error("Invalid structure type");
+    }
+    if (n <= 0) {
+        Rf_error("n must be positive");
+    }
+    
+    size_t total_size = (size_t)n * struct_type->size;
+    void* ptr = calloc(1, total_size);
+    if (!ptr) {
+        Rf_error("Memory allocation failed for %d structs (%zu bytes)", n, total_size);
+    }
+    
+    SEXP extPtr = R_MakeExternalPtr(ptr, Rf_install("struct_array"), R_NilValue);
+    PROTECT(extPtr);
+    R_RegisterCFinalizerEx(extPtr, buffer_finalizer, TRUE);
+    UNPROTECT(1);
+    return extPtr;
+}
+
+// Get pointer to element in struct array (0-based index from C, 1-based from R)
+SEXP R_get_struct_array_element(SEXP r_ptr, SEXP r_index, SEXP r_struct_type) {
+    void* base_ptr = R_ExternalPtrAddr(r_ptr);
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    int index = asInteger(r_index);
+    
+    if (!base_ptr) Rf_error("Invalid pointer");
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
+        Rf_error("Invalid structure type");
+    }
+    if (index < 0) Rf_error("Index must be non-negative");
+    
+    // Calculate offset to element
+    void* element_ptr = (char*)base_ptr + (size_t)index * struct_type->size;
+    
+    // Return new external pointer to this element
+    // NOTE: No finalizer - parent array owns memory
+    return R_MakeExternalPtr(element_ptr, Rf_install("struct_element"), R_NilValue);
+}
+
+// Get struct size (useful for computing offsets)
+SEXP R_get_struct_size(SEXP r_struct_type) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    if (!struct_type) Rf_error("Invalid structure type");
+    return ScalarInteger((int)struct_type->size);
+}
+
+// Get number of fields in a struct
+SEXP R_get_struct_num_fields(SEXP r_struct_type) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    if (!struct_type || !struct_type->elements) Rf_error("Invalid structure type");
+    
+    int count = 0;
+    while (struct_type->elements[count]) count++;
+    return ScalarInteger(count);
+}
+
+// Get field info: returns list(offset, size, alignment) for a field
+SEXP R_get_field_info(SEXP r_struct_type, SEXP r_field_index) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    int field_index = INTEGER(r_field_index)[0];
+    
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
+        Rf_error("Invalid structure type");
+    }
+    if (!struct_type->elements || !struct_type->elements[field_index]) {
+        Rf_error("Field index out of range");
+    }
+    
+    ffi_type* field_type = struct_type->elements[field_index];
+    size_t offset = calculate_field_offset(struct_type, field_index);
+    
+    // Return as named list
+    SEXP result = PROTECT(allocVector(VECSXP, 3));
+    SEXP names = PROTECT(allocVector(STRSXP, 3));
+    
+    SET_VECTOR_ELT(result, 0, ScalarInteger((int)offset));
+    SET_VECTOR_ELT(result, 1, ScalarInteger((int)field_type->size));
+    SET_VECTOR_ELT(result, 2, ScalarInteger((int)field_type->alignment));
+    
+    SET_STRING_ELT(names, 0, mkChar("offset"));
+    SET_STRING_ELT(names, 1, mkChar("size"));
+    SET_STRING_ELT(names, 2, mkChar("alignment"));
+    setAttrib(result, R_NamesSymbol, names);
+    
+    UNPROTECT(2);
+    return result;
+}
+
+// Get all field offsets at once (more efficient than calling R_get_field_info repeatedly)
+SEXP R_get_all_field_offsets(SEXP r_struct_type) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT || !struct_type->elements) {
+        Rf_error("Invalid structure type");
+    }
+    
+    // Count fields
+    int num_fields = 0;
+    while (struct_type->elements[num_fields]) num_fields++;
+    
+    SEXP result = PROTECT(allocVector(INTSXP, num_fields));
+    int* offsets = INTEGER(result);
+    
+    for (int i = 0; i < num_fields; i++) {
+        offsets[i] = (int)calculate_field_offset(struct_type, i);
+    }
+    
+    UNPROTECT(1);
+    return result;
+}
+
+
 // Explicit pointer-to-string conversion for type safety
 SEXP R_pointer_to_string(SEXP r_ptr) {
     if (TYPEOF(r_ptr) != EXTPTRSXP) {

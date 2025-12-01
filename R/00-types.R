@@ -656,3 +656,145 @@ ffi_sizeof <- S7::new_generic("ffi_sizeof", "type")
 
 #' @export
 S7::method(ffi_sizeof, FFIType) <- function(type) type@size
+
+
+#####################################
+#
+# Field Info and Struct Introspection
+#
+######################################
+
+#' Field Information Class
+#'
+#' Represents metadata about a single field in a structure.
+#'
+#' @slot name Character name of the field
+#' @slot type FFIType of the field
+#' @slot offset Integer byte offset within structure
+#' @slot size Integer size of field in bytes
+#' @slot index Integer 1-based field index
+#' @export
+FieldInfo <- S7::new_class(
+  "FieldInfo",
+  package = "RSimpleFFI",
+  properties = list(
+    name = S7::class_character,
+    type = FFIType,
+    offset = S7::class_integer,
+    size = S7::class_integer,
+    index = S7::class_integer
+  )
+)
+
+#' @export
+S7::method(format, FieldInfo) <- function(x, ...) {
+  sprintf(
+    "FieldInfo('%s' type=%s, offset=%d, size=%d)",
+    x@name, x@type@name, x@offset, x@size
+  )
+}
+
+#' @export
+S7::method(print, FieldInfo) <- function(x, ...) {
+  message(format(x), "\n", sep = "")
+  invisible(x)
+}
+
+#' Get field information from a struct type
+#'
+#' Returns metadata about a specific field, including its byte offset,
+#' size, and type information.
+#'
+#' @param struct_type StructType object
+#' @param field Character field name or integer field index (1-based)
+#' @return FieldInfo object with offset, size, alignment info
+#'
+#' @examples
+#' \dontrun{
+#' Point <- ffi_struct(x = ffi_int(), y = ffi_double())
+#' ffi_field_info(Point, "x")
+#' # <FieldInfo 'x' type=int, offset=0, size=4>
+#' ffi_field_info(Point, "y")
+#' # <FieldInfo 'y' type=double, offset=8, size=8>  (offset 8 due to alignment)
+#' }
+#'
+#' @export
+ffi_field_info <- function(struct_type, field) {
+  if (!S7::S7_inherits(struct_type, StructType)) {
+    stop("struct_type must be a StructType object")
+  }
+
+  # Resolve field name to index
+  if (is.character(field)) {
+    field_index <- match(field, struct_type@fields)
+    if (is.na(field_index)) {
+      stop(
+        "No such field '", field, "' in struct. Available fields: ",
+        paste(struct_type@fields, collapse = ", ")
+      )
+    }
+  } else {
+    field_index <- as.integer(field)
+    if (field_index < 1 || field_index > length(struct_type@fields)) {
+      stop("Field index out of range: ", field_index)
+    }
+  }
+
+  # Get info from C (0-based index)
+  info <- .Call("R_get_field_info", struct_type@ref, as.integer(field_index - 1L))
+
+  FieldInfo(
+    name = struct_type@fields[field_index],
+    type = struct_type@field_types[[field_index]],
+    offset = as.integer(info$offset),
+    size = as.integer(info$size),
+    index = field_index
+  )
+}
+
+#' Get byte offset of a field in a structure
+#'
+#' Returns the byte offset of a field within a structure, accounting for
+#' alignment requirements. Similar to C's offsetof() macro.
+#'
+#' @param struct_type StructType object
+#' @param field Character field name or integer field index (1-based)
+#' @return Integer byte offset
+#'
+#' @examples
+#' \dontrun{
+#' Point <- ffi_struct(x = ffi_int(), y = ffi_double())
+#' ffi_offsetof(Point, "x") # 0
+#' ffi_offsetof(Point, "y") # 8 (aligned to 8-byte boundary)
+#' }
+#'
+#' @export
+ffi_offsetof <- function(struct_type, field) {
+  info <- ffi_field_info(struct_type, field)
+  info@offset
+}
+
+#' Get all field offsets for a struct
+#'
+#' Returns a named integer vector with byte offsets for all fields.
+#'
+#' @param struct_type StructType object
+#' @return Named integer vector of offsets
+#'
+#' @examples
+#' \dontrun{
+#' Point <- ffi_struct(x = ffi_int(), y = ffi_double())
+#' ffi_all_offsets(Point)
+#' # x y
+#' # 0 8
+#' }
+#'
+#' @export
+ffi_all_offsets <- function(struct_type) {
+  if (!S7::S7_inherits(struct_type, StructType)) {
+    stop("struct_type must be a StructType object")
+  }
+  offsets <- .Call("R_get_all_field_offsets", struct_type@ref)
+  names(offsets) <- struct_type@fields
+  offsets
+}

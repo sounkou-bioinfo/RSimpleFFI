@@ -249,3 +249,100 @@ long test_long_func(long a) {
 unsigned long test_ulong_func(unsigned long a) {
     return a * 5;
 }
+
+
+/* ============================================================================
+ * STRUCT ARRAY TEST FUNCTIONS
+ * ============================================================================
+ */
+
+/* Struct with alignment padding: int (4) + padding (4) + double (8) = 16 */
+typedef struct {
+    int a;
+    double b;
+} MixedStruct;
+
+/* Sum all x values in an array of Point2D */
+int test_sum_point2d_array(Point2D* points, int count) {
+    int sum = 0;
+    for (int i = 0; i < count; i++) {
+        sum += points[i].x + points[i].y;
+    }
+    return sum;
+}
+
+/* Modify each point in array: multiply x by 2, y by 3 */
+void test_scale_point2d_array(Point2D* points, int count) {
+    for (int i = 0; i < count; i++) {
+        points[i].x *= 2;
+        points[i].y *= 3;
+    }
+}
+
+/* Sum all 'a' and 'b' fields in MixedStruct array */
+double test_sum_mixed_array(MixedStruct* arr, int count) {
+    double sum = 0.0;
+    for (int i = 0; i < count; i++) {
+        sum += (double)arr[i].a + arr[i].b;
+    }
+    return sum;
+}
+
+/* Initialize MixedStruct array with index-based values */
+void test_init_mixed_array(MixedStruct* arr, int count) {
+    for (int i = 0; i < count; i++) {
+        arr[i].a = i + 1;
+        arr[i].b = (i + 1) * 0.5;
+    }
+}
+
+/* Get element at index from Point2D array (returns by value) */
+Point2D test_get_point2d_at(Point2D* points, int index) {
+    return points[index];
+}
+
+/* Set element at index in Point2D array */
+void test_set_point2d_at(Point2D* points, int index, int x, int y) {
+    points[index].x = x;
+    points[index].y = y;
+}
+
+/* Struct with char for alignment testing: char (1) + pad (3) + int (4) + double (8) */
+typedef struct {
+    char c;
+    int i;
+    double d;
+} AlignedStruct;
+
+/* Sum aligned struct array */
+double test_sum_aligned_array(AlignedStruct* arr, int count) {
+    double sum = 0.0;
+    for (int i = 0; i < count; i++) {
+        sum += (double)arr[i].c + (double)arr[i].i + arr[i].d;
+    }
+    return sum;
+}
+
+/* Initialize aligned struct array */
+void test_init_aligned_array(AlignedStruct* arr, int count) {
+    for (int i = 0; i < count; i++) {
+        arr[i].c = 'A' + (i % 26);
+        arr[i].i = (i + 1) * 10;
+        arr[i].d = (i + 1) * 1.5;
+    }
+}
+
+/* Return size of MixedStruct (for verification) */
+int test_sizeof_mixed(void) {
+    return (int)sizeof(MixedStruct);
+}
+
+/* Return size of AlignedStruct (for verification) */
+int test_sizeof_aligned(void) {
+    return (int)sizeof(AlignedStruct);
+}
+
+/* Return size of Point2D (for verification) */
+int test_sizeof_point2d(void) {
+    return (int)sizeof(Point2D);
+}

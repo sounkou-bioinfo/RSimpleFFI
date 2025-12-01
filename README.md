@@ -217,6 +217,60 @@ label  # string fields are returned directly as character
 You can define more complex structs by adding more fields and using any
 supported FFI type.
 
+### Struct Arrays
+
+You can allocate contiguous arrays of structs and access elements by
+index:
+
+``` r
+# Define a Point struct
+Point <- ffi_struct(x = ffi_int(), y = ffi_int())
+
+# Allocate an array of 5 Points
+points <- ffi_alloc(Point, 5L)
+
+# Set values for each point
+for (i in 1:5) {
+  p <- ffi_get_element(points, i, Point)
+  ffi_set_field(p, "x", as.integer(i * 10), Point)
+  ffi_set_field(p, "y", as.integer(i * 20), Point)
+}
+
+# Read back values
+p3 <- ffi_get_element(points, 3L, Point)
+ffi_get_field(p3, "x", Point)
+#> [1] 30
+ffi_get_field(p3, "y", Point)
+#> [1] 60
+```
+
+### Field Introspection
+
+Use `ffi_field_info()`, `ffi_offsetof()`, and `ffi_all_offsets()` to
+inspect struct layout:
+
+``` r
+# Struct with alignment padding: int (4) + padding (4) + double (8) = 16 bytes
+Mixed <- ffi_struct(a = ffi_int(), b = ffi_double())
+ffi_sizeof(Mixed)
+#> [1] 16
+
+# Get byte offset of a field (like C's offsetof macro)
+ffi_offsetof(Mixed, "a")
+#> [1] 0
+ffi_offsetof(Mixed, "b")  # offset 8 due to 8-byte alignment
+#> [1] 8
+
+# Get all offsets at once
+ffi_all_offsets(Mixed)
+#> a b 
+#> 0 8
+
+# Get detailed field info
+ffi_field_info(Mixed, "b")
+#> FieldInfo('b' type=double, offset=8, size=8)
+```
+
 ## Function Calling
 
 ### Basic Function Calls
@@ -458,10 +512,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1581710804
+#> [1] 2088767870
 rand_value <- rand_func()
 rand_value
-#> [1] 1538001442
+#> [1] 2087561124
 dll_unload(libc_path)
 ```
 
@@ -483,7 +537,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x605de0acdb20>
+#> <pointer: 0x58fcfafc2f60>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -574,8 +628,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.2µs   29.2µs    35708.    78.2KB      0  
-#> 2 ffi_call     93.6µs    109µs     9125.    78.7KB     92.2
+#> 1 native_r       13µs   29.1µs    35141.    78.2KB        0
+#> 2 ffi_call       94µs   99.8µs     9789.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -657,7 +711,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x605de6744360>
+#> <pointer: 0x58fcfde66e50>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -689,8 +743,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.42ms   2.59ms      369.    78.2KB     19.4
-#> 2 c_ffi       98.51µs 102.23µs     8729.    78.7KB      0
+#> 1 r            2.41ms   2.61ms      378.    78.2KB     19.9
+#> 2 c_ffi      113.95µs 123.95µs     7649.    78.7KB      0
 
 dll_unload(lib_path)
 ```

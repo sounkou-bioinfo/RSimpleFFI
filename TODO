@@ -1,9 +1,0 @@
-# We can allow nested structs 
-
-This should requires some more serious reworking of the C type creation infracstructure
-
-# add OffsetOf method for struct types
-
-# allow allocate array of structs
-
-# closure

@@ -196,6 +196,50 @@ label  # string fields are returned directly as character
 ```
 You can define more complex structs by adding more fields and using any supported FFI type.
 
+### Struct Arrays
+
+You can allocate contiguous arrays of structs and access elements by index:
+
+```{r}
+# Define a Point struct
+Point <- ffi_struct(x = ffi_int(), y = ffi_int())
+
+# Allocate an array of 5 Points
+points <- ffi_alloc(Point, 5L)
+
+# Set values for each point
+for (i in 1:5) {
+  p <- ffi_get_element(points, i, Point)
+  ffi_set_field(p, "x", as.integer(i * 10), Point)
+  ffi_set_field(p, "y", as.integer(i * 20), Point)
+}
+
+# Read back values
+p3 <- ffi_get_element(points, 3L, Point)
+ffi_get_field(p3, "x", Point)
+ffi_get_field(p3, "y", Point)
+```
+
+### Field Introspection
+
+Use `ffi_field_info()`, `ffi_offsetof()`, and `ffi_all_offsets()` to inspect struct layout:
+
+```{r}
+# Struct with alignment padding: int (4) + padding (4) + double (8) = 16 bytes
+Mixed <- ffi_struct(a = ffi_int(), b = ffi_double())
+ffi_sizeof(Mixed)
+
+# Get byte offset of a field (like C's offsetof macro)
+ffi_offsetof(Mixed, "a")
+ffi_offsetof(Mixed, "b")  # offset 8 due to 8-byte alignment
+
+# Get all offsets at once
+ffi_all_offsets(Mixed)
+
+# Get detailed field info
+ffi_field_info(Mixed, "b")
+```
+
 
 ## Function Calling
 

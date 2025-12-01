@@ -17,6 +17,15 @@ SEXP R_get_struct_field(SEXP ptr, SEXP field_index, SEXP struct_type);
 SEXP R_set_struct_field(SEXP ptr, SEXP field_index, SEXP value, SEXP struct_type);
 SEXP R_is_null_pointer(SEXP ptr);
 SEXP R_copy_array(SEXP ptr, SEXP length, SEXP element_type);
+
+/* Array of structs support */
+SEXP R_alloc_struct_array(SEXP struct_type, SEXP n);
+SEXP R_get_struct_array_element(SEXP ptr, SEXP index, SEXP struct_type);
+SEXP R_get_struct_size(SEXP struct_type);
+SEXP R_get_struct_num_fields(SEXP struct_type);
+SEXP R_get_field_info(SEXP struct_type, SEXP field_index);
+SEXP R_get_all_field_offsets(SEXP struct_type);
+
 SEXP R_alloc_buffer(SEXP r_size);
 SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n);
 SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type);
@@ -62,6 +71,22 @@ double test_transform_sum(double* arr, int len, double (*transform)(double));
 int test_find_max(int* arr, int len, int (*cmp)(int, int));
 void test_foreach(int start, int end, void (*callback)(int));
 
+/* Struct array test functions */
+typedef struct { int a; double b; } MixedStruct;
+typedef struct { char c; int i; double d; } AlignedStruct;
+
+int test_sum_point2d_array(Point2D* points, int count);
+void test_scale_point2d_array(Point2D* points, int count);
+double test_sum_mixed_array(MixedStruct* arr, int count);
+void test_init_mixed_array(MixedStruct* arr, int count);
+Point2D test_get_point2d_at(Point2D* points, int index);
+void test_set_point2d_at(Point2D* points, int index, int x, int y);
+double test_sum_aligned_array(AlignedStruct* arr, int count);
+void test_init_aligned_array(AlignedStruct* arr, int count);
+int test_sizeof_mixed(void);
+int test_sizeof_aligned(void);
+int test_sizeof_point2d(void);
+
 /* pointer utility functions */
 SEXP R_pointer_to_string(SEXP r_ptr);
 SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name);
@@ -85,6 +110,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_set_struct_field",        (DL_FUNC) &R_set_struct_field,        4},
     {"R_is_null_pointer",         (DL_FUNC) &R_is_null_pointer,         1},
     {"R_copy_array",              (DL_FUNC) &R_copy_array,              3},
+    /* Array of structs support */
+    {"R_alloc_struct_array",      (DL_FUNC) &R_alloc_struct_array,      2},
+    {"R_get_struct_array_element",(DL_FUNC) &R_get_struct_array_element,3},
+    {"R_get_struct_size",         (DL_FUNC) &R_get_struct_size,         1},
+    {"R_get_struct_num_fields",   (DL_FUNC) &R_get_struct_num_fields,   1},
+    {"R_get_field_info",          (DL_FUNC) &R_get_field_info,          2},
+    {"R_get_all_field_offsets",   (DL_FUNC) &R_get_all_field_offsets,   1},
     {"R_pointer_to_string",       (DL_FUNC) &R_pointer_to_string,       1},
     {"R_make_typed_pointer",      (DL_FUNC) &R_make_typed_pointer,      2},
     {"R_get_pointer_type",        (DL_FUNC) &R_get_pointer_type,        1},
@@ -137,6 +169,19 @@ static const R_CMethodDef CEntries[] = {
     {"test_transform_sum", (DL_FUNC) &test_transform_sum, 3},
     {"test_find_max", (DL_FUNC) &test_find_max, 3},
     {"test_foreach", (DL_FUNC) &test_foreach, 3},
+    
+    // Struct array test functions
+    {"test_sum_point2d_array", (DL_FUNC) &test_sum_point2d_array, 2},
+    {"test_scale_point2d_array", (DL_FUNC) &test_scale_point2d_array, 2},
+    {"test_sum_mixed_array", (DL_FUNC) &test_sum_mixed_array, 2},
+    {"test_init_mixed_array", (DL_FUNC) &test_init_mixed_array, 2},
+    {"test_get_point2d_at", (DL_FUNC) &test_get_point2d_at, 2},
+    {"test_set_point2d_at", (DL_FUNC) &test_set_point2d_at, 4},
+    {"test_sum_aligned_array", (DL_FUNC) &test_sum_aligned_array, 2},
+    {"test_init_aligned_array", (DL_FUNC) &test_init_aligned_array, 2},
+    {"test_sizeof_mixed", (DL_FUNC) &test_sizeof_mixed, 0},
+    {"test_sizeof_aligned", (DL_FUNC) &test_sizeof_aligned, 0},
+    {"test_sizeof_point2d", (DL_FUNC) &test_sizeof_point2d, 0},
     {NULL, NULL, 0}
 };
 

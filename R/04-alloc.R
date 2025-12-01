@@ -21,10 +21,47 @@ S7::method(ffi_alloc, FFIType) <- function(type, n = 1L) {
 
 #' @export
 S7::method(ffi_alloc, StructType) <- function(type, n = 1L) {
-  if (n != 1L) {
-    stop("StructType allocation only supports n = 1")
+  if (n == 1L) {
+    .Call("R_alloc_struct", type@ref)
+  } else {
+    if (!is.numeric(n) || n < 1) {
+      stop("n must be a positive integer")
+    }
+    .Call("R_alloc_struct_array", type@ref, as.integer(n))
   }
-  .Call("R_alloc_struct", type@ref)
+}
+
+#' Get element from struct array
+#'
+#' Returns a pointer to the i-th struct in a contiguous array of structs.
+#' The returned pointer shares memory with the original array.
+#'
+#' @param ptr External pointer to struct array (from ffi_alloc with n > 1)
+#' @param index 1-based index of element to get
+#' @param struct_type StructType describing the element type
+#' @return External pointer to the element (no finalizer - parent owns memory)
+#'
+#' @examples
+#' \dontrun{
+#' Point <- ffi_struct(x = ffi_int(), y = ffi_int())
+#' points <- ffi_alloc(Point, 10L)  # array of 10 Points
+#' p3 <- ffi_get_element(points, 3L, Point)
+#' ffi_set_field(p3, "x", 100L, Point)
+#' }
+#'
+#' @export
+ffi_get_element <- function(ptr, index, struct_type) {
+  if (!inherits(ptr, "externalptr")) {
+    stop("ptr must be an external pointer")
+  }
+  if (!S7::S7_inherits(struct_type, StructType)) {
+    stop("struct_type must be a StructType object")
+  }
+  if (!is.numeric(index) || length(index) != 1 || index < 1) {
+    stop("index must be a positive integer (1-based)")
+  }
+  # Convert 1-based R index to 0-based C index
+  .Call("R_get_struct_array_element", ptr, as.integer(index - 1L), struct_type@ref)
 }
 
 #' @export
