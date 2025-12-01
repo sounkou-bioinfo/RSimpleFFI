@@ -98,6 +98,8 @@ double test_varargs_mixed_types(int npairs, ...);
 SEXP R_pointer_to_string(SEXP r_ptr);
 SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name);
 SEXP R_get_pointer_type(SEXP r_ptr);
+SEXP R_deref_pointer(SEXP r_ptr);
+SEXP R_read_global(SEXP r_ptr, SEXP r_type);
 
 /* closure API functions */
 SEXP R_ffi_closures_supported(void);
@@ -128,6 +130,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_pointer_to_string",       (DL_FUNC) &R_pointer_to_string,       1},
     {"R_make_typed_pointer",      (DL_FUNC) &R_make_typed_pointer,      2},
     {"R_get_pointer_type",        (DL_FUNC) &R_get_pointer_type,        1},
+    {"R_deref_pointer",           (DL_FUNC) &R_deref_pointer,           1},
+    {"R_read_global",             (DL_FUNC) &R_read_global,             2},
     {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
     {"R_get_ffi_type_size",       (DL_FUNC) &R_get_ffi_type_size,       1},
     {"R_alloc_buffer",            (DL_FUNC) &R_alloc_buffer,            1},

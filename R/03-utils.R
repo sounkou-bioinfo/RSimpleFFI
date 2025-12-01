@@ -164,6 +164,47 @@ get_pointer_type <- function(ptr) {
   .Call("R_get_pointer_type", ptr)
 }
 
+#' Dereference a pointer
+#'
+#' Reads the pointer value stored at an address. This is useful for
+#' accessing global variables in shared libraries that are pointers
+#' (like R_GlobalEnv, R_NilValue, etc.).
+#'
+#' @param ptr External pointer to the address to dereference
+#' @return External pointer containing the value at the address
+#' @export
+#' @examples
+#' \dontrun{
+#' # Get R_GlobalEnv from libR.so
+#' addr <- getNativeSymbolInfo("R_GlobalEnv")$address
+#' globalenv_sexp <- ffi_deref_pointer(addr)
+#' }
+ffi_deref_pointer <- function(ptr) {
+  if (typeof(ptr) != "externalptr") {
+    stop("ptr must be an external pointer")
+  }
+  .Call("R_deref_pointer", ptr)
+}
+
+#' Read a global variable from a shared library
+#'
+#' Reads a typed value from a global symbol address. This is a typed
+#' version of ffi_deref_pointer that handles type conversion.
+#'
+#' @param ptr External pointer to the global variable address
+#' @param type FFIType describing the type of the global variable
+#' @return The value at the address, converted to an appropriate R type
+#' @export
+ffi_read_global <- function(ptr, type) {
+  if (typeof(ptr) != "externalptr") {
+    stop("ptr must be an external pointer")
+  }
+  if (!S7::S7_inherits(type, FFIType)) {
+    stop("type must be an FFIType")
+  }
+  .Call("R_read_global", ptr, type@ref)
+}
+
 # Print methods (using format)
 S7::method(print, FFIType) <- function(x, ...) {
   message(format(x), "\n")

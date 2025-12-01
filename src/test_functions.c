@@ -6,7 +6,38 @@
 #include <stdint.h>
 #include <math.h>
 
-/* Test functions for basic FFI operations */
+/* ==========================================================================
+ * Test Global Variables
+ * These are used to test ffi_deref_pointer and ffi_read_global
+ * ==========================================================================*/
+
+/* Global integer */
+int test_global_int = 42;
+
+/* Global double */
+double test_global_double = 3.14159;
+
+/* Global pointer (to a string) */
+const char* test_global_string = "Hello from global!";
+
+/* Global struct for testing */
+typedef struct {
+    int x;
+    int y;
+} TestPoint;
+
+TestPoint test_global_point = { 100, 200 };
+
+/* Global pointer to a struct */
+TestPoint* test_global_point_ptr = &test_global_point;
+
+/* Global array */
+int test_global_array[5] = { 10, 20, 30, 40, 50 };
+
+
+/* ==========================================================================
+ * Test functions for basic FFI operations
+ * ==========================================================================*/
 
 /* Simple math functions */
 

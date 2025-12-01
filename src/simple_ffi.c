@@ -1427,6 +1427,48 @@ SEXP R_get_pointer_type(SEXP r_ptr) {
     return mkString(CHAR(PRINTNAME(tag)));
 }
 
+// Dereference a pointer - read the pointer value stored at an address
+// This is useful for reading global variables that are pointers (like R_GlobalEnv)
+SEXP R_deref_pointer(SEXP r_ptr) {
+    if (TYPEOF(r_ptr) != EXTPTRSXP) {
+        Rf_error("Expected external pointer");
+    }
+    
+    void** ptr_addr = (void**)R_ExternalPtrAddr(r_ptr);
+    if (ptr_addr == NULL) {
+        return R_MakeExternalPtr(NULL, R_NilValue, R_NilValue);
+    }
+    
+    // Read the pointer value at this address
+    void* value = *ptr_addr;
+    
+    return R_MakeExternalPtr(value, R_NilValue, R_NilValue);
+}
+
+// Read a typed value from a global symbol address
+// Supports: pointer, int, double, etc.
+SEXP R_read_global(SEXP r_ptr, SEXP r_type) {
+    if (TYPEOF(r_ptr) != EXTPTRSXP) {
+        Rf_error("Expected external pointer for address");
+    }
+    if (TYPEOF(r_type) != EXTPTRSXP) {
+        Rf_error("Expected external pointer for type");
+    }
+    
+    void* addr = R_ExternalPtrAddr(r_ptr);
+    if (addr == NULL) {
+        Rf_error("NULL address");
+    }
+    
+    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
+    if (type == NULL) {
+        Rf_error("Invalid type");
+    }
+    
+    // Use convert_native_to_r to handle the conversion
+    return convert_native_to_r(addr, type);
+}
+
 
 /*
 *

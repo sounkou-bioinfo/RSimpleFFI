@@ -683,19 +683,28 @@ char_sexp <- rf_STRING_ELT(str_sexp, 0L)
 rf_R_CHAR(char_sexp)
 ```
 
-Other useful R API functions:
+We can also read global variables from shared libraries using `ffi_deref_pointer()` and `ffi_read_global()`:
 
 ```{r eval=TRUE}
-# Helper to dereference a pointer (read pointer value at an address)
-deref_code <- "void* deref_ptr(void** p) { return *p; }"
-deref_lib <- dll_compile_and_load(deref_code, "deref_helper")
-deref_ptr <- dll_ffi_symbol("deref_ptr", ffi_pointer(), ffi_pointer())
+# Read global variables from our test library
+int_addr <- getNativeSymbolInfo("test_global_int", "RSimpleFFI")$address
+ffi_read_global(int_addr, ffi_int())
 
-# Get R_GlobalEnv - it's a global variable, we need to dereference its address
-globalenv_addr <- getNativeSymbolInfo("R_GlobalEnv")$address
-R_GlobalEnv <- deref_ptr(globalenv_addr)
+dbl_addr <- getNativeSymbolInfo("test_global_double", "RSimpleFFI")$address
+ffi_read_global(dbl_addr, ffi_double())
 
-# Define more R API functions
+# For pointer globals, use ffi_deref_pointer
+str_ptr_addr <- getNativeSymbolInfo("test_global_string", "RSimpleFFI")$address
+pointer_to_string(ffi_deref_pointer(str_ptr_addr))
+```
+
+Now let's call R functions entirely through the C API:
+
+```{r eval=TRUE}
+# Get R_GlobalEnv - it's a global pointer variable
+R_GlobalEnv <- ffi_deref_pointer(getNativeSymbolInfo("R_GlobalEnv")$address)
+
+# Define R API functions
 rf_install <- ffi_function("Rf_install", ffi_pointer(), ffi_string())
 rf_lang1 <- ffi_function("Rf_lang1", ffi_pointer(), ffi_pointer())
 rf_lang2 <- ffi_function("Rf_lang2", ffi_pointer(), ffi_pointer(), ffi_pointer())
@@ -713,8 +722,6 @@ neg_val <- rf_ScalarInteger(-42L)
 abs_call <- rf_lang2(abs_sym, neg_val)
 abs_result <- rf_eval(abs_call, R_GlobalEnv)
 rf_INTEGER_ELT(abs_result, 0L)
-
-dll_unload(deref_lib)
 ```
 
 ## Limitations and issues
