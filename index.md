@@ -215,7 +215,7 @@ x
 #> [1] 10
 y
 #> [1] 3.14
-pointer_to_string(label)
+label  # string fields are returned directly as character
 #> [1] "example"
 ```
 
@@ -292,15 +292,15 @@ float_result
 
 #### String output example
 
-This calls a C function that returns a string (const char\*) as pointer
+This calls a C function that returns a string (const char\*). With
+[`ffi_string()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_string.md)
+type, strings are returned directly as R character vectors.
 
 ``` r
 string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
-string_result
-#> <pointer: 0x7c3bdce3cdcf>
-pointer_to_string(string_result)
+string_result  # returned directly as character
 #> [1] "Hello from C!"
 ```
 
@@ -325,23 +325,55 @@ result_x
 
 #### Type Conversions
 
-RSimpleFFI attemps to convert between R and C types automatically
+RSimpleFFI converts between R and C types following C99 semantics:
+
+**R to Native (input) conversions:**
+
+- **Integer types**: R integers and doubles (truncated) convert to any C
+  integer type using modular arithmetic for overflow
+- **Signed/unsigned**: Negative R values convert to unsigned C types
+  using C99 modular arithmetic (e.g., `-1L` to `uint8` becomes `255`)
+- **Float/double**: R numerics convert to C float (with possible
+  precision loss) or double
+- **Bool**: R logical, integer (0/non-zero), or double (truncated then
+  0/non-zero) convert to C99 `_Bool`
+
+**Native to R (return) conversions:**
+
+- **int8/int16/int32**: Return as R integer
+- **uint8/uint16**: Return as R integer (always fits)
+- **uint32**: Returns as R integer if ≤ `INT_MAX`, otherwise as double
+- **int64/uint64**: Return as R double (may lose precision for values \>
+  2^53)
+- **float/double/long double**: Return as R double
+- \*\*\_Bool\*\*: Returns as R logical
 
 ``` r
-int16_result <- ffi_call(ffi_cif(int16_type, int16_type), 
-                        ffi_symbol("test_int16_func"), 1000L)
-int16_result
-#> [1] 2000
+# Integer truncation: 5.7 -> 5
+int_type <- ffi_int()
+add_fn <- ffi_function("test_add_int", int_type, int_type, int_type)
+add_fn(5.7, 3.2)  # 5 + 3 = 8
+#> [1] 8
 
-uint16_result <- ffi_call(ffi_cif(uint16_type, uint16_type),
-                         ffi_symbol("test_uint16_func"), 2000.0)
-uint16_result
-#> [1] 4000
+# Signed overflow wraps (int8 range is -128 to 127)
+int8_type <- ffi_int8()
+int8_fn <- ffi_function("test_int8_func", int8_type, int8_type)
+int8_fn(127L)  # 127 + 1 wraps to -128
+#> [1] -128
 
-bool_result <- ffi_call(ffi_cif(bool_type, bool_type),
-                       ffi_symbol("test_bool_func"), TRUE)
-bool_result
+# Unsigned modular arithmetic
+uint8_type <- ffi_uint8()
+uint8_fn <- ffi_function("test_uint8_func", uint8_type, uint8_type)
+uint8_fn(-1L)  # -1 as uint8 = 255, then +1 wraps to 0
 #> [1] 0
+
+# Bool conversion
+bool_type <- ffi_bool()
+bool_fn <- ffi_function("test_bool_func", bool_type, bool_type)
+bool_fn(TRUE)   # !TRUE = FALSE
+#> [1] FALSE
+bool_fn(42L)    # 42 != 0 -> TRUE, !TRUE = FALSE
+#> [1] FALSE
 ```
 
 ### Call system libraries functions or external shared libraries
@@ -363,10 +395,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 891543440
+#> [1] 541941975
 rand_value <- rand_func()
 rand_value
-#> [1] 646139820
+#> [1] 1316083227
 dll_unload(libc_path)
 ```
 
@@ -388,7 +420,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x58e5a8b56c70>
+#> <pointer: 0x56d4c6515a40>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -479,8 +511,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     12.9µs   28.8µs    35003.    78.2KB        0
-#> 2 ffi_call     96.2µs  100.5µs     9748.    78.7KB        0
+#> 1 native_r     12.7µs   28.2µs    34737.    78.2KB        0
+#> 2 ffi_call     89.5µs   92.2µs    10558.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -562,7 +594,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x58e5ac221f50>
+#> <pointer: 0x56d4c95a9770>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -594,8 +626,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.53ms   2.58ms      376.    78.2KB     19.8
-#> 2 c_ffi      127.47µs 132.12µs     7064.    78.7KB      0
+#> 1 r            2.49ms   2.64ms      370.    78.2KB     19.5
+#> 2 c_ffi      117.36µs 122.76µs     7489.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -606,14 +638,12 @@ Right now, there are unimplemented features and limitations, including
 unnecessary copying, lack of protection, and several potential memory
 leaks. The interface can and should be refined further. Our type objects
 are C pointers (to static variables for basic types) that are never
-finalized. Additionally, the type coercions are not C99-conformant, and
-we do not support complex types. The more “dynamic” calling interface
-via the closure API of libffi is not included. We do not provide any
-facility to create interfaces from C files like the
+finalized. We do not support complex types. The more “dynamic” calling
+interface via the closure API of libffi is not included. We do not
+provide any facility to create interfaces from C files like the
 [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit).
-And of course don’t don t pass NA to C functions if you are not sure
-what will happen because we do not do any NA check like the R `.C`
-interface.
+And of course don’t pass NA to C functions if you are not sure what will
+happen because we do not do any NA check like the R `.C` interface.
 
 ## License
 
