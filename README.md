@@ -512,10 +512,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1918213583
+#> [1] 1159250725
 rand_value <- rand_func()
 rand_value
-#> [1] 1318176673
+#> [1] 1697928059
 dll_unload(libc_path)
 ```
 
@@ -537,7 +537,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5e72eb617910>
+#> <pointer: 0x61ae6e24f9e0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -628,8 +628,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   29.2µs    35120.    78.2KB        0
-#> 2 ffi_call     96.4µs  100.4µs     9637.    78.7KB        0
+#> 1 native_r     12.8µs   28.2µs    34967.    78.2KB        0
+#> 2 ffi_call     96.1µs    100µs     9757.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -711,7 +711,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5e72eee9fe80>
+#> <pointer: 0x61ae70ed3670>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -743,10 +743,87 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.44ms   2.58ms      375.    78.2KB     19.7
-#> 2 c_ffi      109.64µs 130.72µs     7430.    78.7KB      0
+#> 1 r            2.47ms   2.56ms      376.    78.2KB     19.8
+#> 2 c_ffi      105.51µs 131.11µs     7434.    78.7KB      0
 
 dll_unload(lib_path)
+```
+
+## Dangerous: Calling R API Exported Symbols
+
+Since `libR.so` is loaded we can use its exported symbols and functions.
+This allows calling R’s internal C API directly via FFI - the same
+functions that R packages use in their C code. This is for educational
+purposes only! Calling R internals incorrectly can crash R or corrupt
+memory.
+
+``` r
+# Rf_ScalarInteger - create an R integer scalar (returns SEXP pointer)
+rf_ScalarInteger <- ffi_function("Rf_ScalarInteger", ffi_pointer(), ffi_int())
+rf_ScalarReal <- ffi_function("Rf_ScalarReal", ffi_pointer(), ffi_double())
+
+# Create R objects via C API
+int_sexp <- rf_ScalarInteger(42L)
+dbl_sexp <- rf_ScalarReal(3.14159)
+
+# Extract values using INTEGER_ELT / REAL_ELT
+rf_INTEGER_ELT <- ffi_function("INTEGER_ELT", ffi_int(), ffi_pointer(), ffi_long())
+rf_REAL_ELT <- ffi_function("REAL_ELT", ffi_double(), ffi_pointer(), ffi_long())
+
+rf_INTEGER_ELT(int_sexp, 0L)
+#> [1] 42
+rf_REAL_ELT(dbl_sexp, 0L)
+#> [1] 3.14159
+```
+
+We can also create and extract strings:
+
+``` r
+# Rf_mkString creates a STRSXP (character vector)
+rf_mkString <- ffi_function("Rf_mkString", ffi_pointer(), ffi_string())
+rf_STRING_ELT <- ffi_function("STRING_ELT", ffi_pointer(), ffi_pointer(), ffi_long())
+rf_R_CHAR <- ffi_function("R_CHAR", ffi_string(), ffi_pointer())
+
+str_sexp <- rf_mkString("Hello from C!")
+char_sexp <- rf_STRING_ELT(str_sexp, 0L)
+rf_R_CHAR(char_sexp)
+#> [1] "Hello from C!"
+```
+
+Other useful R API functions:
+
+``` r
+# Helper to dereference a pointer (read pointer value at an address)
+deref_code <- "void* deref_ptr(void** p) { return *p; }"
+deref_lib <- dll_compile_and_load(deref_code, "deref_helper")
+deref_ptr <- dll_ffi_symbol("deref_ptr", ffi_pointer(), ffi_pointer())
+
+# Get R_GlobalEnv - it's a global variable, we need to dereference its address
+globalenv_addr <- getNativeSymbolInfo("R_GlobalEnv")$address
+R_GlobalEnv <- deref_ptr(globalenv_addr)
+
+# Define more R API functions
+rf_install <- ffi_function("Rf_install", ffi_pointer(), ffi_string())
+rf_lang1 <- ffi_function("Rf_lang1", ffi_pointer(), ffi_pointer())
+rf_lang2 <- ffi_function("Rf_lang2", ffi_pointer(), ffi_pointer(), ffi_pointer())
+rf_eval <- ffi_function("Rf_eval", ffi_pointer(), ffi_pointer(), ffi_pointer())
+
+# Call Sys.time() entirely via R's C API!
+sys_time_sym <- rf_install("Sys.time")
+call_expr <- rf_lang1(sys_time_sym)
+result <- rf_eval(call_expr, R_GlobalEnv)
+rf_REAL_ELT(result, 0L)  # Unix timestamp
+#> [1] 1764616245
+
+# Call abs(-42) via C API
+abs_sym <- rf_install("abs")
+neg_val <- rf_ScalarInteger(-42L)
+abs_call <- rf_lang2(abs_sym, neg_val)
+abs_result <- rf_eval(abs_call, R_GlobalEnv)
+rf_INTEGER_ELT(abs_result, 0L)
+#> [1] 42
+
+dll_unload(deref_lib)
 ```
 
 ## Limitations and issues
