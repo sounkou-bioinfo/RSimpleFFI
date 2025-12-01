@@ -786,6 +786,8 @@ This project is licensed under the GPL-3 License.
   : Fill a typed buffer from an R vector (int or double)
 - [`ffi_float()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_float.md)
   : float FFI type
+- [`ffi_free()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_free.md)
+  : Free memory pointed to by an external pointer
 - [`ffi_function()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_function.md)
   : Create a reusable FFI function wrapper
 - [`ffi_get_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_get_field.md)
