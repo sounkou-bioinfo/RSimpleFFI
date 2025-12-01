@@ -1,6 +1,6 @@
-# Ssize_t FFI type
+# uint FFI type
 
-Ssize_t FFI type
+uint FFI type
 
 ## Usage
 
@@ -10,4 +10,4 @@ ffi_uint()
 
 ## Value
 
-FFIType object for ssize_t
+FFIType object for uint

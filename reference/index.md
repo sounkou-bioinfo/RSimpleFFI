@@ -99,7 +99,7 @@
 - [`ffi_uchar()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uchar.md)
   : Uchar FFI type
 - [`ffi_uint()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uint.md)
-  : Ssize_t FFI type
+  : uint FFI type
 - [`ffi_uint16()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uint16.md)
   : Uint16 FFI type
 - [`ffi_uint32()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uint32.md)
