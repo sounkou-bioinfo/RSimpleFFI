@@ -1,6 +1,6 @@
 # Make FFI function call
 
-Make FFI function call
+Call a C function through the FFI interface.
 
 ## Usage
 
@@ -20,10 +20,15 @@ ffi_call(cif, symbol, ...)
 
 - ...:
 
-  Arguments to pass to the function
+  Arguments to pass to the function (including `na_check`)
 
-- na_check:
+## Value
 
-  Logical; if TRUE (default), check for NA values and error if found.
-  Set to FALSE to skip NA checking for better performance (at your own
-  risk).
+The return value from the C function, converted to an R type
+
+## Details
+
+The method implementations accept an additional `na_check` argument
+(logical, default TRUE). When TRUE, the function checks for NA values in
+arguments and errors if found. Set to FALSE to skip NA checking for
+better performance (at your own risk).

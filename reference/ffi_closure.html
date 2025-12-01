@@ -95,8 +95,8 @@ calling through its function pointer will crash.</p>
 <span class="r-in"><span><span class="co"># Wrap it as a C callback: int (*)(int*, int*)</span></span></span>
 <span class="r-in"><span><span class="va">cmp_closure</span> <span class="op">&lt;-</span> <span class="fu">ffi_closure</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">cmp_fn</span>,</span></span>
-<span class="r-in"><span>  <span class="fu"><a href="ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>,                    <span class="co"># return type</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># argument types (pointers to int)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="co"># return type</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># argument types (pointers to int)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Get the function pointer to pass to C</span></span></span>
