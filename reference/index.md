@@ -6,6 +6,8 @@
   : FFI Array Type
 - [`CIF()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/CIF.md)
   : FFI Call Interface (CIF)
+- [`FFIClosure()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIClosure.md)
+  : FFI Closure - R function as C callback
 - [`FFIType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIType.md)
   : FFI Type representation
 - [`NativeSymbol()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/NativeSymbol.md)
@@ -42,6 +44,12 @@
   : Char FFI type
 - [`ffi_cif()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_cif.md)
   : Prepare FFI call interface Prepare FFI call interface
+- [`ffi_closure()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure.md)
+  : Create an FFI closure from an R function
+- [`ffi_closure_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure_pointer.md)
+  : Get the function pointer for an FFI closure
+- [`ffi_closures_supported()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closures_supported.md)
+  : Check if closures are supported on this platform
 - [`ffi_copy_array()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array.md)
   : Copy array from native memory
 - [`ffi_copy_array_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array_type.md)

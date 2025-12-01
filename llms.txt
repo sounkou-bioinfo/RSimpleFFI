@@ -398,6 +398,54 @@ double_fn(NaN, 5.0)  # NaN + 5 = NaN
 #> [1] NaN
 ```
 
+### Closures (R callbacks for C)
+
+The closure API lets you wrap R functions as C callbacks. This is useful
+when C code expects a function pointer (e.g., qsort comparator, event
+handlers).
+
+``` r
+# Create an R function to use as callback
+add_ten <- function(x) {
+ as.integer(x + 10L)
+}
+
+# Wrap it: int (*callback)(int)
+closure <- ffi_closure(add_ten, ffi_int(), ffi_int())
+
+# Get the function pointer to pass to C
+callback_ptr <- ffi_closure_pointer(closure)
+
+# Call C function that accepts a callback: test_callback(func, value)
+test_callback_fn <- ffi_function(
+ "test_callback",
+ ffi_int(),
+ ffi_pointer(),
+ ffi_int()
+)
+
+test_callback_fn(callback_ptr, 5L)  # 5 + 10 = 15
+#> [1] 15
+```
+
+Closures work with any signature:
+
+``` r
+# double (*transform)(double)
+square <- function(x) x * x
+square_closure <- ffi_closure(square, ffi_double(), ffi_double())
+
+test_double_callback_fn <- ffi_function(
+ "test_double_callback",
+ ffi_double(),
+ ffi_pointer(),
+ ffi_double()
+)
+
+test_double_callback_fn(ffi_closure_pointer(square_closure), 4.0)
+#> [1] 16
+```
+
 ### Call system libraries functions or external shared libraries
 
 You can load external shared libraries at runtime using RSimpleFFI’s
@@ -417,10 +465,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 2133585738
+#> [1] 2117202272
 rand_value <- rand_func()
 rand_value
-#> [1] 671987562
+#> [1] 973262221
 dll_unload(libc_path)
 ```
 
@@ -442,7 +490,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x55715a546b60>
+#> <pointer: 0x5d5e019814a0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -533,8 +581,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   29.4µs    33313.    78.2KB        0
-#> 2 ffi_call      110µs  113.8µs     8506.    78.7KB        0
+#> 1 native_r       13µs   29.2µs    33635.    78.2KB      0  
+#> 2 ffi_call     99.9µs  116.7µs     8650.    78.7KB     87.4
 dll_unload(lib_path)
 ```
 
@@ -616,7 +664,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x55715e057ac0>
+#> <pointer: 0x5d5e04e946f0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -648,8 +696,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.45ms   2.58ms      376.    78.2KB     19.8
-#> 2 c_ffi       98.91µs  103.2µs     8879.    78.7KB      0
+#> 1 r            2.52ms   2.72ms      358.    78.2KB     18.9
+#> 2 c_ffi      102.12µs 107.33µs     8489.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -658,8 +706,8 @@ dll_unload(lib_path)
 
 Current limitations include unnecessary copying, lack of protection,
 potential memory leaks, and type objects that are never finalized. We do
-not support complex types or the libffi closure API. No facility to
-generate interfaces from C header files (see
+not support complex types. No facility to generate interfaces from C
+header files (see
 [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)).
 
 ## License
@@ -684,6 +732,8 @@ This project is licensed under the GPL-3 License.
   : FFI Array Type
 - [`CIF()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/CIF.md)
   : FFI Call Interface (CIF)
+- [`FFIClosure()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIClosure.md)
+  : FFI Closure - R function as C callback
 - [`FFIType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIType.md)
   : FFI Type representation
 - [`NativeSymbol()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/NativeSymbol.md)
@@ -720,6 +770,12 @@ This project is licensed under the GPL-3 License.
   : Char FFI type
 - [`ffi_cif()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_cif.md)
   : Prepare FFI call interface Prepare FFI call interface
+- [`ffi_closure()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure.md)
+  : Create an FFI closure from an R function
+- [`ffi_closure_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure_pointer.md)
+  : Get the function pointer for an FFI closure
+- [`ffi_closures_supported()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closures_supported.md)
+  : Check if closures are supported on this platform
 - [`ffi_copy_array()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array.md)
   : Copy array from native memory
 - [`ffi_copy_array_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array_type.md)
