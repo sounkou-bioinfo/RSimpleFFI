@@ -123,12 +123,19 @@ ffi_symbol_from_address <- function(address, name = "anonymous") {
 #' @param cif CIF object defining the call interface
 #' @param symbol NativeSymbol or character name of function
 #' @param ... Arguments to pass to the function
+#' @param na_check Logical; if TRUE (default), check for NA values and error if found.
+#'   Set to FALSE to skip NA checking for better performance (at your own risk).
 #' @export
 ffi_call <- S7::new_generic("ffi_call", c("cif", "symbol"))
 
 # NativeSymbol variant
 #' @export
-S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(cif, symbol, ...) {
+S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(
+    cif,
+    symbol,
+    ...,
+    na_check = TRUE
+) {
   args <- list(...)
   expected_args <- length(cif@arg_types)
 
@@ -136,18 +143,19 @@ S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(cif, symbol, ...) {
     stop("Expected ", expected_args, " arguments, got ", length(args))
   }
 
-  .Call("R_ffi_call", cif@ref, symbol@address, args)
+  .Call("R_ffi_call", cif@ref, symbol@address, args, as.logical(na_check))
 }
 
 # symbol as character name variant
 #' @export
 S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
-  cif,
-  symbol,
-  ...
+    cif,
+    symbol,
+    ...,
+    na_check = TRUE
 ) {
   sym <- ffi_symbol(symbol)
-  ffi_call(cif, sym, ...)
+  ffi_call(cif, sym, ..., na_check = na_check)
 }
 
 
@@ -162,14 +170,18 @@ S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
 #' @param return_type FFIType for return value
 #' @param ... FFIType objects for arguments
 #' @param library Character name of library (optional)
+#' @param na_check Logical; if TRUE (default), check for NA values and error if found.
+#'   Set to FALSE to skip NA checking for better performance (at your own risk).
 #' @export
-ffi_function <- function(name, return_type, ..., library = NULL) {
+ffi_function <- function(name, return_type, ..., library = NULL, na_check = TRUE) {
   # Create CIF and symbol
   cif <- ffi_cif(return_type, ...)
   symbol <- ffi_symbol(name, library)
+  # Capture na_check setting
+  check_na <- as.logical(na_check)
 
   # Return a closure that calls the function
   function(...) {
-    ffi_call(cif, symbol, ...)
+    ffi_call(cif, symbol, ..., na_check = check_na)
   }
 }

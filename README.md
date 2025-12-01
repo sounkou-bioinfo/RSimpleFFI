@@ -319,28 +319,11 @@ result_x
 
 #### Type Conversions
 
-RSimpleFFI converts between R and C types following C99 semantics:
-
-**R to Native (input) conversions:**
-
-- **Integer types**: R integers and doubles (truncated) convert to any C
-  integer type using modular arithmetic for overflow
-- **Signed/unsigned**: Negative R values convert to unsigned C types
-  using C99 modular arithmetic (e.g., `-1L` to `uint8` becomes `255`)
-- **Float/double**: R numerics convert to C float (with possible
-  precision loss) or double
-- **Bool**: R logical, integer (0/non-zero), or double (truncated then
-  0/non-zero) convert to C99 `_Bool`
-
-**Native to R (return) conversions:**
-
-- **int8/int16/int32**: Return as R integer
-- **uint8/uint16**: Return as R integer (always fits)
-- **uint32**: Returns as R integer if ≤ `INT_MAX`, otherwise as double
-- **int64/uint64**: Return as R double (may lose precision for values \>
-  2^53)
-- **float/double/long double**: Return as R double
-- \*\*\_Bool\*\*: Returns as R logical
+RSimpleFFI converts between R and C types following C99 semantics.
+Doubles are truncated to integers, overflow uses modular arithmetic, and
+negative values convert to unsigned types via two’s complement (e.g.,
+`-1L` -\> `uint8` = 255). Large integers (64-bit) return as doubles and
+may lose precision beyond 2^53.
 
 ``` r
 # Integer truncation: 5.7 -> 5
@@ -370,6 +353,45 @@ bool_fn(42L)    # 42 != 0 -> TRUE, !TRUE = FALSE
 #> [1] FALSE
 ```
 
+#### NA Handling
+
+By default, NA values in arguments raise an error to prevent silent data
+corruption (`NA_integer_` becomes `INT_MIN`, `NA_real_` becomes a NaN
+that C doesn’t recognize as missing).
+
+``` r
+# NA values cause errors by default
+add_fn <- ffi_function("test_add_int", ffi_int(), ffi_int(), ffi_int())
+add_fn(NA_integer_, 5L)  # Error: NA values in arguments
+#> Error: NA value not allowed in argument 1. Use na_check=FALSE to allow (at your own risk).
+```
+
+If you know what you’re doing and want to pass NA values (e.g., when
+working with sentinel values), you can disable the check:
+
+``` r
+# Disable NA check with na_check = FALSE
+add_fn_unsafe <- ffi_function("test_add_int", ffi_int(), ffi_int(), ffi_int(), na_check = FALSE)
+add_fn_unsafe(NA_integer_, 5L)  # Passes NA as INT_MIN
+#> [1] -2147483643
+
+# You can also use na_check in ffi_call and dll_ffi_symbol
+cif <- ffi_cif(ffi_int(), ffi_int(), ffi_int())
+sym <- ffi_symbol("test_add_int")
+ffi_call(cif, sym, NA_integer_, 5L, na_check = FALSE)
+#> [1] -2147483643
+```
+
+Note that `NaN` (Not a Number) values are allowed through because they
+have well-defined IEEE 754 semantics that C understands:
+
+``` r
+# NaN passes through - it has IEEE semantics
+double_fn <- ffi_function("test_add_double", ffi_double(), ffi_double(), ffi_double())
+double_fn(NaN, 5.0)  # NaN + 5 = NaN
+#> [1] NaN
+```
+
 ### Call system libraries functions or external shared libraries
 
 You can load external shared libraries at runtime using RSimpleFFI’s
@@ -386,10 +408,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 541941975
+#> [1] 2133585738
 rand_value <- rand_func()
 rand_value
-#> [1] 1316083227
+#> [1] 671987562
 dll_unload(libc_path)
 ```
 
@@ -411,7 +433,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x56d4c6515a40>
+#> <pointer: 0x55715a546b60>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -502,8 +524,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     12.7µs   28.2µs    34737.    78.2KB        0
-#> 2 ffi_call     89.5µs   92.2µs    10558.    78.7KB        0
+#> 1 native_r       13µs   29.4µs    33313.    78.2KB        0
+#> 2 ffi_call      110µs  113.8µs     8506.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -585,7 +607,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x56d4c95a9770>
+#> <pointer: 0x55715e057ac0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -617,24 +639,19 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.49ms   2.64ms      370.    78.2KB     19.5
-#> 2 c_ffi      117.36µs 122.76µs     7489.    78.7KB      0
+#> 1 r            2.45ms   2.58ms      376.    78.2KB     19.8
+#> 2 c_ffi       98.91µs  103.2µs     8879.    78.7KB      0
 
 dll_unload(lib_path)
 ```
 
 ## Limitations and issues
 
-Right now, there are unimplemented features and limitations, including
-unnecessary copying, lack of protection, and several potential memory
-leaks. The interface can and should be refined further. Our type objects
-are C pointers (to static variables for basic types) that are never
-finalized. We do not support complex types. The more “dynamic” calling
-interface via the closure API of libffi is not included. We do not
-provide any facility to create interfaces from C files like the
-[RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit).
-And of course don’t pass NA to C functions if you are not sure what will
-happen because we do not do any NA check like the R `.C` interface.
+Current limitations include unnecessary copying, lack of protection,
+potential memory leaks, and type objects that are never finalized. We do
+not support complex types or the libffi closure API. No facility to
+generate interfaces from C header files (see
+[RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)).
 
 ## License
 

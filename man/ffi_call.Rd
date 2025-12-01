@@ -12,6 +12,9 @@ ffi_call(cif, symbol, ...)
 \item{symbol}{NativeSymbol or character name of function}
 
 \item{...}{Arguments to pass to the function}
+
+\item{na_check}{Logical; if TRUE (default), check for NA values and error if found.
+Set to FALSE to skip NA checking for better performance (at your own risk).}
 }
 \description{
 Make FFI function call

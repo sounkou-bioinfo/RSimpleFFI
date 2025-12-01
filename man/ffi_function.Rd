@@ -4,7 +4,7 @@
 \alias{ffi_function}
 \title{Create a reusable FFI function wrapper}
 \usage{
-ffi_function(name, return_type, ..., library = NULL)
+ffi_function(name, return_type, ..., library = NULL, na_check = TRUE)
 }
 \arguments{
 \item{name}{Character name of the function}
@@ -14,6 +14,9 @@ ffi_function(name, return_type, ..., library = NULL)
 \item{...}{FFIType objects for arguments}
 
 \item{library}{Character name of library (optional)}
+
+\item{na_check}{Logical; if TRUE (default), check for NA values and error if found.
+Set to FALSE to skip NA checking for better performance (at your own risk).}
 }
 \description{
 Create a reusable FFI function wrapper

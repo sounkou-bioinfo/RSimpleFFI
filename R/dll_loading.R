@@ -126,9 +126,11 @@ dll_is_loaded <- function(symbol_name, package = NULL) {
 #' @param return_type Return type specifimessageion
 #' @param ... Argument type specifimessageions
 #' @param package Package name (optional)
+#' @param na_check Logical; if TRUE (default), check for NA values and error if found.
+#'   Set to FALSE to skip NA checking for better performance (at your own risk).
 #' @return FFI function object that can be called directly
 #' @export
-dll_ffi_symbol <- function(symbol_name, return_type, ..., package = NULL) {
+dll_ffi_symbol <- function(symbol_name, return_type, ..., package = NULL, na_check = TRUE) {
   # Get symbol info using R's facilities (like Rffi does)
   symbol_info <- dll_symbol(symbol_name, package)
 
@@ -138,9 +140,13 @@ dll_ffi_symbol <- function(symbol_name, return_type, ..., package = NULL) {
   # Create symbol object from address
   symbol <- ffi_symbol_from_address(symbol_info$address, symbol_name)
 
+  # Capture na_check setting
+
+  check_na <- as.logical(na_check)
+
   # Return a closure that calls the function
   function(...) {
-    ffi_call(cif, symbol, ...)
+    ffi_call(cif, symbol, ..., na_check = check_na)
   }
 }
 

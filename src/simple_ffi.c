@@ -147,6 +147,115 @@ static ffi_type_map_t builtin_ffi_types[] = {
 };
 
 
+/*
+*
+* NA value detection
+*
+* R's NA values are problematic when passed to C:
+* - NA_INTEGER is INT_MIN (-2147483648) - a valid C integer
+* - NA_LOGICAL is also INT_MIN
+* - NA_STRING would pass garbage/NULL pointer
+* - NA_REAL is a special NaN that C treats as regular NaN (safe, but may be unintended)
+*
+* NaN (not NA) has well-defined IEEE 754 semantics and is allowed through.
+*/
+
+// Check if a scalar R value contains NA (not NaN)
+// Returns 1 if NA detected, 0 otherwise
+static int has_na_value(SEXP r_val) {
+    if (r_val == R_NilValue) {
+        return 0;  // NULL is handled separately, not an NA
+    }
+    
+    // Check type first - external pointers, environments, etc. cannot contain NA
+    // and don't support LENGTH()
+    int type = TYPEOF(r_val);
+    if (type == EXTPTRSXP || type == ENVSXP || type == CLOSXP || 
+        type == LISTSXP || type == LANGSXP || type == NILSXP ||
+        type == SYMSXP || type == BUILTINSXP || type == SPECIALSXP) {
+        return 0;
+    }
+    
+    int n = LENGTH(r_val);
+    if (n == 0) {
+        return 0;
+    }
+    
+    switch (type) {
+        case INTSXP:
+            return INTEGER(r_val)[0] == NA_INTEGER;
+        case REALSXP:
+            // Use ISNA to check only for R's NA, not regular NaN
+            // NaN has well-defined C semantics and is allowed
+            return ISNA(REAL(r_val)[0]);
+        case LGLSXP:
+            return LOGICAL(r_val)[0] == NA_LOGICAL;
+        case STRSXP:
+            return STRING_ELT(r_val, 0) == NA_STRING;
+        case RAWSXP:
+            return 0;  // Raw vectors cannot contain NA
+        default:
+            return 0;
+    }
+}
+
+// Check if any element in a vector contains NA
+// Returns 1-based index of first NA, or 0 if none found
+static int vector_has_na(SEXP r_val) {
+    if (r_val == R_NilValue) {
+        return 0;
+    }
+    
+    // Check type first - external pointers, environments, etc. cannot contain NA
+    // and don't support LENGTH()
+    int type = TYPEOF(r_val);
+    if (type == EXTPTRSXP || type == ENVSXP || type == CLOSXP || 
+        type == LISTSXP || type == LANGSXP || type == NILSXP ||
+        type == SYMSXP || type == BUILTINSXP || type == SPECIALSXP) {
+        return 0;
+    }
+    
+    int n = LENGTH(r_val);
+    if (n == 0) {
+        return 0;
+    }
+    
+    switch (type) {
+        case INTSXP: {
+            int* p = INTEGER(r_val);
+            for (int i = 0; i < n; i++) {
+                if (p[i] == NA_INTEGER) return i + 1;
+            }
+            break;
+        }
+        case REALSXP: {
+            double* p = REAL(r_val);
+            for (int i = 0; i < n; i++) {
+                if (ISNA(p[i])) return i + 1;
+            }
+            break;
+        }
+        case LGLSXP: {
+            int* p = LOGICAL(r_val);
+            for (int i = 0; i < n; i++) {
+                if (p[i] == NA_LOGICAL) return i + 1;
+            }
+            break;
+        }
+        case STRSXP: {
+            for (int i = 0; i < n; i++) {
+                if (STRING_ELT(r_val, i) == NA_STRING) return i + 1;
+            }
+            break;
+        }
+        case RAWSXP:
+            return 0;  // Raw vectors cannot contain NA
+        default:
+            return 0;
+    }
+    return 0;
+}
+
 
 /*
 
@@ -884,6 +993,7 @@ static SEXP do_ffi_call_internal(void* data) {
     SEXP r_cif = args[0];
     SEXP r_func_ptr = args[1];
     SEXP r_args = args[2];
+    int na_check = asLogical(args[3]);
     
     ffi_cif* cif = (ffi_cif*)R_ExternalPtrAddr(r_cif);
     void* func_ptr = R_ExternalPtrAddr(r_func_ptr);
@@ -894,6 +1004,16 @@ static SEXP do_ffi_call_internal(void* data) {
     int num_args = LENGTH(r_args);
     if (num_args != (int)cif->nargs) {
         Rf_error("Argument count mismatch: expected %d, got %d", (int)cif->nargs, num_args);
+    }
+    
+    // Check for NA values if requested
+    if (na_check) {
+        for (int i = 0; i < num_args; i++) {
+            SEXP arg = VECTOR_ELT(r_args, i);
+            if (has_na_value(arg)) {
+                Rf_error("NA value not allowed in argument %d. Use na_check=FALSE to allow (at your own risk).", i + 1);
+            }
+        }
     }
     
     // Set up cleanup context
@@ -946,9 +1066,10 @@ static SEXP do_ffi_call_internal(void* data) {
 }
 
 // Make FFI function call - SAFE VERSION with balanced PROTECT/UNPROTECT
-SEXP R_ffi_call(SEXP r_cif, SEXP r_func_ptr, SEXP r_args) {
+// na_check: if TRUE, check for NA values and error if found
+SEXP R_ffi_call(SEXP r_cif, SEXP r_func_ptr, SEXP r_args, SEXP r_na_check) {
     // Use UNWIND_PROTECT for automatic cleanup on error
-    SEXP args[3] = {r_cif, r_func_ptr, r_args};
+    SEXP args[4] = {r_cif, r_func_ptr, r_args, r_na_check};
     ffi_call_context_t ctx = {0};
     
     return R_UnwindProtect(do_ffi_call_internal, args, ffi_call_cleanup, &ctx, NULL);

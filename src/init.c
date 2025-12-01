@@ -11,7 +11,7 @@ SEXP R_get_ffi_type_size(SEXP type_ptr);
 SEXP R_create_struct_ffi_type(SEXP field_refs);
 SEXP R_create_array_ffi_type(SEXP element_type, SEXP length);
 SEXP R_prep_ffi_cif(SEXP return_type, SEXP arg_types);
-SEXP R_ffi_call(SEXP cif_ptr, SEXP func_ptr, SEXP args);
+SEXP R_ffi_call(SEXP cif_ptr, SEXP func_ptr, SEXP args, SEXP na_check);
 SEXP R_alloc_struct(SEXP struct_type);
 SEXP R_get_struct_field(SEXP ptr, SEXP field_index, SEXP struct_type);
 SEXP R_set_struct_field(SEXP ptr, SEXP field_index, SEXP value, SEXP struct_type);
@@ -67,7 +67,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_create_struct_ffi_type",  (DL_FUNC) &R_create_struct_ffi_type,  1},
     {"R_create_array_ffi_type",   (DL_FUNC) &R_create_array_ffi_type,   2},
     {"R_prep_ffi_cif",            (DL_FUNC) &R_prep_ffi_cif,            2},
-    {"R_ffi_call",                (DL_FUNC) &R_ffi_call,                3},
+    {"R_ffi_call",                (DL_FUNC) &R_ffi_call,                4},
     {"R_alloc_struct",            (DL_FUNC) &R_alloc_struct,            1},
     {"R_get_struct_field",        (DL_FUNC) &R_get_struct_field,        3},
     {"R_set_struct_field",        (DL_FUNC) &R_set_struct_field,        4},

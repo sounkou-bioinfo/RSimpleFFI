@@ -4,7 +4,7 @@
 \alias{dll_ffi_symbol}
 \title{Create FFI function from dynamically loaded function}
 \usage{
-dll_ffi_symbol(symbol_name, return_type, ..., package = NULL)
+dll_ffi_symbol(symbol_name, return_type, ..., package = NULL, na_check = TRUE)
 }
 \arguments{
 \item{symbol_name}{Name of the symbol}
@@ -14,6 +14,9 @@ dll_ffi_symbol(symbol_name, return_type, ..., package = NULL)
 \item{...}{Argument type specifimessageions}
 
 \item{package}{Package name (optional)}
+
+\item{na_check}{Logical; if TRUE (default), check for NA values and error if found.
+Set to FALSE to skip NA checking for better performance (at your own risk).}
 }
 \value{
 FFI function object that can be called directly
