@@ -299,7 +299,7 @@ string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
 string_result
-#> <pointer: 0x712a01470dcf>
+#> <pointer: 0x7c3bdce3cdcf>
 pointer_to_string(string_result)
 #> [1] "Hello from C!"
 ```
@@ -363,10 +363,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 2069511245
+#> [1] 891543440
 rand_value <- rand_func()
 rand_value
-#> [1] 1032294660
+#> [1] 646139820
 dll_unload(libc_path)
 ```
 
@@ -388,7 +388,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x615aa1798430>
+#> <pointer: 0x58e5a8b56c70>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -479,8 +479,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.2µs   30.2µs    30235.    78.2KB        0
-#> 2 ffi_call     96.8µs  100.4µs     9757.    78.7KB        0
+#> 1 native_r     12.9µs   28.8µs    35003.    78.2KB        0
+#> 2 ffi_call     96.2µs  100.5µs     9748.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -562,7 +562,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x615aa2ecb610>
+#> <pointer: 0x58e5ac221f50>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -594,8 +594,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r             2.5ms   2.55ms      382.    78.2KB     20.1
-#> 2 c_ffi         123µs 131.66µs     7204.    78.7KB      0
+#> 1 r            2.53ms   2.58ms      376.    78.2KB     19.8
+#> 2 c_ffi      127.47µs 132.12µs     7064.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -611,6 +611,9 @@ we do not support complex types. The more “dynamic” calling interface
 via the closure API of libffi is not included. We do not provide any
 facility to create interfaces from C files like the
 [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit).
+And of course don’t don t pass NA to C functions if you are not sure
+what will happen because we do not do any NA check like the R `.C`
+interface.
 
 ## License
 
