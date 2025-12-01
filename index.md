@@ -407,6 +407,7 @@ handlers).
 ``` r
 # Create an R function to use as callback
 add_ten <- function(x) {
+ print(paste0("adding " , x, " to 10"))
  as.integer(x + 10L)
 }
 
@@ -425,6 +426,7 @@ test_callback_fn <- ffi_function(
 )
 
 test_callback_fn(callback_ptr, 5L)  # 5 + 10 = 15
+#> [1] "adding 5 to 10"
 #> [1] 15
 ```
 
@@ -465,10 +467,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 2117202272
+#> [1] 1581710804
 rand_value <- rand_func()
 rand_value
-#> [1] 973262221
+#> [1] 1538001442
 dll_unload(libc_path)
 ```
 
@@ -490,7 +492,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5d5e019814a0>
+#> <pointer: 0x605de0acdb20>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -581,8 +583,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   29.2µs    33635.    78.2KB      0  
-#> 2 ffi_call     99.9µs  116.7µs     8650.    78.7KB     87.4
+#> 1 native_r     13.2µs   29.2µs    35708.    78.2KB      0  
+#> 2 ffi_call     93.6µs    109µs     9125.    78.7KB     92.2
 dll_unload(lib_path)
 ```
 
@@ -664,7 +666,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5d5e04e946f0>
+#> <pointer: 0x605de6744360>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -696,8 +698,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.52ms   2.72ms      358.    78.2KB     18.9
-#> 2 c_ffi      102.12µs 107.33µs     8489.    78.7KB      0
+#> 1 r            2.42ms   2.59ms      369.    78.2KB     19.4
+#> 2 c_ffi       98.51µs 102.23µs     8729.    78.7KB      0
 
 dll_unload(lib_path)
 ```
