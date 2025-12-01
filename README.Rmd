@@ -726,7 +726,7 @@ rf_INTEGER_ELT(abs_result, 0L)
 
 ## Limitations and issues
 
-Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types, unions or special packing for alignment for Structs. No facility to generate interfaces from C header files (see [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)).
+Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types, unions or special packing for alignment for Structs. No facility to generate interfaces from C header files (see [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)). This is ABI level access to C Routines in dynamic libraries, so care must be taken to alignment issues.
 
 ## License
 
