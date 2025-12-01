@@ -150,11 +150,48 @@ int test_divide_int(int a, int b) {
     return a / b;
 }
 
-// Callback testing (basic)
+// Callback testing
 typedef int (*IntCallback)(int);
+typedef int (*IntCmpCallback)(int, int);
+typedef double (*DoubleCallback)(double);
+typedef void (*VoidIntCallback)(int);
 
+// Simple callback that applies function to value
 int test_callback(IntCallback func, int value) {
     return func(value);
+}
+
+// Apply a callback to transform a value
+double test_double_callback(DoubleCallback func, double value) {
+    return func(value);
+}
+
+// Sum array using callback for transformation
+double test_transform_sum(double* arr, int len, DoubleCallback transform) {
+    double sum = 0.0;
+    for (int i = 0; i < len; i++) {
+        sum += transform(arr[i]);
+    }
+    return sum;
+}
+
+// Find max using comparison callback
+int test_find_max(int* arr, int len, IntCmpCallback cmp) {
+    if (len <= 0) return 0;
+    int max_val = arr[0];
+    for (int i = 1; i < len; i++) {
+        if (cmp(arr[i], max_val) > 0) {
+            max_val = arr[i];
+        }
+    }
+    return max_val;
+}
+
+// Call callback with sequence of values
+void test_foreach(int start, int end, VoidIntCallback callback) {
+    for (int i = start; i < end; i++) {
+        callback(i);
+    }
 }
 
 // Multi-argument function

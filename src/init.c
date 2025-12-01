@@ -54,11 +54,22 @@ void test_move_point2d(Point2D* point, int dx, int dy);
 Point2D test_create_point2d(int x, int y);
 int test_get_point_x(Point2D* point);
 int test_get_point_y(Point2D* point);
+/* Callback test function declarations */
+int test_callback(int (*func)(int), int value);
+double test_double_callback(double (*func)(double), double value);
+double test_transform_sum(double* arr, int len, double (*transform)(double));
+int test_find_max(int* arr, int len, int (*cmp)(int, int));
+void test_foreach(int start, int end, void (*callback)(int));
 
 /* pointer utility functions */
 SEXP R_pointer_to_string(SEXP r_ptr);
 SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name);
 SEXP R_get_pointer_type(SEXP r_ptr);
+
+/* closure API functions */
+SEXP R_ffi_closures_supported(void);
+SEXP R_create_closure(SEXP r_function, SEXP r_cif);
+SEXP R_get_closure_pointer(SEXP r_closure);
 
 /* Registration table */
 static const R_CallMethodDef CallEntries[] = {
@@ -82,8 +93,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_alloc_typed_buffer",      (DL_FUNC) &R_alloc_typed_buffer,      2},
     {"R_fill_typed_buffer",       (DL_FUNC) &R_fill_typed_buffer,       3},
     {"R_libffi_version",          (DL_FUNC) &R_libffi_version,          0},
+    /* closure API */
+    {"R_ffi_closures_supported",  (DL_FUNC) &R_ffi_closures_supported,  0},
+    {"R_create_closure",          (DL_FUNC) &R_create_closure,          2},
+    {"R_get_closure_pointer",     (DL_FUNC) &R_get_closure_pointer,     1},
     {NULL, NULL, 0}
 };
+
 
 /* C method table for test functions */
 static const R_CMethodDef CEntries[] = {
@@ -112,6 +128,13 @@ static const R_CMethodDef CEntries[] = {
     {"test_create_point2d", (DL_FUNC) &test_create_point2d, 2},
     {"test_get_point_x", (DL_FUNC) &test_get_point_x, 1},
     {"test_get_point_y", (DL_FUNC) &test_get_point_y, 1},
+    
+    // Callback test functions
+    {"test_callback", (DL_FUNC) &test_callback, 2},
+    {"test_double_callback", (DL_FUNC) &test_double_callback, 2},
+    {"test_transform_sum", (DL_FUNC) &test_transform_sum, 3},
+    {"test_find_max", (DL_FUNC) &test_find_max, 3},
+    {"test_foreach", (DL_FUNC) &test_foreach, 3},
     {NULL, NULL, 0}
 };
 

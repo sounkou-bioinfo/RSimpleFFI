@@ -159,6 +159,8 @@ S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
 }
 
 
+
+
 #####################################
 #
 # FFI Function Wrappers
@@ -184,4 +186,112 @@ ffi_function <- function(name, return_type, ..., library = NULL, na_check = TRUE
   function(...) {
     ffi_call(cif, symbol, ..., na_check = check_na)
   }
+}
+
+
+#####################################
+#
+# FFI Closure API
+#
+# Wrap R functions as C callbacks
+######################################
+
+#' Check if closures are supported on this platform
+#'
+#' Not all platforms support FFI closures. Use this function to check
+#' before attempting to create closures.
+#'
+#' @return Logical; TRUE if closures are supported
+#' @export
+ffi_closures_supported <- function() {
+  .Call("R_ffi_closures_supported")
+}
+
+#' Create an FFI closure from an R function
+#'
+#' Wraps an R function so it can be used as a callback from C code.
+#' The closure has a CIF that describes its signature (return type and
+#' argument types). When C code calls through the closure's function
+#' pointer, the R function is invoked with converted arguments.
+#'
+#' @param r_function An R function to wrap as a callback
+#' @param return_type FFIType for return value
+#' @param ... FFIType objects for arguments
+#' @return An FFIClosure object
+#'
+#' @details
+#' The R function must accept the same number of arguments as specified
+
+#' in the type signature. Arguments are converted from C types to R types
+#' before calling, and the return value is converted back to C.
+#'
+#' Important: You must keep a reference to the FFIClosure object for as
+#' long as C code might call through it. If the closure is garbage collected,
+#' calling through its function pointer will crash.
+#'
+#' @examples
+#' \dontrun{
+#' # Create a comparison function for qsort
+#' cmp_fn <- function(a, b) {
+#'   as.integer(a - b)
+#' }
+#'
+#' # Wrap it as a C callback: int (*)(int*, int*)
+#' cmp_closure <- ffi_closure(
+#'   cmp_fn,
+#'   ffi_int(),                    # return type
+#'   ffi_pointer(), ffi_pointer()  # argument types (pointers to int)
+#' )
+#'
+#' # Get the function pointer to pass to C
+#' cmp_ptr <- ffi_closure_pointer(cmp_closure)
+#' }
+#'
+#' @seealso [ffi_closure_pointer()] to get the callable function pointer
+#' @export
+ffi_closure <- function(r_function, return_type, ...) {
+  if (!is.function(r_function)) {
+    stop("r_function must be a function")
+  }
+
+  if (!ffi_closures_supported()) {
+    stop("FFI closures are not supported on this platform")
+  }
+
+  # Create CIF for the callback signature
+  cif <- ffi_cif(return_type, ...)
+
+  # Create the closure
+  closure_ref <- .Call("R_create_closure", r_function, cif@ref)
+
+  # Get the executable function pointer
+  func_ptr <- .Call("R_get_closure_pointer", closure_ref)
+
+  FFIClosure(
+    r_function = r_function,
+    cif = cif,
+    ref = closure_ref,
+    func_ptr = func_ptr
+  )
+}
+
+#' Get the function pointer for an FFI closure
+#'
+#' Returns the executable function pointer that can be passed to C functions
+#' expecting a callback.
+#'
+#' @param closure An FFIClosure object
+#' @return External pointer to the callable function
+#'
+#' @details
+#' The returned pointer can be passed to C functions via `ffi_call()`.
+#' It will invoke the R function when called.
+#'
+#' @seealso [ffi_closure()] to create closures
+#' @export
+ffi_closure_pointer <- function(closure) {
+  if (!S7::S7_inherits(closure, FFIClosure)) {
+    stop("closure must be an FFIClosure object")
+  }
+  closure@func_ptr
 }

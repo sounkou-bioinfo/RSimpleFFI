@@ -183,6 +183,44 @@ NativeSymbol <- S7::new_class(
   )
 )
 
+#####################################
+#
+# FFI Closure class
+#
+# Wraps an R function as a C callback
+######################################
+
+#' FFI Closure - R function as C callback
+#'
+#' A closure wraps an R function so it can be used as a callback
+#' from C code. The closure has an associated CIF that describes
+#' the function signature.
+#'
+#' @param r_function The R function to wrap
+#' @param cif CIF object describing the callback signature
+#' @param ref External pointer to the closure
+#' @param func_ptr External pointer to the executable function
+#' @return An FFIClosure object
+#' @keywords Types
+#' @export
+FFIClosure <- S7::new_class(
+  "FFIClosure",
+  package = "RSimpleFFI",
+  properties = list(
+    r_function = S7::class_function,
+    cif = CIF,
+    ref = S7::class_any,
+    func_ptr = S7::class_any
+  ),
+  validator = function(self) {
+    if (!inherits(self@ref, "externalptr")) {
+      "@ref must be an external pointer"
+    } else if (!inherits(self@func_ptr, "externalptr")) {
+      "@func_ptr must be an external pointer"
+    }
+  }
+)
+
 
 #####################################
 #

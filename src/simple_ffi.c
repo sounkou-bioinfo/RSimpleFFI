@@ -1290,3 +1290,170 @@ SEXP R_get_pointer_type(SEXP r_ptr) {
     
     return mkString(CHAR(PRINTNAME(tag)));
 }
+
+
+/*
+*
+*
+* CLOSURE API
+*
+* Allows R functions to be used as C callbacks
+*
+*/
+
+#ifdef FFI_CLOSURES
+
+// Structure to hold closure data - stored with the closure
+typedef struct {
+    SEXP r_function;      // The R function to call
+    SEXP r_cif;           // CIF external pointer (to prevent GC)
+    ffi_cif* cif;         // Direct pointer to CIF for fast access
+    void* executable;     // Executable address for the closure
+} closure_data_t;
+
+// Generic callback handler - called by libffi when closure is invoked
+static void closure_callback_handler(ffi_cif* cif, void* ret, void** args, void* user_data) {
+    closure_data_t* data = (closure_data_t*)user_data;
+    
+    if (!data || !data->r_function) {
+        Rf_error("Invalid closure data");
+    }
+    
+    // Build R argument list from native args
+    int nargs = cif->nargs;
+    SEXP call;
+    PROTECT(call = allocVector(LANGSXP, nargs + 1));
+    SETCAR(call, data->r_function);
+    
+    // Convert each native argument to R
+    SEXP arg_cursor = CDR(call);
+    for (int i = 0; i < nargs; i++) {
+        SEXP r_arg = convert_native_to_r(args[i], cif->arg_types[i]);
+        SETCAR(arg_cursor, r_arg);
+        arg_cursor = CDR(arg_cursor);
+    }
+    
+    // Call the R function
+    int error_occurred = 0;
+    SEXP result = R_tryEval(call, R_GlobalEnv, &error_occurred);
+    
+    if (error_occurred) {
+        UNPROTECT(1);
+        Rf_error("Error in R callback function");
+    }
+    
+    PROTECT(result);
+    
+    // Convert result back to native if not void
+    if (cif->rtype->type != FFI_TYPE_VOID && ret != NULL) {
+        void* native_ret = convert_r_to_native(result, cif->rtype);
+        memcpy(ret, native_ret, cif->rtype->size);
+    }
+    
+    UNPROTECT(2);
+}
+
+// Closure finalizer - frees the closure when R GCs the external pointer
+static void closure_finalizer(SEXP r_closure_ptr) {
+    closure_data_t* data = (closure_data_t*)R_ExternalPtrAddr(r_closure_ptr);
+    if (data) {
+        // The closure memory (writable address) is what we free
+        // data itself was allocated alongside or separately
+        // ffi_closure_free expects the writable pointer
+        ffi_closure_free(data);
+    }
+}
+
+// Check if closures are supported
+SEXP R_ffi_closures_supported() {
+    return ScalarLogical(1);
+}
+
+// Create a closure from an R function
+// Returns external pointer to closure that can be cast to function pointer
+SEXP R_create_closure(SEXP r_function, SEXP r_cif) {
+    if (!Rf_isFunction(r_function)) {
+        Rf_error("First argument must be a function");
+    }
+    
+    ffi_cif* cif = (ffi_cif*)R_ExternalPtrAddr(r_cif);
+    if (!cif) {
+        Rf_error("Invalid CIF pointer");
+    }
+    
+    // Allocate closure with space for our data
+    void* executable = NULL;
+    ffi_closure* closure = ffi_closure_alloc(sizeof(ffi_closure) + sizeof(closure_data_t), &executable);
+    
+    if (!closure) {
+        Rf_error("Failed to allocate closure memory");
+    }
+    
+    // Our data lives right after the ffi_closure struct
+    closure_data_t* data = (closure_data_t*)((char*)closure + sizeof(ffi_closure));
+    data->r_function = r_function;
+    data->r_cif = r_cif;
+    data->cif = cif;
+    data->executable = executable;
+    
+    // Prepare the closure
+    ffi_status status = ffi_prep_closure_loc(
+        closure,
+        cif,
+        closure_callback_handler,
+        data,
+        executable
+    );
+    
+    if (status != FFI_OK) {
+        ffi_closure_free(closure);
+        Rf_error("Failed to prepare closure (status: %d)", status);
+    }
+    
+    // Create external pointer for the closure (writable address for freeing)
+    SEXP r_closure = PROTECT(R_MakeExternalPtr(closure, Rf_install("ffi_closure"), R_NilValue));
+    R_RegisterCFinalizerEx(r_closure, closure_finalizer, TRUE);
+    
+    // Store the R function and CIF in the protected slot to prevent GC
+    // The protected slot keeps these alive as long as the closure lives
+    SEXP prot = PROTECT(allocVector(VECSXP, 2));
+    SET_VECTOR_ELT(prot, 0, r_function);
+    SET_VECTOR_ELT(prot, 1, r_cif);
+    R_SetExternalPtrProtected(r_closure, prot);
+    
+    UNPROTECT(2);
+    return r_closure;
+}
+
+// Get the executable pointer for a closure (to pass to C functions)
+SEXP R_get_closure_pointer(SEXP r_closure) {
+    ffi_closure* closure = (ffi_closure*)R_ExternalPtrAddr(r_closure);
+    if (!closure) {
+        Rf_error("Invalid closure pointer");
+    }
+    
+    // Our data is stored right after the ffi_closure
+    closure_data_t* data = (closure_data_t*)((char*)closure + sizeof(ffi_closure));
+    
+    // Return the executable address as an external pointer
+    return R_MakeExternalPtr(data->executable, Rf_install("closure_func"), R_NilValue);
+}
+
+#else
+// Closures not supported on this platform
+
+SEXP R_ffi_closures_supported() {
+    return ScalarLogical(0);
+}
+
+SEXP R_create_closure(SEXP r_function, SEXP r_cif) {
+    Rf_error("FFI closures are not supported on this platform");
+    return R_NilValue;
+}
+
+SEXP R_get_closure_pointer(SEXP r_closure) {
+    Rf_error("FFI closures are not supported on this platform");
+    return R_NilValue;
+}
+
+#endif /* FFI_CLOSURES */

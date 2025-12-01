@@ -341,6 +341,50 @@ double_fn <- ffi_function("test_add_double", ffi_double(), ffi_double(), ffi_dou
 double_fn(NaN, 5.0)  # NaN + 5 = NaN
 ```
 
+### Closures (R callbacks for C)
+
+The closure API lets you wrap R functions as C callbacks. This is useful when C code expects a function pointer (e.g., qsort comparator, event handlers).
+
+```{r}
+# Create an R function to use as callback
+add_ten <- function(x) {
+ as.integer(x + 10L)
+}
+
+# Wrap it: int (*callback)(int)
+closure <- ffi_closure(add_ten, ffi_int(), ffi_int())
+
+# Get the function pointer to pass to C
+callback_ptr <- ffi_closure_pointer(closure)
+
+# Call C function that accepts a callback: test_callback(func, value)
+test_callback_fn <- ffi_function(
+ "test_callback",
+ ffi_int(),
+ ffi_pointer(),
+ ffi_int()
+)
+
+test_callback_fn(callback_ptr, 5L)  # 5 + 10 = 15
+```
+
+Closures work with any signature:
+
+```{r}
+# double (*transform)(double)
+square <- function(x) x * x
+square_closure <- ffi_closure(square, ffi_double(), ffi_double())
+
+test_double_callback_fn <- ffi_function(
+ "test_double_callback",
+ ffi_double(),
+ ffi_pointer(),
+ ffi_double()
+)
+
+test_double_callback_fn(ffi_closure_pointer(square_closure), 4.0)
+```
+
 ### Call system libraries functions or external shared libraries
 
 You can load external shared libraries at runtime using RSimpleFFI's `dll_load()` and `dll_ffi_symbol()` functions. These are wrappers around R's native `dyn.load()` facilities that search for shared libraries in system paths when required. 
@@ -562,7 +606,7 @@ dll_unload(lib_path)
 
 ## Limitations and issues
 
-Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects that are never finalized. We do not support complex types or the libffi closure API. No facility to generate interfaces from C header files (see [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)).
+Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects that are never finalized. We do not support complex types. No facility to generate interfaces from C header files (see [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)).
 
 ## License
 
