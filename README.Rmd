@@ -348,6 +348,7 @@ The closure API lets you wrap R functions as C callbacks. This is useful when C 
 ```{r}
 # Create an R function to use as callback
 add_ten <- function(x) {
+ print(paste0("adding " , x, " to 10"))
  as.integer(x + 10L)
 }
 
