@@ -120,22 +120,29 @@ ffi_symbol_from_address <- function(address, name = "anonymous") {
 ######################################
 
 #' Make FFI function call
+#'
+#' @description
+#' Call a C function through the FFI interface.
+#'
+#' @details
+#' The method implementations accept an additional `na_check` argument (logical,
+#' default TRUE). When TRUE, the function checks for NA values in arguments and
+#' errors if found. Set to FALSE to skip NA checking for better performance
+#' (at your own risk).
+#'
 #' @param cif CIF object defining the call interface
 #' @param symbol NativeSymbol or character name of function
-#' @param ... Arguments to pass to the function
-#' @param na_check Logical; if TRUE (default), check for NA values and error if found.
-#'   Set to FALSE to skip NA checking for better performance (at your own risk).
+#' @param ... Arguments to pass to the function (including `na_check`)
+#' @return The return value from the C function, converted to an R type
 #' @export
 ffi_call <- S7::new_generic("ffi_call", c("cif", "symbol"))
 
 # NativeSymbol variant
-#' @export
 S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(
     cif,
     symbol,
     ...,
-    na_check = TRUE
-) {
+    na_check = TRUE) {
   args <- list(...)
   expected_args <- length(cif@arg_types)
 
@@ -147,13 +154,11 @@ S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(
 }
 
 # symbol as character name variant
-#' @export
 S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
     cif,
     symbol,
     ...,
-    na_check = TRUE
-) {
+    na_check = TRUE) {
   sym <- ffi_symbol(symbol)
   ffi_call(cif, sym, ..., na_check = na_check)
 }
@@ -239,8 +244,8 @@ ffi_closures_supported <- function() {
 #' # Wrap it as a C callback: int (*)(int*, int*)
 #' cmp_closure <- ffi_closure(
 #'   cmp_fn,
-#'   ffi_int(),                    # return type
-#'   ffi_pointer(), ffi_pointer()  # argument types (pointers to int)
+#'   ffi_int(), # return type
+#'   ffi_pointer(), ffi_pointer() # argument types (pointers to int)
 #' )
 #'
 #' # Get the function pointer to pass to C

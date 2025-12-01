@@ -11,11 +11,17 @@ ffi_call(cif, symbol, ...)
 
 \item{symbol}{NativeSymbol or character name of function}
 
-\item{...}{Arguments to pass to the function}
-
-\item{na_check}{Logical; if TRUE (default), check for NA values and error if found.
-Set to FALSE to skip NA checking for better performance (at your own risk).}
+\item{...}{Arguments to pass to the function (including \code{na_check})}
+}
+\value{
+The return value from the C function, converted to an R type
 }
 \description{
-Make FFI function call
+Call a C function through the FFI interface.
+}
+\details{
+The method implementations accept an additional \code{na_check} argument (logical,
+default TRUE). When TRUE, the function checks for NA values in arguments and
+errors if found. Set to FALSE to skip NA checking for better performance
+(at your own risk).
 }

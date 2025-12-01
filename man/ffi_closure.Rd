@@ -41,8 +41,8 @@ cmp_fn <- function(a, b) {
 # Wrap it as a C callback: int (*)(int*, int*)
 cmp_closure <- ffi_closure(
   cmp_fn,
-  ffi_int(),                    # return type
-  ffi_pointer(), ffi_pointer()  # argument types (pointers to int)
+  ffi_int(), # return type
+  ffi_pointer(), ffi_pointer() # argument types (pointers to int)
 )
 
 # Get the function pointer to pass to C
