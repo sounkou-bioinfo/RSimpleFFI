@@ -1,6 +1,7 @@
 # Field Information Class
 
-Represents metadata about a single field in a structure.
+Represents metadata about a single field in a structure. Field
+Information Class
 
 ## Usage
 
@@ -14,24 +15,33 @@ FieldInfo(
 )
 ```
 
-## Slots
+## Arguments
 
-- `name`:
+- name:
 
   Character name of the field
 
-- `type`:
+- type:
 
   FFIType of the field
 
-- `offset`:
+- offset:
 
   Integer byte offset within structure
 
-- `size`:
+- size:
 
   Integer size of field in bytes
 
-- `index`:
+- index:
 
   Integer 1-based field index
+
+## Value
+
+A FieldInfo object
+
+## Details
+
+Contains metadata about a struct field including its name, type, byte
+offset within the structure, size, and index.
