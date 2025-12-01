@@ -10,6 +10,8 @@
   : FFI Closure - R function as C callback
 - [`FFIType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIType.md)
   : FFI Type representation
+- [`FieldInfo()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FieldInfo.md)
+  : Field Information Class
 - [`NativeSymbol()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/NativeSymbol.md)
   : Native Symbol Reference
 - [`StructType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/StructType.md)
@@ -32,6 +34,8 @@
   [`dll_compile_and_load()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
   [`dll_load_system()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
   : Load a shared library/DLL
+- [`ffi_all_offsets()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_all_offsets.md)
+  : Get all field offsets for a struct
 - [`ffi_alloc_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_alloc_buffer.md)
   : Allocate a raw memory buffer (external pointer, auto-finalized)
 - [`ffi_array_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_array_type.md)
@@ -44,6 +48,8 @@
   : Char FFI type
 - [`ffi_cif()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_cif.md)
   : Prepare FFI call interface Prepare FFI call interface
+- [`ffi_cif_var()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_cif_var.md)
+  : Prepare FFI call interface for variadic functions
 - [`ffi_closure()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure.md)
   : Create an FFI closure from an R function
 - [`ffi_closure_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure_pointer.md)
@@ -56,6 +62,8 @@
   : Copy array from native memory (ArrayType version)
 - [`ffi_double()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.md)
   : double FFI type
+- [`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md)
+  : Get field information from a struct type
 - [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
   : Fill a typed buffer from an R vector (int or double)
 - [`ffi_float()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_float.md)
@@ -64,6 +72,8 @@
   : Free memory pointed to by an external pointer
 - [`ffi_function()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_function.md)
   : Create a reusable FFI function wrapper
+- [`ffi_get_element()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_get_element.md)
+  : Get element from struct array
 - [`ffi_get_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_get_field.md)
   : Get field value from FFI structure
 - [`ffi_int()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int.md)
@@ -84,6 +94,8 @@
   : longdouble FFI type
 - [`ffi_longlong()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_longlong.md)
   : long long FFI type
+- [`ffi_offsetof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.md)
+  : Get byte offset of a field in a structure
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
   : pointer FFI type
 - [`ffi_raw()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_raw.md)

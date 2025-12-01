@@ -251,8 +251,12 @@ ffi_get_field(p3, "y", Point)
 
 ### Field Introspection
 
-Use `ffi_field_info()`, `ffi_offsetof()`, and `ffi_all_offsets()` to
-inspect struct layout:
+Use
+[`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md),
+[`ffi_offsetof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.md),
+and
+[`ffi_all_offsets()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_all_offsets.md)
+to inspect struct layout:
 
 ``` r
 # Struct with alignment padding: int (4) + padding (4) + double (8) = 16 bytes

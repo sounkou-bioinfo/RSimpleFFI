@@ -247,13 +247,13 @@
 <span></span>
 <span><span class="co"># Set values for each point</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">ffi_get_element</span><span class="op">(</span><span class="va">points</span>, <span class="va">i</span>, <span class="va">Point</span><span class="op">)</span></span>
+<span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_get_element.html">ffi_get_element</a></span><span class="op">(</span><span class="va">points</span>, <span class="va">i</span>, <span class="va">Point</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="reference/ffi_set_field.html">ffi_set_field</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"x"</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">i</span> <span class="op">*</span> <span class="fl">10</span><span class="op">)</span>, <span class="va">Point</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="reference/ffi_set_field.html">ffi_set_field</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"y"</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">i</span> <span class="op">*</span> <span class="fl">20</span><span class="op">)</span>, <span class="va">Point</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="co"># Read back values</span></span>
-<span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu">ffi_get_element</span><span class="op">(</span><span class="va">points</span>, <span class="fl">3L</span>, <span class="va">Point</span><span class="op">)</span></span>
+<span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_get_element.html">ffi_get_element</a></span><span class="op">(</span><span class="va">points</span>, <span class="fl">3L</span>, <span class="va">Point</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/ffi_get_field.html">ffi_get_field</a></span><span class="op">(</span><span class="va">p3</span>, <span class="st">"x"</span>, <span class="va">Point</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 30</span></span>
 <span><span class="fu"><a href="reference/ffi_get_field.html">ffi_get_field</a></span><span class="op">(</span><span class="va">p3</span>, <span class="st">"y"</span>, <span class="va">Point</span><span class="op">)</span></span>
@@ -262,7 +262,7 @@
 <div class="section level3">
 <h3 id="field-introspection">Field Introspection<a class="anchor" aria-label="anchor" href="#field-introspection"></a>
 </h3>
-<p>Use <code>ffi_field_info()</code>, <code>ffi_offsetof()</code>, and <code>ffi_all_offsets()</code> to inspect struct layout:</p>
+<p>Use <code><a href="reference/ffi_field_info.html">ffi_field_info()</a></code>, <code><a href="reference/ffi_offsetof.html">ffi_offsetof()</a></code>, and <code><a href="reference/ffi_all_offsets.html">ffi_all_offsets()</a></code> to inspect struct layout:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Struct with alignment padding: int (4) + padding (4) + double (8) = 16 bytes</span></span>
 <span><span class="va">Mixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_struct.html">ffi_struct</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, b <span class="op">=</span> <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -270,18 +270,18 @@
 <span><span class="co">#&gt; [1] 16</span></span>
 <span></span>
 <span><span class="co"># Get byte offset of a field (like C's offsetof macro)</span></span>
-<span><span class="fu">ffi_offsetof</span><span class="op">(</span><span class="va">Mixed</span>, <span class="st">"a"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_offsetof.html">ffi_offsetof</a></span><span class="op">(</span><span class="va">Mixed</span>, <span class="st">"a"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
-<span><span class="fu">ffi_offsetof</span><span class="op">(</span><span class="va">Mixed</span>, <span class="st">"b"</span><span class="op">)</span>  <span class="co"># offset 8 due to 8-byte alignment</span></span>
+<span><span class="fu"><a href="reference/ffi_offsetof.html">ffi_offsetof</a></span><span class="op">(</span><span class="va">Mixed</span>, <span class="st">"b"</span><span class="op">)</span>  <span class="co"># offset 8 due to 8-byte alignment</span></span>
 <span><span class="co">#&gt; [1] 8</span></span>
 <span></span>
 <span><span class="co"># Get all offsets at once</span></span>
-<span><span class="fu">ffi_all_offsets</span><span class="op">(</span><span class="va">Mixed</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_all_offsets.html">ffi_all_offsets</a></span><span class="op">(</span><span class="va">Mixed</span><span class="op">)</span></span>
 <span><span class="co">#&gt; a b </span></span>
 <span><span class="co">#&gt; 0 8</span></span>
 <span></span>
 <span><span class="co"># Get detailed field info</span></span>
-<span><span class="fu">ffi_field_info</span><span class="op">(</span><span class="va">Mixed</span>, <span class="st">"b"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_field_info.html">ffi_field_info</a></span><span class="op">(</span><span class="va">Mixed</span>, <span class="st">"b"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; FieldInfo('b' type=double, offset=8, size=8)</span></span></code></pre></div>
 </div>
 </div>
