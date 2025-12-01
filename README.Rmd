@@ -523,7 +523,7 @@ dll_unload(lib_path)
 
 ## Limitations and issues
 
-Right now, there are unimplemented features and limitations, including unnecessary copying, lack of protection, and several potential memory leaks. The interface can and should be refined further. Our type objects are C pointers (to static variables for basic types) that are never finalized. Additionally, the type coercions are not C99-conformant, and we do not support complex types. The more "dynamic" calling interface via the closure API of libffi is not included. We do not provide any facility to create interfaces from C files like the [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit).
+Right now, there are unimplemented features and limitations, including unnecessary copying, lack of protection, and several potential memory leaks. The interface can and should be refined further. Our type objects are C pointers (to static variables for basic types) that are never finalized. Additionally, the type coercions are not C99-conformant, and we do not support complex types. The more "dynamic" calling interface via the closure API of libffi is not included. We do not provide any facility to create interfaces from C files like the [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit). And of course don't don t pass NA to C functions if you are not sure what will happen because we do not do any NA check like the R `.C` interface.
 
 ## License
 
