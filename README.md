@@ -512,10 +512,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 679269586
+#> [1] 580119179
 rand_value <- rand_func()
 rand_value
-#> [1] 175598706
+#> [1] 1057736537
 dll_unload(libc_path)
 ```
 
@@ -537,7 +537,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x566c3e891090>
+#> <pointer: 0x62686fd0bb00>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -628,8 +628,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   29.1µs    34395.    78.2KB        0
-#> 2 ffi_call       96µs  100.1µs     9665.    78.7KB        0
+#> 1 native_r       13µs   29.1µs    35209.    78.2KB        0
+#> 2 ffi_call     97.4µs  101.7µs     9627.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -711,7 +711,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x566c3fe88c30>
+#> <pointer: 0x6268715ddfd0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -743,8 +743,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r             2.5ms   2.66ms      370.    78.2KB     19.5
-#> 2 c_ffi       126.3µs 132.75µs     7042.    78.7KB      0
+#> 1 r            2.39ms    2.5ms      386.    78.2KB     20.3
+#> 2 c_ffi      124.39µs  129.2µs     7194.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -826,7 +826,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764619375
+#> [1] 1764619477
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -845,6 +845,8 @@ finalized. We do not support complex types, unions or special packing
 for alignment for Structs. No facility to generate interfaces from C
 header files (see
 [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)).
+This is ABI level access to C Routines in dynamic libraries, so care
+must be taken to alignment issues.
 
 ## License
 
