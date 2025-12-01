@@ -12,20 +12,25 @@ FieldInfo(
   index = integer(0)
 )
 }
+\arguments{
+\item{name}{Character name of the field}
+
+\item{type}{FFIType of the field}
+
+\item{offset}{Integer byte offset within structure}
+
+\item{size}{Integer size of field in bytes}
+
+\item{index}{Integer 1-based field index}
+}
+\value{
+A FieldInfo object
+}
 \description{
 Represents metadata about a single field in a structure.
+Field Information Class
 }
-\section{Slots}{
-
-\describe{
-\item{\code{name}}{Character name of the field}
-
-\item{\code{type}}{FFIType of the field}
-
-\item{\code{offset}}{Integer byte offset within structure}
-
-\item{\code{size}}{Integer size of field in bytes}
-
-\item{\code{index}}{Integer 1-based field index}
-}}
-
+\details{
+Contains metadata about a struct field including its name, type,
+byte offset within the structure, size, and index.
+}

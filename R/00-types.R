@@ -667,12 +667,18 @@ S7::method(ffi_sizeof, FFIType) <- function(type) type@size
 #' Field Information Class
 #'
 #' Represents metadata about a single field in a structure.
+#' Field Information Class
 #'
-#' @slot name Character name of the field
-#' @slot type FFIType of the field
-#' @slot offset Integer byte offset within structure
-#' @slot size Integer size of field in bytes
-#' @slot index Integer 1-based field index
+#' Contains metadata about a struct field including its name, type,
+#' byte offset within the structure, size, and index.
+#'
+#' @name FieldInfo
+#' @param name Character name of the field
+#' @param type FFIType of the field
+#' @param offset Integer byte offset within structure
+#' @param size Integer size of field in bytes
+#' @param index Integer 1-based field index
+#' @return A FieldInfo object
 #' @export
 FieldInfo <- S7::new_class(
   "FieldInfo",
