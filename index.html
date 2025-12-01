@@ -498,10 +498,10 @@
 <span><span class="va">rand_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dll_ffi_symbol.html">dll_ffi_symbol</a></span><span class="op">(</span><span class="st">"rand"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 1489749637</span></span>
+<span><span class="co">#&gt; [1] 41788213</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 1715004248</span></span>
+<span><span class="co">#&gt; [1] 1667835173</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">libc_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -523,7 +523,7 @@
 <span></span>
 <span><span class="co"># Fill the buffer with ASCII 'A' (0x41)</span></span>
 <span><span class="fu">memset_fn</span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fl">0x41</span><span class="op">)</span>, <span class="fl">8L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x596816d8dbf0&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x575546b3cbb0&gt;</span></span>
 <span></span>
 <span><span class="co"># Read back the buffer and print as string</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rawConversion.html" class="external-link">rawToChar</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fl">8L</span>, <span class="va">raw_type</span><span class="op">)</span><span class="op">)</span></span>
@@ -610,8 +610,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 native_r     12.9µs     29µs    36253.    78.2KB        0</span></span>
-<span><span class="co">#&gt; 2 ffi_call     96.3µs    103µs     9580.    78.7KB        0</span></span>
+<span><span class="co">#&gt; 1 native_r     13.3µs   28.9µs    35857.    78.2KB        0</span></span>
+<span><span class="co">#&gt; 2 ffi_call     98.7µs  102.6µs     9551.    78.7KB        0</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -692,7 +692,7 @@
 <span>      <span class="va">out_ptr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span><span class="va">out_ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x59681a8899d0&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x57554909ad60&gt;</span></span>
 <span><span class="va">c_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">out_ptr</span>, <span class="va">n_out</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run R convolution</span></span>
@@ -724,8 +724,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 r            2.45ms   2.54ms      377.    78.2KB     19.8</span></span>
-<span><span class="co">#&gt; 2 c_ffi       109.9µs 128.38µs     7417.    78.7KB      0</span></span>
+<span><span class="co">#&gt; 1 r            2.46ms   2.56ms      373.    78.2KB     19.6</span></span>
+<span><span class="co">#&gt; 2 c_ffi      117.47µs  130.6µs     7259.    78.7KB      0</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -762,18 +762,27 @@
 <span><span class="va">char_sexp</span> <span class="op">&lt;-</span> <span class="fu">rf_STRING_ELT</span><span class="op">(</span><span class="va">str_sexp</span>, <span class="fl">0L</span><span class="op">)</span></span>
 <span><span class="fu">rf_R_CHAR</span><span class="op">(</span><span class="va">char_sexp</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Hello from C!"</span></span></code></pre></div>
-<p>Other useful R API functions:</p>
+<p>We can also read global variables from shared libraries using <code><a href="reference/ffi_deref_pointer.html">ffi_deref_pointer()</a></code> and <code><a href="reference/ffi_read_global.html">ffi_read_global()</a></code>:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Helper to dereference a pointer (read pointer value at an address)</span></span>
-<span><span class="va">deref_code</span> <span class="op">&lt;-</span> <span class="st">"void* deref_ptr(void** p) { return *p; }"</span></span>
-<span><span class="va">deref_lib</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dynamic_library_management.html">dll_compile_and_load</a></span><span class="op">(</span><span class="va">deref_code</span>, <span class="st">"deref_helper"</span><span class="op">)</span></span>
-<span><span class="va">deref_ptr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dll_ffi_symbol.html">dll_ffi_symbol</a></span><span class="op">(</span><span class="st">"deref_ptr"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Read global variables from our test library</span></span>
+<span><span class="va">int_addr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getNativeSymbolInfo.html" class="external-link">getNativeSymbolInfo</a></span><span class="op">(</span><span class="st">"test_global_int"</span>, <span class="st">"RSimpleFFI"</span><span class="op">)</span><span class="op">$</span><span class="va">address</span></span>
+<span><span class="fu"><a href="reference/ffi_read_global.html">ffi_read_global</a></span><span class="op">(</span><span class="va">int_addr</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 42</span></span>
 <span></span>
-<span><span class="co"># Get R_GlobalEnv - it's a global variable, we need to dereference its address</span></span>
-<span><span class="va">globalenv_addr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getNativeSymbolInfo.html" class="external-link">getNativeSymbolInfo</a></span><span class="op">(</span><span class="st">"R_GlobalEnv"</span><span class="op">)</span><span class="op">$</span><span class="va">address</span></span>
-<span><span class="va">R_GlobalEnv</span> <span class="op">&lt;-</span> <span class="fu">deref_ptr</span><span class="op">(</span><span class="va">globalenv_addr</span><span class="op">)</span></span>
+<span><span class="va">dbl_addr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getNativeSymbolInfo.html" class="external-link">getNativeSymbolInfo</a></span><span class="op">(</span><span class="st">"test_global_double"</span>, <span class="st">"RSimpleFFI"</span><span class="op">)</span><span class="op">$</span><span class="va">address</span></span>
+<span><span class="fu"><a href="reference/ffi_read_global.html">ffi_read_global</a></span><span class="op">(</span><span class="va">dbl_addr</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 3.14159</span></span>
 <span></span>
-<span><span class="co"># Define more R API functions</span></span>
+<span><span class="co"># For pointer globals, use ffi_deref_pointer</span></span>
+<span><span class="va">str_ptr_addr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getNativeSymbolInfo.html" class="external-link">getNativeSymbolInfo</a></span><span class="op">(</span><span class="st">"test_global_string"</span>, <span class="st">"RSimpleFFI"</span><span class="op">)</span><span class="op">$</span><span class="va">address</span></span>
+<span><span class="fu"><a href="reference/pointer_to_string.html">pointer_to_string</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_deref_pointer.html">ffi_deref_pointer</a></span><span class="op">(</span><span class="va">str_ptr_addr</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Hello from global!"</span></span></code></pre></div>
+<p>Now let’s call R functions entirely through the C API:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Get R_GlobalEnv - it's a global pointer variable</span></span>
+<span><span class="va">R_GlobalEnv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_deref_pointer.html">ffi_deref_pointer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getNativeSymbolInfo.html" class="external-link">getNativeSymbolInfo</a></span><span class="op">(</span><span class="st">"R_GlobalEnv"</span><span class="op">)</span><span class="op">$</span><span class="va">address</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Define R API functions</span></span>
 <span><span class="va">rf_install</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_install"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_string.html">ffi_string</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rf_lang1</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_lang1"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rf_lang2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_lang2"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -784,7 +793,7 @@
 <span><span class="va">call_expr</span> <span class="op">&lt;-</span> <span class="fu">rf_lang1</span><span class="op">(</span><span class="va">sys_time_sym</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">rf_eval</span><span class="op">(</span><span class="va">call_expr</span>, <span class="va">R_GlobalEnv</span><span class="op">)</span></span>
 <span><span class="fu">rf_REAL_ELT</span><span class="op">(</span><span class="va">result</span>, <span class="fl">0L</span><span class="op">)</span>  <span class="co"># Unix timestamp</span></span>
-<span><span class="co">#&gt; [1] 1764617770</span></span>
+<span><span class="co">#&gt; [1] 1764618318</span></span>
 <span></span>
 <span><span class="co"># Call abs(-42) via C API</span></span>
 <span><span class="va">abs_sym</span> <span class="op">&lt;-</span> <span class="fu">rf_install</span><span class="op">(</span><span class="st">"abs"</span><span class="op">)</span></span>
@@ -792,9 +801,7 @@
 <span><span class="va">abs_call</span> <span class="op">&lt;-</span> <span class="fu">rf_lang2</span><span class="op">(</span><span class="va">abs_sym</span>, <span class="va">neg_val</span><span class="op">)</span></span>
 <span><span class="va">abs_result</span> <span class="op">&lt;-</span> <span class="fu">rf_eval</span><span class="op">(</span><span class="va">abs_call</span>, <span class="va">R_GlobalEnv</span><span class="op">)</span></span>
 <span><span class="fu">rf_INTEGER_ELT</span><span class="op">(</span><span class="va">abs_result</span>, <span class="fl">0L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 42</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">deref_lib</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 42</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="limitations-and-issues">Limitations and issues<a class="anchor" aria-label="anchor" href="#limitations-and-issues"></a>

@@ -60,6 +60,8 @@
   : Copy array from native memory
 - [`ffi_copy_array_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array_type.md)
   : Copy array from native memory (ArrayType version)
+- [`ffi_deref_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_deref_pointer.md)
+  : Dereference a pointer
 - [`ffi_double()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.md)
   : double FFI type
 - [`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md)
@@ -100,6 +102,8 @@
   : pointer FFI type
 - [`ffi_raw()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_raw.md)
   : Char FFI type
+- [`ffi_read_global()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_read_global.md)
+  : Read a global variable from a shared library
 - [`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
   : Set field value in FFI structure
 - [`ffi_short()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_short.md)
