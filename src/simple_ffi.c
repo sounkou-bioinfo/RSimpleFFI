@@ -77,10 +77,12 @@ static ffi_type ffi_type_ssize_t_custom = {
     NULL 
 };
 
+// C99 _Bool type - typically 1 byte
+// Note: C's stdbool.h bool type maps to _Bool
 static ffi_type ffi_type_bool_custom = { 
-    sizeof(int), 
-    sizeof(int),  // alignment 
-    FFI_TYPE_SINT32, 
+    sizeof(_Bool), 
+    sizeof(_Bool),  // alignment 
+    FFI_TYPE_UINT8,  // _Bool is essentially unsigned with value 0 or 1
     NULL 
 };
 
@@ -351,57 +353,181 @@ SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type) {
 *
 * Conversion between R values and native values
 *
+* Type conversion follows C99 semantics:
+* - Integer promotions: smaller types promote to int
+* - Signed/unsigned conversions: modular arithmetic for unsigned types
+* - Floating point: standard C conversions with truncation toward zero
 *
 */
 
+// Helper: Get integer value from R SEXP (handles INTSXP, REALSXP, LGLSXP)
+// Returns 1 on success, 0 on failure. Sets *out_val and *is_exact
+static int get_r_integer_value(SEXP r_val, int64_t* out_val, int* is_exact) {
+    *is_exact = 1;
+    if (TYPEOF(r_val) == INTSXP) {
+        *out_val = (int64_t)INTEGER(r_val)[0];
+        return 1;
+    } else if (TYPEOF(r_val) == REALSXP) {
+        double val = REAL(r_val)[0];
+        if (!R_FINITE(val)) {
+            return 0;  // Inf, -Inf, NaN cannot convert to integer
+        }
+        // Check if value is exactly representable as integer
+        double truncated = trunc(val);
+        *is_exact = (val == truncated);
+        *out_val = (int64_t)truncated;
+        return 1;
+    } else if (TYPEOF(r_val) == LGLSXP) {
+        *out_val = (int64_t)LOGICAL(r_val)[0];
+        return 1;
+    }
+    return 0;
+}
+
+// Helper: Get unsigned integer value from R SEXP
+// For uint64 we need special handling since int64_t may not cover full range
+static int get_r_unsigned_value(SEXP r_val, uint64_t* out_val, int* is_exact) {
+    *is_exact = 1;
+    if (TYPEOF(r_val) == INTSXP) {
+        int val = INTEGER(r_val)[0];
+        // C99: signed to unsigned conversion uses modular arithmetic
+        *out_val = (uint64_t)(unsigned int)val;
+        return 1;
+    } else if (TYPEOF(r_val) == REALSXP) {
+        double val = REAL(r_val)[0];
+        if (!R_FINITE(val)) {
+            return 0;
+        }
+        double truncated = trunc(val);
+        *is_exact = (val == truncated);
+        // Handle negative values with modular arithmetic for unsigned conversion
+        if (truncated < 0) {
+            // C99 6.3.1.3: conversion to unsigned wraps around
+            // We need to be careful here for very large negative numbers
+            *out_val = (uint64_t)(int64_t)truncated;
+        } else {
+            *out_val = (uint64_t)truncated;
+        }
+        return 1;
+    } else if (TYPEOF(r_val) == LGLSXP) {
+        *out_val = (uint64_t)LOGICAL(r_val)[0];
+        return 1;
+    }
+    return 0;
+}
+
+// Helper: Get double value from R SEXP
+static int get_r_double_value(SEXP r_val, double* out_val) {
+    if (TYPEOF(r_val) == REALSXP) {
+        *out_val = REAL(r_val)[0];
+        return 1;
+    } else if (TYPEOF(r_val) == INTSXP) {
+        *out_val = (double)INTEGER(r_val)[0];
+        return 1;
+    } else if (TYPEOF(r_val) == LGLSXP) {
+        *out_val = (double)LOGICAL(r_val)[0];
+        return 1;
+    }
+    return 0;
+}
+
 // Convert R value to native value for FFI call
-// TODO: ADD STRUCT SUPPORT MORE RELIABLY THAN THE GENERIC POINTERS
+// Follows C99 type conversion semantics
 void* convert_r_to_native(SEXP r_val, ffi_type* type) {
+    int64_t ival;
+    uint64_t uval;
+    double dval;
+    int is_exact;
     
+    // Handle custom types first (before switch on type->type)
+    // These custom types may share type codes with standard types
+    if (type == &ffi_type_string_custom) {
+        if (TYPEOF(r_val) == STRSXP && LENGTH(r_val) > 0) {
+            const char* str = CHAR(STRING_ELT(r_val, 0));
+            const char** ptr = (const char**)R_alloc(1, sizeof(const char*));
+            *ptr = str;
+            return ptr;
+        } else if (r_val == R_NilValue) {
+            static const char* null_str = NULL;
+            return (void*)&null_str;
+        } else {
+            Rf_error("Cannot convert to string (expected character vector or NULL)");
+        }
+    } else if (type == &ffi_type_size_t_custom) {
+        size_t* converted = (size_t*)R_alloc(1, sizeof(size_t));
+        if (!get_r_unsigned_value(r_val, &uval, &is_exact)) {
+            Rf_error("Cannot convert to size_t: unsupported R type");
+        }
+        *converted = (size_t)uval;
+        return converted;
+    } else if (type == &ffi_type_ssize_t_custom) {
+        ssize_t* converted = (ssize_t*)R_alloc(1, sizeof(ssize_t));
+        if (!get_r_integer_value(r_val, &ival, &is_exact)) {
+            Rf_error("Cannot convert to ssize_t: unsupported R type");
+        }
+        *converted = (ssize_t)ival;
+        return converted;
+    } else if (type == &ffi_type_bool_custom) {
+        // C99 _Bool type
+        _Bool* converted = (_Bool*)R_alloc(1, sizeof(_Bool));
+        if (TYPEOF(r_val) == LGLSXP) {
+            *converted = (_Bool)(LOGICAL(r_val)[0] != 0);
+        } else if (!get_r_integer_value(r_val, &ival, &is_exact)) {
+            Rf_error("Cannot convert to bool: unsupported R type");
+        } else {
+            *converted = (_Bool)(ival != 0);
+        }
+        return converted;
+    } else if (type == &ffi_type_wchar_t_custom) {
+        wchar_t* converted = (wchar_t*)R_alloc(1, sizeof(wchar_t));
+        if (TYPEOF(r_val) == STRSXP && LENGTH(r_val) > 0) {
+            const char* str = CHAR(STRING_ELT(r_val, 0));
+            if (strlen(str) > 0) {
+                *converted = (wchar_t)(unsigned char)str[0];
+            } else {
+                *converted = 0;
+            }
+        } else if (get_r_integer_value(r_val, &ival, &is_exact)) {
+            *converted = (wchar_t)ival;
+        } else {
+            Rf_error("Cannot convert to wchar_t: unsupported R type");
+        }
+        return converted;
+    } else if (type == &ffi_type_raw_custom) {
+        uint8_t* converted = (uint8_t*)R_alloc(1, sizeof(uint8_t));
+        if (TYPEOF(r_val) == RAWSXP && LENGTH(r_val) > 0) {
+            *converted = RAW(r_val)[0];
+        } else if (!get_r_unsigned_value(r_val, &uval, &is_exact)) {
+            Rf_error("Cannot convert to raw: unsupported R type");
+        } else {
+            *converted = (uint8_t)uval;
+        }
+        return converted;
+    }
+    
+    // Handle standard libffi types
     switch (type->type) {
         case FFI_TYPE_VOID:
             return NULL;
             
         case FFI_TYPE_SINT8: {
             int8_t* converted = (int8_t*)R_alloc(1, sizeof(int8_t));
-            if (TYPEOF(r_val) == INTSXP) {
-                int val = INTEGER(r_val)[0];
-                if (val < -128 || val > 127) {
-                    Rf_error("Integer %d out of range for int8 [-128, 127]", val);
-                }
-                *converted = (int8_t)val;
-                return converted;
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                if (val < -128.0 || val > 127.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for int8 [-128, 127]", val);
-                }
-                *converted = (int8_t)val;
-                return converted;
-            } else {
-                Rf_error("Cannot convert to int8");
+            if (!get_r_integer_value(r_val, &ival, &is_exact)) {
+                Rf_error("Cannot convert to int8: unsupported R type");
             }
+            // C99: conversion to signed type is implementation-defined if out of range
+            // We use modular arithmetic (common behavior)
+            *converted = (int8_t)ival;
+            return converted;
         }
             
         case FFI_TYPE_SINT16: {
             int16_t* converted = (int16_t*)R_alloc(1, sizeof(int16_t));
-            if (TYPEOF(r_val) == INTSXP) {
-                int val = INTEGER(r_val)[0];
-                if (val < -32768 || val > 32767) {
-                    Rf_error("Integer %d out of range for int16 [-32768, 32767]", val);
-                }
-                *converted = (int16_t)val;
-                return converted;
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                if (val < -32768.0 || val > 32767.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for int16 [-32768, 32767]", val);
-                }
-                *converted = (int16_t)val;
-                return converted;
-            } else {
-                Rf_error("Cannot convert to int16");
+            if (!get_r_integer_value(r_val, &ival, &is_exact)) {
+                Rf_error("Cannot convert to int16: unsupported R type");
             }
+            *converted = (int16_t)ival;
+            return converted;
         }
 
         case FFI_TYPE_STRUCT: {
@@ -417,232 +543,102 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
                 Rf_error("Cannot convert R value to native struct: must be external pointer");
             }
         }
-        case FFI_TYPE_SINT32:
+        
+        case FFI_TYPE_SINT32: {
+            int32_t* converted = (int32_t*)R_alloc(1, sizeof(int32_t));
             if (TYPEOF(r_val) == INTSXP) {
-                return INTEGER(r_val);
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                if (val < -2147483648.0 || val > 2147483647.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for int32 [-2147483648, 2147483647]", val);
-                }
-                int* converted = (int*)R_alloc(1, sizeof(int));
-                *converted = (int)val;
+                // Direct conversion - R integers are 32-bit signed
+                *converted = INTEGER(r_val)[0];
                 return converted;
-            } else if (TYPEOF(r_val) == LGLSXP) {
-                int* converted = (int*)R_alloc(1, sizeof(int));
-                *converted = LOGICAL(r_val)[0];
-                return converted;
-            } else {
-                Rf_error("Cannot convert to int");
             }
+            if (!get_r_integer_value(r_val, &ival, &is_exact)) {
+                Rf_error("Cannot convert to int32: unsupported R type");
+            }
+            // C99 modular conversion
+            *converted = (int32_t)ival;
+            return converted;
+        }
             
         case FFI_TYPE_SINT64: {
             int64_t* converted = (int64_t*)R_alloc(1, sizeof(int64_t));
-            if (TYPEOF(r_val) == INTSXP) {
-                *converted = (int64_t)INTEGER(r_val)[0];
-                return converted;
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                // Note: double precision limits exact integer representation to ~53 bits
-                if (val < -9007199254740992.0 || val > 9007199254740992.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for safe int64 conversion", val);
-                }
-                *converted = (int64_t)val;
-                return converted;
-            } else {
-                Rf_error("Cannot convert to int64");
+            if (!get_r_integer_value(r_val, &ival, &is_exact)) {
+                Rf_error("Cannot convert to int64: unsupported R type");
             }
+            *converted = ival;
+            return converted;
         }
             
         case FFI_TYPE_UINT8: {
             uint8_t* converted = (uint8_t*)R_alloc(1, sizeof(uint8_t));
-            if (TYPEOF(r_val) == INTSXP) {
-                int val = INTEGER(r_val)[0];
-                if (val < 0 || val > 255) {
-                    Rf_error("Integer %d out of range for uint8 [0, 255]", val);
-                }
-                *converted = (uint8_t)val;
-                return converted;
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                if (val < 0.0 || val > 255.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for uint8 [0, 255]", val);
-                }
-                *converted = (uint8_t)val;
-                return converted;
-            } else {
-                Rf_error("Cannot convert to uint8");
+            if (!get_r_unsigned_value(r_val, &uval, &is_exact)) {
+                Rf_error("Cannot convert to uint8: unsupported R type");
             }
+            // C99: modular arithmetic for unsigned (value mod 256)
+            *converted = (uint8_t)uval;
+            return converted;
         }
             
         case FFI_TYPE_UINT16: {
             uint16_t* converted = (uint16_t*)R_alloc(1, sizeof(uint16_t));
-            if (TYPEOF(r_val) == INTSXP) {
-                int val = INTEGER(r_val)[0];
-                if (val < 0 || val > 65535) {
-                    Rf_error("Integer %d out of range for uint16 [0, 65535]", val);
-                }
-                *converted = (uint16_t)val;
-                return converted;
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                if (val < 0.0 || val > 65535.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for uint16 [0, 65535]", val);
-                }
-                *converted = (uint16_t)val;
-                return converted;
-            } else {
-                Rf_error("Cannot convert to uint16");
+            if (!get_r_unsigned_value(r_val, &uval, &is_exact)) {
+                Rf_error("Cannot convert to uint16: unsupported R type");
             }
+            // C99: modular arithmetic for unsigned (value mod 65536)
+            *converted = (uint16_t)uval;
+            return converted;
         }
             
         case FFI_TYPE_UINT32: {
             uint32_t* converted = (uint32_t*)R_alloc(1, sizeof(uint32_t));
-            if (TYPEOF(r_val) == INTSXP) {
-                int val = INTEGER(r_val)[0];
-                if (val < 0) {
-                    Rf_error("Integer %d out of range for uint32 [0, 4294967295]", val);
-                }
-                *converted = (uint32_t)val;
-                return converted;
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                if (val < 0.0 || val > 4294967295.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for uint32 [0, 4294967295]", val);
-                }
-                *converted = (uint32_t)val;
-                return converted;
-            } else {
-                Rf_error("Cannot convert to uint32");
+            if (!get_r_unsigned_value(r_val, &uval, &is_exact)) {
+                Rf_error("Cannot convert to uint32: unsupported R type");
             }
+            // C99: modular arithmetic for unsigned
+            *converted = (uint32_t)uval;
+            return converted;
         }
             
         case FFI_TYPE_UINT64: {
             uint64_t* converted = (uint64_t*)R_alloc(1, sizeof(uint64_t));
-            if (TYPEOF(r_val) == INTSXP) {
-                int val = INTEGER(r_val)[0];
-                if (val < 0) {
-                    Rf_error("Integer %d out of range for uint64 [0, 18446744073709551615]", val);
-                }
-                *converted = (uint64_t)val;
-                return converted;
-            } else if (TYPEOF(r_val) == REALSXP) {
-                double val = REAL(r_val)[0];
-                if (val < 0.0 || val > 18446744073709551615.0 || val != floor(val)) {
-                    Rf_error("Value %g out of range or not integer for uint64", val);
-                }
-                *converted = (uint64_t)val;
-                return converted;
-            } else {
-                Rf_error("Cannot convert to uint64");
+            if (!get_r_unsigned_value(r_val, &uval, &is_exact)) {
+                Rf_error("Cannot convert to uint64: unsupported R type");
             }
+            *converted = uval;
+            return converted;
         }
-            
-
             
         #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
         case FFI_TYPE_LONGDOUBLE: {
-            if (TYPEOF(r_val) == REALSXP) {
-                long double* converted = (long double*)R_alloc(1, sizeof(long double));
-                *converted = (long double)REAL(r_val)[0];
-                return converted;
-            } else if (TYPEOF(r_val) == INTSXP) {
-                long double* converted = (long double*)R_alloc(1, sizeof(long double));
-                *converted = (long double)INTEGER(r_val)[0];
-                return converted;
-            } else {
-                Rf_error("Cannot convert to long double");
+            long double* converted = (long double*)R_alloc(1, sizeof(long double));
+            if (!get_r_double_value(r_val, &dval)) {
+                Rf_error("Cannot convert to long double: unsupported R type");
             }
+            *converted = (long double)dval;
+            return converted;
         }
         #endif
             
-        // Handle custom platform-dependent types by their underlying type
         default:
-            // Check if this is one of our custom types and handle accordingly
-            if (type == &ffi_type_size_t_custom) {
-                if (TYPEOF(r_val) == INTSXP) {
-                    size_t* converted = (size_t*)R_alloc(1, sizeof(size_t));
-                    *converted = (size_t)INTEGER(r_val)[0];
-                    return converted;
-                } else if (TYPEOF(r_val) == REALSXP) {
-                    size_t* converted = (size_t*)R_alloc(1, sizeof(size_t));
-                    *converted = (size_t)REAL(r_val)[0];
-                    return converted;
-                } else {
-                    Rf_error("Cannot convert to size_t");
-                }
-            } else if (type == &ffi_type_ssize_t_custom) {
-                if (TYPEOF(r_val) == INTSXP) {
-                    ssize_t* converted = (ssize_t*)R_alloc(1, sizeof(ssize_t));
-                    *converted = (ssize_t)INTEGER(r_val)[0];
-                    return converted;
-                } else if (TYPEOF(r_val) == REALSXP) {
-                    ssize_t* converted = (ssize_t*)R_alloc(1, sizeof(ssize_t));
-                    *converted = (ssize_t)REAL(r_val)[0];
-                    return converted;
-                } else {
-                    Rf_error("Cannot convert to ssize_t");
-                }
-            } else if (type == &ffi_type_bool_custom) {
-                if (TYPEOF(r_val) == LGLSXP) {
-                    int* converted = (int*)R_alloc(1, sizeof(int));
-                    *converted = LOGICAL(r_val)[0];
-                    return converted;
-                } else if (TYPEOF(r_val) == INTSXP) {
-                    int* converted = (int*)R_alloc(1, sizeof(int));
-                    *converted = INTEGER(r_val)[0] != 0;
-                    return converted;
-                } else if (TYPEOF(r_val) == REALSXP) {
-                    int* converted = (int*)R_alloc(1, sizeof(int));
-                    *converted = REAL(r_val)[0] != 0.0;
-                    return converted;
-                } else {
-                    Rf_error("Cannot convert to bool");
-                }
-            } else if (type == &ffi_type_wchar_t_custom) {
-                if (TYPEOF(r_val) == INTSXP) {
-                    wchar_t* converted = (wchar_t*)R_alloc(1, sizeof(wchar_t));
-                    *converted = (wchar_t)INTEGER(r_val)[0];
-                    return converted;
-                } else if (TYPEOF(r_val) == STRSXP && LENGTH(r_val) > 0) {
-                    wchar_t* converted = (wchar_t*)R_alloc(1, sizeof(wchar_t));
-                    const char* str = CHAR(STRING_ELT(r_val, 0));
-                    if (strlen(str) > 0) {
-                        *converted = (wchar_t)str[0];
-                    } else {
-                        *converted = 0;
-                    }
-                    return converted;
-                } else {
-                    Rf_error("Cannot convert to wchar_t");
-                }
-            }
+            // Custom types are handled above; if we get here, it's unsupported
             Rf_error("Unsupported FFI type for conversion: %d", type->type);
             
-        case FFI_TYPE_DOUBLE:
-            if (TYPEOF(r_val) == REALSXP) {
-                // Direct pointer to R's double data - safe with PROTECT
-                return REAL(r_val);
-            } else if (TYPEOF(r_val) == INTSXP) {
-                double* converted = (double*)R_alloc(1, sizeof(double));
-                *converted = (double)INTEGER(r_val)[0];
-                return converted;
-            } else {
-                Rf_error("Cannot convert to double");
+        case FFI_TYPE_DOUBLE: {
+            double* converted = (double*)R_alloc(1, sizeof(double));
+            if (!get_r_double_value(r_val, &dval)) {
+                Rf_error("Cannot convert to double: unsupported R type");
             }
+            *converted = dval;
+            return converted;
+        }
             
         case FFI_TYPE_FLOAT: {
-            if (TYPEOF(r_val) == REALSXP) {
-                float* converted = (float*)R_alloc(1, sizeof(float));
-                *converted = (float)REAL(r_val)[0];
-                return converted;
-            } else if (TYPEOF(r_val) == INTSXP) {
-                float* converted = (float*)R_alloc(1, sizeof(float));
-                *converted = (float)INTEGER(r_val)[0];
-                return converted;
-            } else {
-                Rf_error("Cannot convert to float");
+            float* converted = (float*)R_alloc(1, sizeof(float));
+            if (!get_r_double_value(r_val, &dval)) {
+                Rf_error("Cannot convert to float: unsupported R type");
             }
+            // C99: double to float conversion may lose precision
+            *converted = (float)dval;
+            return converted;
         }
         
         case FFI_TYPE_POINTER:
@@ -682,50 +678,109 @@ void* convert_r_to_native(SEXP r_val, ffi_type* type) {
 }
 
 // Convert native return value to R value
-// Right now structs are returned as generic pointers
+// 
+// Type conversion strategy (native to R):
+// - Signed integers that fit in R's integer range: return as integer
+// - Unsigned integers: uint8/uint16 fit in integer, uint32/uint64 use double
+// - int64: uses double (may lose precision for values > 2^53)
+// - Floating point: all return as R double
+// - Pointers: return as external pointer
 SEXP convert_native_to_r(void* value, ffi_type* type) {
+    // Handle custom types first (before switch on type->type)
+    // These custom types may share type codes with standard types
+    if (type == &ffi_type_string_custom) {
+        char* str = *(char**)value;
+        if (str == NULL) {
+            return R_NilValue;
+        } else {
+            return mkString(str);
+        }
+    } else if (type == &ffi_type_size_t_custom) {
+        size_t val = *(size_t*)value;
+        // size_t is unsigned, may exceed INT_MAX
+        if (val <= INT_MAX) {
+            return ScalarInteger((int)val);
+        }
+        return ScalarReal((double)val);
+    } else if (type == &ffi_type_ssize_t_custom) {
+        ssize_t val = *(ssize_t*)value;
+        // ssize_t is signed, check if fits in R integer
+        if (val >= INT_MIN && val <= INT_MAX) {
+            return ScalarInteger((int)val);
+        }
+        return ScalarReal((double)val);
+    } else if (type == &ffi_type_bool_custom) {
+        // C99 _Bool returns as R logical
+        return ScalarLogical(*(_Bool*)value != 0);
+    } else if (type == &ffi_type_wchar_t_custom) {
+        wchar_t wc = *(wchar_t*)value;
+        // Return as integer - user can convert if needed
+        return ScalarInteger((int)wc);
+    } else if (type == &ffi_type_raw_custom) {
+        // raw type returns as integer (single byte)
+        return ScalarInteger((int)(*(uint8_t*)value));
+    }
+    
+    // Now handle standard libffi types
     switch (type->type) {
         case FFI_TYPE_VOID:
             return R_NilValue;
             
         case FFI_TYPE_SINT8:
+            // int8 always fits in R integer
             return ScalarInteger((int)(*(int8_t*)value));
             
         case FFI_TYPE_SINT16:
+            // int16 always fits in R integer
             return ScalarInteger((int)(*(int16_t*)value));
             
         case FFI_TYPE_SINT32:
-            return ScalarInteger(*(int*)value);
+            // int32 = R integer (same type)
+            return ScalarInteger(*(int32_t*)value);
             
-        case FFI_TYPE_SINT64:
-            return ScalarReal((double)(*(int64_t*)value));
+        case FFI_TYPE_SINT64: {
+            // int64 may not fit in R integer, use double
+            // Note: precision loss for |value| > 2^53
+            int64_t val = *(int64_t*)value;
+            return ScalarReal((double)val);
+        }
             
         case FFI_TYPE_UINT8:
+            // uint8 [0, 255] always fits in R integer
             return ScalarInteger((int)(*(uint8_t*)value));
             
         case FFI_TYPE_UINT16:
+            // uint16 [0, 65535] always fits in R integer
             return ScalarInteger((int)(*(uint16_t*)value));
             
-        case FFI_TYPE_UINT32:
-            return ScalarReal((double)(*(uint32_t*)value));
+        case FFI_TYPE_UINT32: {
+            // uint32 [0, 4294967295] may not fit in R integer (max ~2.1B)
+            // Values > INT_MAX are returned as double
+            uint32_t val = *(uint32_t*)value;
+            if (val <= INT_MAX) {
+                return ScalarInteger((int)val);
+            }
+            return ScalarReal((double)val);
+        }
             
-        case FFI_TYPE_UINT64:
-            return ScalarReal((double)(*(uint64_t*)value));
-            
-
+        case FFI_TYPE_UINT64: {
+            // uint64 - use double (may lose precision for values > 2^53)
+            uint64_t val = *(uint64_t*)value;
+            return ScalarReal((double)val);
+        }
             
         case FFI_TYPE_DOUBLE:
             return ScalarReal(*(double*)value);
             
         case FFI_TYPE_FLOAT:
+            // float promotes to double
             return ScalarReal((double)(*(float*)value));
             
         #if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
         case FFI_TYPE_LONGDOUBLE:
+            // long double demotes to double (may lose precision)
             return ScalarReal((double)(*(long double*)value));
         #endif
-            
-        // Handle custom platform-dependent types by their underlying type
             
         case FFI_TYPE_POINTER: {
             void* ptr = *(void**)value;
@@ -749,30 +804,6 @@ SEXP convert_native_to_r(void* value, ffi_type* type) {
         }
         
         default:
-            // Check if this is one of our custom types and handle accordingly
-            if (type == &ffi_type_string_custom) {
-                char* str = *(char**)value;
-                if (str == NULL) {
-                    return R_NilValue;
-                } else {
-                    return mkString(str);
-                }
-            } else if (type == &ffi_type_size_t_custom) {
-                return ScalarReal((double)(*(size_t*)value));
-            } else if (type == &ffi_type_ssize_t_custom) {
-                return ScalarReal((double)(*(ssize_t*)value));
-            } else if (type == &ffi_type_bool_custom) {
-                return ScalarLogical(*(int*)value);
-            } else if (type == &ffi_type_wchar_t_custom) {
-                wchar_t wc = *(wchar_t*)value;
-                char str[2] = {0, 0};
-                if (wc < 128) {  // ASCII range
-                    str[0] = (char)wc;
-                    return mkString(str);
-                } else {
-                    return ScalarInteger((int)wc);
-                }
-            }
             Rf_error("Unsupported FFI type for return conversion: %d", type->type);
     }
 }

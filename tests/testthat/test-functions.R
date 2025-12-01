@@ -135,8 +135,10 @@ test_that("Type conversion works", {
   result <- add_int_fn(5.0, 3L) # First arg is double but whole number
   expect_equal(result, 8L)
 
-  # Test that non-integer double is properly rejected
-  expect_error(add_int_fn(5.7, 3L), "not integer")
+  # Test that non-integer double is truncated (C99 semantics)
+  # 5.7 is truncated to 5, 3.9 is truncated to 3: result = 5 + 3 = 8
+  result <- add_int_fn(5.7, 3.9)
+  expect_equal(result, 8L)
 })
 
 test_that("Error handling works", {

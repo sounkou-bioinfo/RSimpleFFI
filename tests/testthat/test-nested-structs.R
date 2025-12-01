@@ -37,7 +37,8 @@ test_that("Nested struct fields can be set and accessed", {
     y <- ffi_get_field(point_ptr, "y", inner)
 
     expect_equal(id, 42L)
-    expect_equal(pointer_to_string(label), "example")
+    # String fields are now returned directly as character
+    expect_equal(label, "example")
     expect_equal(x, 10L)
     expect_equal(y, 3.14)
 })
