@@ -5,7 +5,7 @@ Create a reusable FFI function wrapper
 ## Usage
 
 ``` r
-ffi_function(name, return_type, ..., library = NULL)
+ffi_function(name, return_type, ..., library = NULL, na_check = TRUE)
 ```
 
 ## Arguments
@@ -25,3 +25,9 @@ ffi_function(name, return_type, ..., library = NULL)
 - library:
 
   Character name of library (optional)
+
+- na_check:
+
+  Logical; if TRUE (default), check for NA values and error if found.
+  Set to FALSE to skip NA checking for better performance (at your own
+  risk).

@@ -41,7 +41,7 @@ Uses direct address access like Rffi for maximum compatibility.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dll_ffi_symbol</span><span class="op">(</span><span class="va">symbol_name</span>, <span class="va">return_type</span>, <span class="va">...</span>, package <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dll_ffi_symbol</span><span class="op">(</span><span class="va">symbol_name</span>, <span class="va">return_type</span>, <span class="va">...</span>, package <span class="op">=</span> <span class="cn">NULL</span>, na_check <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -62,6 +62,11 @@ Uses direct address access like Rffi for maximum compatibility.</p>
 
 <dt id="arg-package">package<a class="anchor" aria-label="anchor" href="#arg-package"></a></dt>
 <dd><p>Package name (optional)</p></dd>
+
+
+<dt id="arg-na-check">na_check<a class="anchor" aria-label="anchor" href="#arg-na-check"></a></dt>
+<dd><p>Logical; if TRUE (default), check for NA values and error if found.
+Set to FALSE to skip NA checking for better performance (at your own risk).</p></dd>
 
 </dl></div>
     <div class="section level2">

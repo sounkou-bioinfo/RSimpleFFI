@@ -7,7 +7,7 @@ compatibility.
 ## Usage
 
 ``` r
-dll_ffi_symbol(symbol_name, return_type, ..., package = NULL)
+dll_ffi_symbol(symbol_name, return_type, ..., package = NULL, na_check = TRUE)
 ```
 
 ## Arguments
@@ -27,6 +27,12 @@ dll_ffi_symbol(symbol_name, return_type, ..., package = NULL)
 - package:
 
   Package name (optional)
+
+- na_check:
+
+  Logical; if TRUE (default), check for NA values and error if found.
+  Set to FALSE to skip NA checking for better performance (at your own
+  risk).
 
 ## Value
 

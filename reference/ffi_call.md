@@ -21,3 +21,9 @@ ffi_call(cif, symbol, ...)
 - ...:
 
   Arguments to pass to the function
+
+- na_check:
+
+  Logical; if TRUE (default), check for NA values and error if found.
+  Set to FALSE to skip NA checking for better performance (at your own
+  risk).
