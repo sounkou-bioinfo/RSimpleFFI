@@ -346,3 +346,55 @@ int test_sizeof_aligned(void) {
 int test_sizeof_point2d(void) {
     return (int)sizeof(Point2D);
 }
+
+
+/* ============================================================================
+ * VARARGS TEST FUNCTIONS
+ * ============================================================================
+ */
+
+#include <stdarg.h>
+
+/* Sum nargs integers passed as varargs */
+double test_varargs_sum(int nargs, ...) {
+    double sum = 0;
+    va_list va;
+    va_start(va, nargs);
+    
+    for (int i = 0; i < nargs; i++) {
+        sum += va_arg(va, int);
+    }
+    
+    va_end(va);
+    return sum;
+}
+
+/* Sum doubles passed as varargs (NULL-terminated via count) */
+double test_varargs_sum_doubles(int nargs, ...) {
+    double sum = 0;
+    va_list va;
+    va_start(va, nargs);
+    
+    for (int i = 0; i < nargs; i++) {
+        sum += va_arg(va, double);
+    }
+    
+    va_end(va);
+    return sum;
+}
+
+/* Mixed fixed + varargs: format string + nargs integers */
+int test_varargs_mixed(const char* prefix, int nargs, ...) {
+    int sum = 0;
+    va_list va;
+    va_start(va, nargs);
+    
+    /* Just sum the integers, ignore prefix */
+    (void)prefix;
+    for (int i = 0; i < nargs; i++) {
+        sum += va_arg(va, int);
+    }
+    
+    va_end(va);
+    return sum;
+}

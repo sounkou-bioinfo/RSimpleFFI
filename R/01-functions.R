@@ -40,6 +40,74 @@ ffi_cif <- function(return_type, ...) {
   )
 }
 
+#' Prepare FFI call interface for variadic functions
+#'
+#' Creates a CIF for calling C functions with variable arguments (varargs).
+#' Unlike regular CIFs, variadic CIFs must specify the types of ALL arguments
+#' for each specific call, including the variadic ones.
+#'
+#' @param return_type FFIType for return value
+#' @param nfixedargs Number of fixed arguments (before the ...)
+#' @param ... FFIType objects for ALL arguments (fixed + variadic)
+#' @return CIF object
+#'
+#' @details
+#' Due to C calling conventions, variadic arguments undergo "default argument
+#' promotions": float becomes double, and small integers (char, short) become int.
+#' You must use ffi_int() or ffi_double() for variadic arguments, not smaller types.
+#'
+#' @examples
+#' \dontrun{
+#' # Call a varargs function: test_varargs_sum(int nargs, ...)
+#' # First argument (nargs) is fixed, rest are variadic integers
+#' sym <- ffi_symbol("test_varargs_sum")
+#'
+#' # Call with 3 variadic int arguments
+#' cif <- ffi_cif_var(ffi_double(),
+#'   nfixedargs = 1L,
+#'   ffi_int(), ffi_int(), ffi_int(), ffi_int()
+#' )
+#' result <- ffi_call(cif, sym, 3L, 10L, 20L, 30L) # returns 60
+#' }
+#' @export
+ffi_cif_var <- function(return_type, nfixedargs, ...) {
+  if (!S7::S7_inherits(return_type, FFIType)) {
+    stop("return_type must be an FFIType object")
+  }
+
+  if (!is.numeric(nfixedargs) || length(nfixedargs) != 1 || nfixedargs < 0) {
+    stop("nfixedargs must be a non-negative integer")
+  }
+
+  arg_types <- list(...)
+
+  if (length(arg_types) > 0 &&
+    !all(sapply(arg_types, function(x) S7::S7_inherits(x, FFIType)))) {
+    stop("All argument types must be FFIType objects")
+  }
+
+  if (as.integer(nfixedargs) > length(arg_types)) {
+    stop("nfixedargs cannot exceed total number of argument types")
+  }
+
+  arg_refs <- if (length(arg_types) > 0) {
+    lapply(arg_types, function(x) x@ref)
+  } else {
+    list()
+  }
+
+  cif_ref <- .Call(
+    "R_prep_ffi_cif_var", return_type@ref, arg_refs,
+    as.integer(nfixedargs)
+  )
+
+  CIF(
+    return_type = return_type,
+    arg_types = arg_types,
+    ref = cif_ref
+  )
+}
+
 
 #####################################
 #

@@ -943,6 +943,62 @@ SEXP R_prep_ffi_cif(SEXP r_return_type, SEXP r_arg_types) {
     return R_MakeExternalPtr(cif, R_NilValue, R_NilValue);
 }
 
+// Prepare FFI call interface for variadic functions
+// nfixedargs: number of fixed arguments (before the ...)
+// r_arg_types: list of ALL argument types (fixed + variadic)
+SEXP R_prep_ffi_cif_var(SEXP r_return_type, SEXP r_arg_types, SEXP r_nfixedargs) {
+    ffi_type* return_type = (ffi_type*)R_ExternalPtrAddr(r_return_type);
+    if (!return_type) {
+        Rf_error("Invalid return type");
+    }
+    
+    int nfixedargs = asInteger(r_nfixedargs);
+    int ntotalargs = LENGTH(r_arg_types);
+    
+    if (nfixedargs < 0 || nfixedargs > ntotalargs) {
+        Rf_error("nfixedargs must be between 0 and total number of arguments");
+    }
+    
+    ffi_type** arg_types = NULL;
+    
+    if (ntotalargs > 0) {
+        arg_types = (ffi_type**)malloc(sizeof(ffi_type*) * ntotalargs);
+        if (!arg_types) {
+            Rf_error("Memory allocation failed");
+        }
+        
+        for (int i = 0; i < ntotalargs; i++) {
+            SEXP arg_type = VECTOR_ELT(r_arg_types, i);
+            arg_types[i] = (ffi_type*)R_ExternalPtrAddr(arg_type);
+            if (!arg_types[i]) {
+                free(arg_types);
+                Rf_error("Invalid argument type at index %d", i + 1);
+            }
+        }
+    }
+    
+    ffi_cif* cif = (ffi_cif*)malloc(sizeof(ffi_cif));
+    if (!cif) {
+        if (arg_types) free(arg_types);
+        Rf_error("Memory allocation failed");
+    }
+    
+    // Use ffi_prep_cif_var for variadic functions
+    ffi_status status = ffi_prep_cif_var(cif, FFI_DEFAULT_ABI, 
+                                          nfixedargs, ntotalargs, 
+                                          return_type, arg_types);
+    if (status != FFI_OK) {
+        free(cif);
+        if (arg_types) free(arg_types);
+        if (status == FFI_BAD_ARGTYPE) {
+            Rf_error("FFI_BAD_ARGTYPE: variadic args cannot be float or small integers (use int/double)");
+        }
+        Rf_error("Failed to prepare variadic FFI call interface (status: %d)", status);
+    }
+    
+    return R_MakeExternalPtr(cif, Rf_install("ffi_cif_var"), R_NilValue);
+}
+
 
 // Internal function that does the actual work
 static SEXP do_ffi_call_internal(void* data) {
