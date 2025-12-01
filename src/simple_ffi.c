@@ -199,63 +199,6 @@ static int has_na_value(SEXP r_val) {
     }
 }
 
-// Check if any element in a vector contains NA
-// Returns 1-based index of first NA, or 0 if none found
-static int vector_has_na(SEXP r_val) {
-    if (r_val == R_NilValue) {
-        return 0;
-    }
-    
-    // Check type first - external pointers, environments, etc. cannot contain NA
-    // and don't support LENGTH()
-    int type = TYPEOF(r_val);
-    if (type == EXTPTRSXP || type == ENVSXP || type == CLOSXP || 
-        type == LISTSXP || type == LANGSXP || type == NILSXP ||
-        type == SYMSXP || type == BUILTINSXP || type == SPECIALSXP) {
-        return 0;
-    }
-    
-    int n = LENGTH(r_val);
-    if (n == 0) {
-        return 0;
-    }
-    
-    switch (type) {
-        case INTSXP: {
-            int* p = INTEGER(r_val);
-            for (int i = 0; i < n; i++) {
-                if (p[i] == NA_INTEGER) return i + 1;
-            }
-            break;
-        }
-        case REALSXP: {
-            double* p = REAL(r_val);
-            for (int i = 0; i < n; i++) {
-                if (ISNA(p[i])) return i + 1;
-            }
-            break;
-        }
-        case LGLSXP: {
-            int* p = LOGICAL(r_val);
-            for (int i = 0; i < n; i++) {
-                if (p[i] == NA_LOGICAL) return i + 1;
-            }
-            break;
-        }
-        case STRSXP: {
-            for (int i = 0; i < n; i++) {
-                if (STRING_ELT(r_val, i) == NA_STRING) return i + 1;
-            }
-            break;
-        }
-        case RAWSXP:
-            return 0;  // Raw vectors cannot contain NA
-        default:
-            return 0;
-    }
-    return 0;
-}
-
 
 /*
 
@@ -369,6 +312,20 @@ static void buffer_finalizer(SEXP extPtr) {
     void* ptr = R_ExternalPtrAddr(extPtr);
     if (ptr) free(ptr);
     R_ClearExternalPtr(extPtr);
+}
+
+// Explicitly free memory pointed to by an external pointer
+// Use this for pointers returned from C that you know should be freed
+SEXP R_ffi_free(SEXP r_ptr) {
+    if (TYPEOF(r_ptr) != EXTPTRSXP) {
+        Rf_error("Expected an external pointer");
+    }
+    void* ptr = R_ExternalPtrAddr(r_ptr);
+    if (ptr) {
+        free(ptr);
+        R_ClearExternalPtr(r_ptr);
+    }
+    return R_NilValue;
 }
 
 // Allocate a buffer and return an external pointer with finalizer

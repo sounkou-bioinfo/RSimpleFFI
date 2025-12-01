@@ -31,3 +31,44 @@ S7::method(ffi_alloc, StructType) <- function(type, n = 1L) {
 S7::method(ffi_alloc, ArrayType) <- function(type, n = 1L) {
   .Call("R_alloc_typed_buffer", type@ref, as.integer(type@length * n))
 }
+
+#' Free memory pointed to by an external pointer
+#'
+#' Explicitly frees memory that was allocated by C code and returned as a pointer.
+#' Use this when you know the pointer was allocated with malloc/calloc and it's
+#' your responsibility to free it.
+#'
+#' @param ptr External pointer to free
+#' @return NULL invisibly
+#'
+#' @details
+#' **When to use this:**
+#' - Pointers returned from C functions that allocate memory (e.g., `strdup`, `malloc`)
+#' - When C documentation says "caller must free"
+#'
+#' **When NOT to use this:**
+#' - Pointers allocated via `ffi_alloc()` (auto-freed by R's GC)
+#' - Static or global pointers from C
+#' - Pointers into existing structures
+#' - Pointers that C will free itself
+#'
+#' Calling `ffi_free()` on an already-freed pointer or invalid pointer
+#' will cause undefined behavior (likely crash).
+#'
+#' @examples
+#' \dontrun{
+#' # C function that allocates and returns a string
+#' strdup_fn <- ffi_function("strdup", ffi_pointer(), ffi_string())
+#' ptr <- strdup_fn("hello")
+#' # ... use ptr ...
+#' ffi_free(ptr) # We must free because strdup allocates
+#' }
+#'
+#' @export
+ffi_free <- function(ptr) {
+  if (!inherits(ptr, "externalptr")) {
+    stop("ptr must be an external pointer")
+  }
+  .Call("R_ffi_free", ptr)
+  invisible(NULL)
+}

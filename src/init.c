@@ -20,8 +20,9 @@ SEXP R_copy_array(SEXP ptr, SEXP length, SEXP element_type);
 SEXP R_alloc_buffer(SEXP r_size);
 SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n);
 SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type);
+SEXP R_ffi_free(SEXP r_ptr);
 /*libffi versions*/
-SEXP R_libffi_version();
+SEXP R_libffi_version(void);
 /* Declare test functions */
 double test_add_double(double a, double b);
 double test_square(double x);
@@ -92,6 +93,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_alloc_buffer",            (DL_FUNC) &R_alloc_buffer,            1},
     {"R_alloc_typed_buffer",      (DL_FUNC) &R_alloc_typed_buffer,      2},
     {"R_fill_typed_buffer",       (DL_FUNC) &R_fill_typed_buffer,       3},
+    {"R_ffi_free",                (DL_FUNC) &R_ffi_free,                1},
     {"R_libffi_version",          (DL_FUNC) &R_libffi_version,          0},
     /* closure API */
     {"R_ffi_closures_supported",  (DL_FUNC) &R_ffi_closures_supported,  0},
