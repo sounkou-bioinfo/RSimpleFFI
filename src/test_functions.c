@@ -566,3 +566,41 @@ int test_packet_count_flags(uint8_t packed) {
     return u.flags.syn + u.flags.ack + u.flags.fin + u.flags.rst;
 }
 
+
+/* ==========================================================================
+ * Bit-field Struct Pass-by-Value Tests
+ * 
+ * These test passing bit-field structs directly (not as packed integers).
+ * This tests whether libffi can handle bit-field structs at all.
+ * ==========================================================================*/
+
+/* Function that takes bit-field struct by value */
+int test_bitfield_struct_get_mode(SettingsFlags settings) {
+    return settings.mode;
+}
+
+/* Function that returns bit-field struct by value */
+SettingsFlags test_bitfield_struct_create(int enabled, int mode, int priority) {
+    SettingsFlags settings;
+    settings.enabled = enabled & 0x1;
+    settings.mode = mode & 0x7;
+    settings.priority = priority & 0xF;
+    settings.reserved = 0;
+    return settings;
+}
+
+/* Function that takes pointer to bit-field struct */
+int test_bitfield_struct_ptr_get_mode(SettingsFlags* settings) {
+    return settings->mode;
+}
+
+/* Function that modifies bit-field struct via pointer */
+void test_bitfield_struct_ptr_set_mode(SettingsFlags* settings, int mode) {
+    settings->mode = mode & 0x7;
+}
+
+/* Function combining both: takes struct by value, returns modified struct */
+SettingsFlags test_bitfield_struct_increment_priority(SettingsFlags settings) {
+    settings.priority = (settings.priority + 1) & 0xF;
+    return settings;
+}
