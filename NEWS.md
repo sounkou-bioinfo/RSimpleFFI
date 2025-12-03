@@ -7,7 +7,7 @@
   - `ffi_extract_bit_field()` / `ffi_set_bit_field()` - single field operations
   - `ffi_create_bitfield_accessors()` - generate accessor functions for bit-field structs
 
-* Autogeneration of bindings using tinycc for preprocessing
+* Autogeneration of bindings using tinycc for preprocessing of header files
 
 
 # RSimpleFFI 1.0.1
