@@ -716,6 +716,48 @@ S7::method(
   .Call("R_get_struct_field", ptr, as.integer(field - 1), struct_type@ref)
 }
 
+#' @export
+S7::method(
+  ffi_get_field,
+  list(S7::class_any, S7::class_character, UnionType)
+) <- function(ptr, field, struct_type) {
+  field_index <- match(field, struct_type@fields)
+  if (is.na(field_index)) {
+    stop(
+      "No such field '",
+      field,
+      "' in union. Available fields: ",
+      paste(struct_type@fields, collapse = ", ")
+    )
+  }
+
+  # For unions, all fields share memory at offset 0
+  # Use union-specific C function with field type
+  field_type <- struct_type@field_types[[field_index]]
+  .Call("R_get_union_field", ptr, field_type@ref)
+}
+
+#' @export
+S7::method(
+  ffi_get_field,
+  list(S7::class_any, S7::class_integer, UnionType)
+) <- function(ptr, field, struct_type) {
+  if (field < 1 || field > length(struct_type@fields)) {
+    stop(
+      "Field index out of range: ",
+      field,
+      ". Union has ",
+      length(struct_type@fields),
+      " fields."
+    )
+  }
+
+  # For unions, all fields share memory at offset 0
+  # Use union-specific C function with field type
+  field_type <- struct_type@field_types[[field]]
+  .Call("R_get_union_field", ptr, field_type@ref)
+}
+
 #' Set field value in FFI structure
 #' @name ffi_set_field
 #' @param ptr External pointer to structure
@@ -777,6 +819,60 @@ S7::method(
     as.integer(field - 1),
     value,
     struct_type@ref
+  )
+  invisible(ptr)
+}
+
+#' @export
+S7::method(
+  ffi_set_field,
+  list(S7::class_any, S7::class_character, S7::class_any, UnionType)
+) <- function(ptr, field, value, struct_type) {
+  field_index <- match(field, struct_type@fields)
+  if (is.na(field_index)) {
+    stop(
+      "No such field '",
+      field,
+      "' in union. Available fields: ",
+      paste(struct_type@fields, collapse = ", ")
+    )
+  }
+
+  # For unions, all fields share memory at offset 0
+  # Use union-specific C function with field type
+  field_type <- struct_type@field_types[[field_index]]
+  .Call(
+    "R_set_union_field",
+    ptr,
+    value,
+    field_type@ref
+  )
+  invisible(ptr)
+}
+
+#' @export
+S7::method(
+  ffi_set_field,
+  list(S7::class_any, S7::class_integer, S7::class_any, UnionType)
+) <- function(ptr, field, value, struct_type) {
+  if (field < 1 || field > length(struct_type@fields)) {
+    stop(
+      "Field index out of range: ",
+      field,
+      ". Union has ",
+      length(struct_type@fields),
+      " fields."
+    )
+  }
+
+  # For unions, all fields share memory at offset 0
+  # Use union-specific C function with field type
+  field_type <- struct_type@field_types[[field]]
+  .Call(
+    "R_set_union_field",
+    ptr,
+    value,
+    field_type@ref
   )
   invisible(ptr)
 }

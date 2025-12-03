@@ -17,6 +17,8 @@ SEXP R_ffi_call(SEXP cif_ptr, SEXP func_ptr, SEXP args, SEXP na_check);
 SEXP R_alloc_struct(SEXP struct_type);
 SEXP R_get_struct_field(SEXP ptr, SEXP field_index, SEXP struct_type);
 SEXP R_set_struct_field(SEXP ptr, SEXP field_index, SEXP value, SEXP struct_type);
+SEXP R_get_union_field(SEXP union_ptr, SEXP field_type);
+SEXP R_set_union_field(SEXP union_ptr, SEXP value, SEXP field_type);
 SEXP R_is_null_pointer(SEXP ptr);
 SEXP R_copy_array(SEXP ptr, SEXP length, SEXP element_type);
 
@@ -120,6 +122,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_alloc_struct",            (DL_FUNC) &R_alloc_struct,            1},
     {"R_get_struct_field",        (DL_FUNC) &R_get_struct_field,        3},
     {"R_set_struct_field",        (DL_FUNC) &R_set_struct_field,        4},
+    {"R_get_union_field",         (DL_FUNC) &R_get_union_field,         2},
+    {"R_set_union_field",         (DL_FUNC) &R_set_union_field,         3},
     {"R_is_null_pointer",         (DL_FUNC) &R_is_null_pointer,         1},
     {"R_copy_array",              (DL_FUNC) &R_copy_array,              3},
     /* Array of structs support */

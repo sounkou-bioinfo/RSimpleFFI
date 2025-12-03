@@ -157,3 +157,66 @@ ffi_print_struct <- function(ptr, struct_type) {
   
   invisible(ptr)
 }
+
+#' Convert enum name to integer value
+#'
+#' Look up the integer value for a named enum constant.
+#'
+#' @param enum_type EnumType object
+#' @param name Character name of enum constant
+#' @return Integer value
+#' @export
+#' @examples
+#' \dontrun{
+#' Color <- ffi_enum(RED = 0L, GREEN = 1L, BLUE = 2L)
+#' ffi_enum_to_int(Color, "GREEN")  # 1L
+#' }
+ffi_enum_to_int <- function(enum_type, name) {
+  if (!S7::S7_inherits(enum_type, EnumType)) {
+    stop("enum_type must be an EnumType object")
+  }
+  if (!is.character(name) || length(name) != 1) {
+    stop("name must be a single character string")
+  }
+  
+  value <- enum_type@values[name]
+  if (is.na(value)) {
+    stop(
+      "No such enum constant '", name, "'. Available: ",
+      paste(names(enum_type@values), collapse = ", ")
+    )
+  }
+  
+  as.integer(value)
+}
+
+#' Convert integer value to enum name
+#'
+#' Look up the enum constant name for an integer value.
+#'
+#' @param enum_type EnumType object
+#' @param value Integer value
+#' @return Character name of enum constant (or NA if not found)
+#' @export
+#' @examples
+#' \dontrun{
+#' Color <- ffi_enum(RED = 0L, GREEN = 1L, BLUE = 2L)
+#' ffi_int_to_enum(Color, 1L)  # "GREEN"
+#' }
+ffi_int_to_enum <- function(enum_type, value) {
+  if (!S7::S7_inherits(enum_type, EnumType)) {
+    stop("enum_type must be an EnumType object")
+  }
+  if (!is.numeric(value) || length(value) != 1) {
+    stop("value must be a single integer")
+  }
+  
+  value <- as.integer(value)
+  matches <- which(enum_type@values == value)
+  
+  if (length(matches) == 0) {
+    NA_character_
+  } else {
+    names(enum_type@values)[matches[1]]
+  }
+}

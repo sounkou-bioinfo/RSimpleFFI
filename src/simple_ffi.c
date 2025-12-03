@@ -1265,6 +1265,37 @@ SEXP R_set_struct_field(SEXP r_struct_ptr, SEXP r_field_index, SEXP r_value, SEX
     return R_NilValue;
 }
 
+// Get union field value
+// Unions have all fields at offset 0, but we need to interpret via the correct type
+SEXP R_get_union_field(SEXP r_union_ptr, SEXP r_field_type) {
+    void* union_ptr = R_ExternalPtrAddr(r_union_ptr);
+    ffi_type* field_type = (ffi_type*)R_ExternalPtrAddr(r_field_type);
+    
+    if (!union_ptr) Rf_error("Invalid union pointer");
+    if (!field_type) Rf_error("Invalid field type");
+    
+    // All union fields are at offset 0
+    return convert_native_to_r(union_ptr, field_type);
+}
+
+// Set union field value
+// Unions have all fields at offset 0, but we need to write with the correct type
+SEXP R_set_union_field(SEXP r_union_ptr, SEXP r_value, SEXP r_field_type) {
+    void* union_ptr = R_ExternalPtrAddr(r_union_ptr);
+    ffi_type* field_type = (ffi_type*)R_ExternalPtrAddr(r_field_type);
+    
+    if (!union_ptr) Rf_error("Invalid union pointer");
+    if (!field_type) Rf_error("Invalid field type");
+    
+    // Convert R value to native
+    void* value_ptr = convert_r_to_native(r_value, field_type);
+    
+    // All union fields are at offset 0, write to beginning
+    memcpy(union_ptr, value_ptr, field_type->size);
+    
+    return R_NilValue;
+}
+
 // Check if pointer is NULL
 SEXP R_is_null_pointer(SEXP r_ptr) {
     if (TYPEOF(r_ptr) != EXTPTRSXP) {

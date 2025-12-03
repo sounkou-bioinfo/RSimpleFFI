@@ -42,6 +42,18 @@ S7::method(ffi_alloc, UnionType) <- function(type, n = 1L) {
   .Call("R_alloc_typed_buffer", type@ref, as.integer(n))
 }
 
+#' @export
+S7::method(ffi_alloc, EnumType) <- function(type, n = 1L) {
+  if (!S7::S7_inherits(type, EnumType)) {
+    stop("type must be an EnumType object")
+  }
+  if (length(n) != 1 || !is.numeric(n) || n < 1) {
+    stop("n must be a positive integer")
+  }
+  # Allocate based on underlying type
+  .Call("R_alloc_typed_buffer", type@underlying_type@ref, as.integer(n))
+}
+
 #' Get element from struct array
 #'
 #' Returns a pointer to the i-th struct in a contiguous array of structs.
