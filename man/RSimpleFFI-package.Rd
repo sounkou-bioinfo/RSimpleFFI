@@ -6,7 +6,7 @@
 \alias{RSimpleFFI-package}
 \title{RSimpleFFI: Simple Foreign Function Interface using 'S7' and 'libffi'}
 \description{
-Simple Foreign Function Interface for 'R' using 'libffi' and 'S7' classes. Supports calling 'C' functions with type conversion and struct handling. Includes standard 'C' types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), floating point types, and complex struct types. Experimental header parsing using 'tinycc' enables automatic generation of 'R' bindings from 'C' header files, simplifying package development for 'C' libraries.
+Simple Foreign Function Interface for 'R' using 'libffi' and 'S7' classes. Supports calling 'C' functions with type conversion and struct handling. Includes standard 'C' types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), floating point types, and complex struct types. Experimental header parsing using 'tinycc' as `C` preprocessor enables automatic generation of 'R' bindings from 'C' header files, simplifying package development for 'C' libraries.
 }
 \seealso{
 Useful links:

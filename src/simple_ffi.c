@@ -22,6 +22,9 @@
 #  endif
 #endif
 
+// Forward declarations for packed struct support
+static size_t calculate_packed_struct_size(ffi_type* struct_type, int pack);
+
 
 
 /*
@@ -245,10 +248,18 @@ static void struct_type_finalizer(SEXP extPtr) {
 }
 
 // Create structure FFI type
-SEXP R_create_struct_ffi_type(SEXP r_field_types) {
+// Create structure FFI type
+// pack: packing alignment (0 or NULL for natural alignment, 1/2/4/8/16 for packed)
+SEXP R_create_struct_ffi_type(SEXP r_field_types, SEXP r_pack) {
     int num_fields = LENGTH(r_field_types);
     if (num_fields == 0) {
         Rf_error("Structure must have at least one field");
+    }
+    
+    // Get pack value (0 means natural alignment)
+    int pack = 0;
+    if (r_pack != R_NilValue && LENGTH(r_pack) > 0) {
+        pack = INTEGER(r_pack)[0];
     }
     
     // Allocate array for field types (+ NULL terminator)
@@ -287,6 +298,17 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types) {
         free(field_types);
         free(struct_type);
         Rf_error("Failed to compute struct layout");
+    }
+    
+    // Apply pack to alignment and size
+    // This affects how this struct is placed when used as a field in another struct
+    if (pack > 0) {
+        // Set reduced alignment
+        if (struct_type->alignment > (unsigned short)pack) {
+            struct_type->alignment = (unsigned short)pack;
+        }
+        // Also set packed size so nested structs work correctly
+        struct_type->size = calculate_packed_struct_size(struct_type, pack);
     }
     
    SEXP extPtr = R_MakeExternalPtr(struct_type, R_NilValue, R_NilValue);

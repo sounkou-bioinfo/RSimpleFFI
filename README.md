@@ -649,10 +649,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 450612177
+#> [1] 1491274507
 rand_value <- rand_func()
 rand_value
-#> [1] 753706019
+#> [1] 283968821
 dll_unload(libc_path)
 ```
 
@@ -674,7 +674,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x619bc30d3a10>
+#> <pointer: 0x5ca44fbc4880>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -765,8 +765,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.2µs     29µs    35885.    78.2KB      0  
-#> 2 ffi_call     97.1µs    101µs     9296.    78.7KB     93.9
+#> 1 native_r       13µs   28.8µs    35690.    78.2KB      0  
+#> 2 ffi_call     92.9µs   98.2µs     9743.    78.7KB     98.4
 dll_unload(lib_path)
 ```
 
@@ -848,7 +848,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x619bc9498620>
+#> <pointer: 0x5ca455e95d20>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -880,8 +880,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.49ms   2.58ms      366.    78.2KB     19.3
-#> 2 c_ffi      106.47µs 127.72µs     7652.    78.7KB      0
+#> 1 r            2.52ms   2.72ms      359.    78.2KB     18.9
+#> 2 c_ffi       99.54µs 116.52µs     8222.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -963,7 +963,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764784813
+#> [1] 1764789096
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1004,7 +1004,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 19:00:13.35094\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 20:11:36.244817\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1061,8 +1061,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file1bf26eb8195d.h
-#> # Generated on: 2025-12-03 19:00:13.373576
+#> # Auto-generated R bindings for filefc2015ae4c17.h
+#> # Generated on: 2025-12-03 20:11:36.267577
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().

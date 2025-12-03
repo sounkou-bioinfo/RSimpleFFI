@@ -638,7 +638,7 @@ ffi_struct <- function(..., pack = NULL) {
   field_names <- names(fields)
   field_refs <- lapply(fields, function(f) f@ref)
 
-  struct_ref <- .Call("R_create_struct_ffi_type", field_refs)
+  struct_ref <- .Call("R_create_struct_ffi_type", field_refs, pack)
   struct_size <- .Call("R_get_ffi_type_size", struct_ref)
 
   StructType(
