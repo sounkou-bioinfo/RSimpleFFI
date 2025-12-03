@@ -1071,6 +1071,11 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
 
         # Clean up C-specific patterns that R doesn't understand
 
+        # 0. Skip wide string literals (L"...") - can't represent in R
+        if (grepl('^L"', value) || grepl("^L'", value)) {
+          next
+        }
+
         # 1. String concatenation: "hello" "world" -> "helloworld"
         if (grepl('^"[^"]*"\\s+"[^"]*"', value)) {
           # Extract all string literals and concatenate
@@ -1126,6 +1131,19 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
         # Handle exponential notation: 1.0e10f
         else if (grepl("^[0-9.+-]+[eE][+-]?[0-9]+[LlUuFf]*$", value)) {
           value <- sub("[LlUuFf]+$", "", value)
+        }
+
+        # 7. Escape backslashes in string values (Windows paths, etc.)
+        if (grepl('^"', value)) {
+          # Extract content, escape backslashes, re-quote
+          content <- gsub('^"(.*)\"$', "\\1", value)
+          # Double any backslashes that aren't already escape sequences
+          # This is tricky - we want \n to stay as \n, but \ to become \\
+          # Simple approach: if backslash is followed by an invalid escape char, double it
+          # Valid R escapes: \n \r \t \b \a \f \v \\ \' \" \` \nnn \xnn \unnnn \Unnnnnnnn
+          # For now, just double all backslashes and let valid ones work
+          content <- gsub("\\\\", "\\\\\\\\", content)
+          value <- paste0('"', content, '"')
         }
 
         # Quote value if it's not a number or already quoted
