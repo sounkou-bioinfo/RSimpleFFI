@@ -607,10 +607,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 4050168
+#> [1] 501681217
 rand_value <- rand_func()
 rand_value
-#> [1] 252912524
+#> [1] 1674072837
 dll_unload(libc_path)
 ```
 
@@ -632,7 +632,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x6392cf3a7170>
+#> <pointer: 0x63729fc1dde0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -723,8 +723,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.9µs   31.1µs    31893.    78.2KB        0
-#> 2 ffi_call    133.4µs  146.6µs     6399.    78.7KB        0
+#> 1 native_r     21.1µs   54.1µs    12626.    78.2KB        0
+#> 2 ffi_call    223.3µs  299.6µs     2737.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -806,7 +806,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x6392d1c597e0>
+#> <pointer: 0x6372a135f300>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -838,8 +838,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r             3.3ms   3.63ms      274.    78.2KB     14.4
-#> 2 c_ffi         174µs    196µs     4780.    78.7KB      0
+#> 1 r            4.78ms   5.28ms      178.    78.2KB     9.38
+#> 2 c_ffi       227.6µs 260.45µs     3640.    78.7KB     0
 
 dll_unload(lib_path)
 ```
@@ -923,7 +923,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764770669
+#> [1] 1764770991
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -964,7 +964,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:04:28.73025\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:09:50.59485\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"
 
 # The generated code includes:
 # - Constants from #define
@@ -1021,8 +1021,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for filed3290690c603e.h
-#> # Generated on: 2025-12-03 18:04:28.76619
+#> # Auto-generated R bindings for filed431a72229a26.h
+#> # Generated on: 2025-12-03 18:09:50.641245
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -1032,7 +1032,7 @@ cat(substr(libc_code, 1, 600))
 #> #  - char*: use ffi_string(), automatically converts to/from R character
 #> #  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()
 #> #  - Struct fields: access with ffi_get_field() and ffi_set_field()
-#> #  - Union fields: same as structs,
+#> #  - Union fields: same as structs
 
 # Source the bindings
 tmpfile <- tempfile(fileext = ".R")
@@ -1083,12 +1083,12 @@ generate_package_from_headers(
 #> ========================================
 #> 
 #> Generated files:
-#>   - /tmp/RtmpK0oQI2/filed329062590ff6/zzz.R 
-#>   - /tmp/RtmpK0oQI2/filed329062590ff6/simple_types_bindings.R 
-#>   - /tmp/RtmpK0oQI2/filed329062590ff6/helpers.R 
+#>   - /tmp/RtmpE14ucd/filed431a61a2ca/zzz.R 
+#>   - /tmp/RtmpE14ucd/filed431a61a2ca/simple_types_bindings.R 
+#>   - /tmp/RtmpE14ucd/filed431a61a2ca/helpers.R 
 #> 
 #> Next steps:
-#> 1. Review generated R files in /tmp/RtmpK0oQI2/filed329062590ff6 
+#> 1. Review generated R files in /tmp/RtmpE14ucd/filed431a61a2ca 
 #> 2. Add DESCRIPTION file with dependencies: RSimpleFFI
 #> 3. Generate NAMESPACE with: devtools::document()
 #> 4. Build package: R CMD build
@@ -1136,58 +1136,45 @@ finalized.
 
 ### Bit-fields
 
-libffi does not support bit-fields (they’re compiler/platform-specific).
-Use manual bit manipulation instead:
+libffi does not support passing bit-field structs by value (they’re
+compiler/platform-specific). The workaround is to model them as packed
+integers.
 
-``` r
-# Create accessors for bit-field layout
-settings <- ffi_create_bitfield_accessors(
-  list(enabled = 1L, mode = 3L, priority = 4L)
-)
+**The Problem:** If C code has this:
 
-# Pack values
-packed <- settings$pack(list(enabled = 1L, mode = 5L, priority = 10L))
-packed
-#> [1] 171
-
-# Access fields
-settings$get(packed, "mode")
-#> [1] 5
-
-# Pass to C function as uint32_t
-verify <- ffi_function("test_bitfield_verify", ffi_int(), 
-                       ffi_uint32(), ffi_int(), ffi_int(), ffi_int())
-verify(as.integer(packed), 1L, 5L, 10L)
-#> [1] 1
-
-# Modify in C, read in R
-increment <- ffi_function("test_bitfield_increment_priority", 
-                          ffi_uint32(), ffi_uint32())
-packed <- increment(as.integer(packed))
-settings$get(packed, "priority")  # Now 11
-#> [1] 11
+``` c
+typedef struct { unsigned enabled:1; mode:3; priority:4; reserved:24; } SettingsFlags;
+int get_mode(SettingsFlags settings);           // Takes struct by value
+SettingsFlags increment(SettingsFlags settings); // Returns struct by value
 ```
 
-For by-value bit-field structs, model them as packed integer types
-(`ffi_uint8/16/32/64`). Calculate size by summing bit widths and
-rounding up to the next power-of-2 byte boundary (1, 2, 4, or 8 bytes).
+**You cannot use
+[`ffi_struct()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct.md)
+for this.** libffi will fail or give incorrect results.
+
+**The Solution:** Treat bit-field structs as their underlying integer
+type. Calculate size by summing bit widths and rounding up (1, 2, 4, or
+8 bytes). For `SettingsFlags` above: 1+3+4+24 = 32 bits → use
+[`ffi_uint32()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uint32.md).
 
 ``` r
-# C struct: typedef struct { unsigned enabled:1; mode:3; priority:4; reserved:24; } SettingsFlags;
-# Total 32 bits -> use ffi_uint32()
+# C functions that internally use SettingsFlags struct but expose uint32_t interface:
+# uint32_t test_bitfield_pack(int enabled, int mode, int priority);
+# int test_bitfield_get_mode(uint32_t packed);
+# uint32_t test_bitfield_toggle_enabled(uint32_t packed);
 
-# Create a packed value using test function
+# Create a packed value
 pack_fn <- ffi_function("test_bitfield_pack", ffi_uint32(), ffi_int(), ffi_int(), ffi_int())
 packed <- pack_fn(1L, 5L, 10L)  # enabled=1, mode=5, priority=10
 packed
 #> [1] 171
 
-# Pass packed struct by value to C function
+# "Pass struct by value" - actually passing uint32_t
 get_mode_fn <- ffi_function("test_bitfield_get_mode", ffi_int(), ffi_uint32())
 get_mode_fn(as.integer(packed))
 #> [1] 5
 
-# Return modified packed struct
+# "Return struct by value" - actually returning uint32_t
 toggle_fn <- ffi_function("test_bitfield_toggle_enabled", ffi_uint32(), ffi_uint32())
 toggled <- toggle_fn(as.integer(packed))
 
@@ -1197,6 +1184,48 @@ get_enabled_fn(as.integer(packed))    # Original: 1
 #> [1] 1
 get_enabled_fn(as.integer(toggled))   # Toggled: 0
 #> [1] 0
+```
+
+**Passing by Pointer:** Bit-field structs can also be passed by pointer:
+
+``` r
+# C functions: int test_bitfield_struct_ptr_get_mode(SettingsFlags* settings);
+#              void test_bitfield_struct_ptr_set_mode(SettingsFlags* settings, int mode);
+
+# Allocate buffer and pack initial value
+buf <- ffi_alloc(ffi_int(), 1L)  # uint32_t and int are same size
+pack_fn <- ffi_function("test_bitfield_pack", ffi_uint32(), ffi_int(), ffi_int(), ffi_int())
+packed <- pack_fn(1L, 3L, 7L)
+ffi_fill_typed_buffer(buf, as.integer(packed), ffi_int())
+#> NULL
+
+# Read field via pointer
+ptr_get_fn <- ffi_function("test_bitfield_struct_ptr_get_mode", ffi_int(), ffi_pointer())
+ptr_get_fn(buf)
+#> [1] 3
+
+# Modify field via pointer
+ptr_set_fn <- ffi_function("test_bitfield_struct_ptr_set_mode", ffi_void(), ffi_pointer(), ffi_int())
+ptr_set_fn(buf, 5L)
+#> NULL
+
+# Verify modification
+ptr_get_fn(buf)
+#> [1] 5
+```
+
+For convenient access, use bitfield helpers:
+
+``` r
+settings <- ffi_create_bitfield_accessors(
+  list(enabled = 1L, mode = 3L, priority = 4L)
+)
+
+packed <- settings$pack(list(enabled = 1L, mode = 5L, priority = 10L))
+settings$get(packed, "mode")
+#> [1] 5
+settings$get(packed, "priority")
+#> [1] 10
 ```
 
 Helper functions:
