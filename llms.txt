@@ -286,6 +286,82 @@ ffi_field_info(Mixed, "b")
 #> FieldInfo('b' type=double, offset=8, size=8)
 ```
 
+### Enumerations
+
+Enums map named constants to integer values, useful for flags, status
+codes, or options:
+
+``` r
+# Define an enum type
+Color <- ffi_enum(RED = 0L, GREEN = 1L, BLUE = 2L)
+
+# Allocate enum value
+color_ptr <- ffi_alloc(Color)
+
+# Convert between names and integers
+ffi_enum_to_int(Color, "GREEN")
+#> [1] 1
+ffi_int_to_enum(Color, 1L)
+#> [1] "GREEN"
+
+# Use enums in structs
+Pixel <- ffi_struct(
+  color = Color,
+  intensity = ffi_uint8()
+)
+
+pixel <- ffi_alloc(Pixel)
+ffi_set_field(pixel, "color", ffi_enum_to_int(Color, "RED"), Pixel)
+ffi_set_field(pixel, "intensity", 255L, Pixel)
+
+color_val <- ffi_get_field(pixel, "color", Pixel)
+ffi_int_to_enum(Color, color_val)
+#> [1] "RED"
+```
+
+### Unions
+
+Unions allow multiple fields to share the same memory location, useful
+for variant types or memory-efficient data structures:
+
+``` r
+# Define a union (all fields share the same memory)
+Value <- ffi_union(
+  as_int = ffi_int(),
+  as_float = ffi_float(),
+  as_bytes = ffi_array_type(ffi_uint8(), 4L)
+)
+
+# Allocate union
+val <- ffi_alloc(Value)
+
+# Write as integer
+ffi_set_field(val, "as_int", 0x41424344L, Value)
+
+# Read back as integer
+ffi_get_field(val, "as_int", Value)
+#> [1] 1094861636
+
+# Read the same memory as float (reinterprets the bits)
+ffi_get_field(val, "as_float", Value)
+#> [1] 12.14142
+
+# Tagged union example (union + tag field)
+TaggedValue <- ffi_struct(
+  tag = ffi_int(),  # 0=int, 1=float
+  data = Value
+)
+
+tagged <- ffi_alloc(TaggedValue)
+ffi_set_field(tagged, "tag", 1L, TaggedValue)
+
+# Access nested union
+data_ptr <- ffi_get_field(tagged, "data", TaggedValue)
+ffi_set_field(data_ptr, "as_float", 3.14, Value)
+ffi_get_field(data_ptr, "as_float", Value)
+#> [1] 3.14
+```
+
 ## Function Calling
 
 ### Basic Function Calls
@@ -531,10 +607,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 902957152
+#> [1] 1361089009
 rand_value <- rand_func()
 rand_value
-#> [1] 1114337491
+#> [1] 917625373
 dll_unload(libc_path)
 ```
 
@@ -556,7 +632,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5f31be3ac840>
+#> <pointer: 0x653a6580f7b0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -647,8 +723,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     14.2µs   32.1µs    30535.    78.2KB      0  
-#> 2 ffi_call    124.1µs  142.5µs     6518.    78.7KB     65.8
+#> 1 native_r     15.2µs   35.8µs    27513.    78.2KB        0
+#> 2 ffi_call    150.5µs  168.6µs     5543.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -730,7 +806,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5f31c22b5320>
+#> <pointer: 0x653a67278000>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -762,8 +838,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            3.19ms   3.53ms      272.    78.2KB     14.3
-#> 2 c_ffi      135.28µs 165.18µs     5712.    78.7KB      0
+#> 1 r            3.33ms   3.69ms      259.    78.2KB     13.7
+#> 2 c_ffi       166.6µs 202.15µs     4268.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -847,7 +923,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764753000
+#> [1] 1764761393
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -888,7 +964,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 13:09:59.734218\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 15:29:52.593786\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -945,8 +1021,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file5bbc28d2272e.h
-#> # Generated on: 2025-12-03 13:09:59.766163
+#> # Auto-generated R bindings for file9916a389b670d.h
+#> # Generated on: 2025-12-03 15:29:52.628616
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -959,7 +1035,7 @@ cat(substr(libc_code, 1, 600))
 #> 
 #> # Function wrappers
 #> 
-#> #' Wrapper fo
+#> #' Wrapper f
 
 # Source the bindings
 tmpfile <- tempfile(fileext = ".R")
@@ -1010,12 +1086,12 @@ generate_package_from_headers(
 #> ========================================
 #> 
 #> Generated files:
-#>   - /tmp/RtmpnvorU1/file5bbc226479c3c/zzz.R 
-#>   - /tmp/RtmpnvorU1/file5bbc226479c3c/simple_types_bindings.R 
-#>   - /tmp/RtmpnvorU1/file5bbc226479c3c/helpers.R 
+#>   - /tmp/Rtmp6zUMFL/file9916a52c50d66/zzz.R 
+#>   - /tmp/Rtmp6zUMFL/file9916a52c50d66/simple_types_bindings.R 
+#>   - /tmp/Rtmp6zUMFL/file9916a52c50d66/helpers.R 
 #> 
 #> Next steps:
-#> 1. Review generated R files in /tmp/RtmpnvorU1/file5bbc226479c3c 
+#> 1. Review generated R files in /tmp/Rtmp6zUMFL/file9916a52c50d66 
 #> 2. Add DESCRIPTION file with dependencies: RSimpleFFI
 #> 3. Generate NAMESPACE with: devtools::document()
 #> 4. Build package: R CMD build
@@ -1059,9 +1135,9 @@ ffi_print_struct(pt, Point)
 
 Current limitations include unnecessary copying, lack of protection,
 potential memory leaks, and type objects are C pointers that are never
-finalized. We do not support complex types, unions or special packing
-for alignment for Structs. This is ABI level access to C Routines in
-dynamic libraries, so care must be taken to alignment issues.
+finalized. We do not support complex types or special packing for
+alignment for Structs. This is ABI level access to C Routines in dynamic
+libraries, so care must be taken to alignment issues.
 
 ## License
 
