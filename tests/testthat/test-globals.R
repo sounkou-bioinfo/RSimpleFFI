@@ -26,6 +26,16 @@ test_that("ffi_copy_array works with global arrays", {
 })
 
 test_that("ffi_deref_pointer works with R_GlobalEnv", {
+    # On Windows, we need to explicitly load R.dll to access R_GlobalEnv
+    r_lib_handle <- NULL
+    if (.Platform$OS.type == "windows") {
+        r_lib_handle <- dll_load_r()
+        if (is.null(r_lib_handle)) {
+            skip("Could not load R library")
+        }
+        on.exit(dll_unload(r_lib_handle), add = TRUE)
+    }
+    
     addr <- getNativeSymbolInfo("R_GlobalEnv")$address
     globalenv_sexp <- ffi_deref_pointer(addr)
     expect_true(typeof(globalenv_sexp) == "externalptr")
@@ -33,6 +43,16 @@ test_that("ffi_deref_pointer works with R_GlobalEnv", {
 })
 
 test_that("can call R functions via C API using R_GlobalEnv", {
+    # On Windows, we need to explicitly load R.dll to access R_GlobalEnv
+    r_lib_handle <- NULL
+    if (.Platform$OS.type == "windows") {
+        r_lib_handle <- dll_load_r()
+        if (is.null(r_lib_handle)) {
+            skip("Could not load R library")
+        }
+        on.exit(dll_unload(r_lib_handle), add = TRUE)
+    }
+    
     # Get R_GlobalEnv
     R_GlobalEnv <- ffi_deref_pointer(getNativeSymbolInfo("R_GlobalEnv")$address)
 

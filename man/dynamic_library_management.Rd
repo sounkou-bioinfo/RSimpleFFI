@@ -6,6 +6,7 @@
 \alias{dll_symbol}
 \alias{dll_compile_and_load}
 \alias{dll_load_system}
+\alias{dll_load_r}
 \title{Load a shared library/DLL}
 \usage{
 dll_load(filename, now = TRUE, local = TRUE, verbose = FALSE)
@@ -25,6 +26,8 @@ dll_compile_and_load(
 )
 
 dll_load_system(lib_name, verbose = FALSE)
+
+dll_load_r(verbose = FALSE)
 }
 \arguments{
 \item{filename}{Path to the shared library}
@@ -63,6 +66,8 @@ dyn.unload result invisibly
 Symbol information including address as external pointer
 
 Library handle that can be used with dll_* functions
+
+Library handle or NULL if not found
 
 Library handle or NULL if not found
 }

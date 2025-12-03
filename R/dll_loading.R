@@ -397,3 +397,46 @@ dll_load_system <- function(lib_name, verbose = FALSE) {
   warning("System library not found: ", lib_name)
   NULL
 }
+
+#' @name dll_load_r
+#' @title Load the R shared library
+#' Load the R shared library (libR.so, libR.dylib, or R.dll) to access
+#' R internal symbols like R_GlobalEnv, R_NilValue, etc.
+#' @param verbose Print loading information (default FALSE)
+#' @return Library handle or NULL if not found
+#' @rdname dynamic_library_management
+#' @export
+dll_load_r <- function(verbose = FALSE) {
+  r_home <- R.home()
+  
+  # Determine library name and path based on OS
+  if (.Platform$OS.type == "windows") {
+    lib_name <- "R.dll"
+    lib_path <- file.path(r_home, "bin", .Platform$r_arch, lib_name)
+  } else if (Sys.info()["sysname"] == "Darwin") {
+    lib_name <- "libR.dylib"
+    lib_path <- file.path(r_home, "lib", lib_name)
+  } else {
+    lib_name <- "libR.so"
+    lib_path <- file.path(r_home, "lib", lib_name)
+  }
+  
+  if (!file.exists(lib_path)) {
+    warning("R library not found at: ", lib_path)
+    return(NULL)
+  }
+  
+  tryCatch(
+    {
+      handle <- dll_load(lib_path, verbose = verbose)
+      if (verbose) {
+        message("Loaded R library from: ", lib_path)
+      }
+      return(handle)
+    },
+    error = function(e) {
+      warning("Failed to load R library: ", e$message)
+      return(NULL)
+    }
+  )
+}
