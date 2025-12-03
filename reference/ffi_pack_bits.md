@@ -1,0 +1,48 @@
+# Pack bit-fields into an integer
+
+Packs multiple values into a single integer according to specified bit
+widths. This is useful when working with C structures that use
+bit-fields, which are not directly supported by libffi.
+
+## Usage
+
+``` r
+ffi_pack_bits(values, widths, base_type = ffi_uint32())
+```
+
+## Arguments
+
+- values:
+
+  Integer vector of values to pack
+
+- widths:
+
+  Integer vector of bit widths for each value
+
+- base_type:
+
+  FFI type for the result (default: ffi_uint32())
+
+## Value
+
+Packed integer value
+
+## Details
+
+Values are packed from LSB to MSB (least significant bit to most
+significant bit). Each value is masked to its specified width and
+shifted into position.
+
+## Examples
+
+``` r
+# Pack three bit-fields: enabled (1 bit), mode (3 bits), priority (4 bits)
+packed <- ffi_pack_bits(c(1L, 5L, 12L), c(1L, 3L, 4L))
+# Result: 0b1100101 = 0x65 = 101
+
+# Verify by unpacking
+ffi_unpack_bits(packed, c(1L, 3L, 4L))
+#> [1]  1  5 12
+# [1]  1  5 12
+```

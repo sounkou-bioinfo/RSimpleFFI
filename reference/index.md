@@ -67,6 +67,8 @@
   : Copy array from native memory
 - [`ffi_copy_array_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array_type.md)
   : Copy array from native memory (ArrayType version)
+- [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md)
+  : Create accessor functions for a bit-field structure
 - [`ffi_deref_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_deref_pointer.md)
   : Dereference a pointer
 - [`ffi_double()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.md)
@@ -75,6 +77,8 @@
   : Create FFI enumeration type
 - [`ffi_enum_to_int()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_enum_to_int.md)
   : Convert enum name to integer value
+- [`ffi_extract_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_bit_field.md)
+  : Extract a single bit-field from a packed value
 - [`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md)
   : Get field information from a struct type
 - [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
@@ -115,6 +119,8 @@
   : Create a NULL pointer
 - [`ffi_offsetof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.md)
   : Get byte offset of a field in a structure
+- [`ffi_pack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits.md)
+  : Pack bit-fields into an integer
 - [`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md)
   : Parse C header file and create structured result
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
@@ -125,6 +131,8 @@
   : Char FFI type
 - [`ffi_read_global()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_read_global.md)
   : Read a global variable from a shared library
+- [`ffi_set_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_bit_field.md)
+  : Set a single bit-field in a packed value
 - [`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
   : Set field value in FFI structure
 - [`ffi_short()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_short.md)
@@ -167,6 +175,8 @@
   : ulonglong FFI type
 - [`ffi_union()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_union.md)
   : Create FFI union type
+- [`ffi_unpack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_unpack_bits.md)
+  : Unpack bit-fields from an integer
 - [`ffi_ushort()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.md)
   : Ushort FFI type
 - [`ffi_void()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.md)

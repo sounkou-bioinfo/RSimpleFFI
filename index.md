@@ -1138,9 +1138,63 @@ ffi_print_struct(pt, Point)
 
 Current limitations include unnecessary copying, lack of protection,
 potential memory leaks, and type objects are C pointers that are never
-finalized. We do not support complex types or special packing for
-alignment for Structs. This is ABI level access to C Routines in dynamic
-libraries, so care must be taken to alignment issues.
+finalized.
+
+### Bit-fields and Struct Packing
+
+**RSimpleFFI does not support bit-fields** in C structures. This is an
+inherent limitation of libffi. As stated in the libffi manual (section
+2.3.2):
+
+> Note that ‘libffi’ has no special support for bit-fields. You must
+> manage these manually.
+
+If you attempt to parse a header file containing structs with
+bit-fields, you will receive a warning:
+
+``` r
+# Example C struct with bit-fields:
+# typedef struct {
+#   unsigned int enabled : 1;
+#   unsigned int mode : 3;
+#   unsigned int reserved : 4;
+# } Flags;
+
+Bindings <- parse_and_generate_bindings("myheader.h")
+#> Warning: Struct 'Flags' contains bit-fields which are not supported by libffi.
+#>   Fields: 'enabled : 1', 'mode : 3', 'reserved : 4'
+#>   See BITFIELDS_STRATEGY.md for workarounds.
+```
+
+**Workarounds:** See `BITFIELDS_STRATEGY.md` for comprehensive
+strategies including:
+
+- Redesigning structs to use full integer types
+- Manual bit manipulation in R using
+  [`bitwShiftL()`](https://rdrr.io/r/base/bitwise.html) and
+  [`bitwAnd()`](https://rdrr.io/r/base/bitwise.html)
+- Writing C wrapper functions that convert between bit-field and
+  standard structs
+- Working with raw memory buffers
+
+### Struct Packing
+
+We do not support special packing or alignment attributes
+(`#pragma pack`, `__attribute__((packed))`). Struct layout is computed
+by libffi using the platform’s native ABI rules. This is ABI level
+access to C Routines in dynamic libraries, so care must be taken with
+alignment issues.
+
+For cross-platform compatibility, document your assumptions about struct
+layout and test on each target platform.
+
+### Unions
+
+Union support has limitations on certain ABIs (particularly AMD64). When
+mixing float and integer types, the calling convention may not be
+correctly detected. **Recommendation:** Pass unions by pointer rather
+than by value whenever possible. See `BITFIELDS_STRATEGY.md` for
+details.
 
 ## License
 

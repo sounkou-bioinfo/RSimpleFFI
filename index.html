@@ -1077,7 +1077,47 @@
 <div class="section level2">
 <h2 id="limitations-and-issues">Limitations and issues<a class="anchor" aria-label="anchor" href="#limitations-and-issues"></a>
 </h2>
-<p>Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types or special packing for alignment for Structs. This is ABI level access to C Routines in dynamic libraries, so care must be taken to alignment issues.</p>
+<p>Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized.</p>
+<div class="section level3">
+<h3 id="bit-fields-and-struct-packing">Bit-fields and Struct Packing<a class="anchor" aria-label="anchor" href="#bit-fields-and-struct-packing"></a>
+</h3>
+<p><strong>RSimpleFFI does not support bit-fields</strong> in C structures. This is an inherent limitation of libffi. As stated in the libffi manual (section 2.3.2):</p>
+<blockquote>
+<p>Note that ‘libffi’ has no special support for bit-fields. You must manage these manually.</p>
+</blockquote>
+<p>If you attempt to parse a header file containing structs with bit-fields, you will receive a warning:</p>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Example C struct with bit-fields:</span></span>
+<span><span class="co"># typedef struct {</span></span>
+<span><span class="co">#   unsigned int enabled : 1;</span></span>
+<span><span class="co">#   unsigned int mode : 3;</span></span>
+<span><span class="co">#   unsigned int reserved : 4;</span></span>
+<span><span class="co"># } Flags;</span></span>
+<span></span>
+<span><span class="va">Bindings</span> <span class="op">&lt;-</span> <span class="fu">parse_and_generate_bindings</span><span class="op">(</span><span class="st">"myheader.h"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Struct 'Flags' contains bit-fields which are not supported by libffi.</span></span>
+<span><span class="co">#&gt;   Fields: 'enabled : 1', 'mode : 3', 'reserved : 4'</span></span>
+<span><span class="co">#&gt;   See BITFIELDS_STRATEGY.md for workarounds.</span></span></code></pre></div>
+<p><strong>Workarounds:</strong> See <code>BITFIELDS_STRATEGY.md</code> for comprehensive strategies including:</p>
+<ul>
+<li>Redesigning structs to use full integer types</li>
+<li>Manual bit manipulation in R using <code><a href="https://rdrr.io/r/base/bitwise.html" class="external-link">bitwShiftL()</a></code> and <code><a href="https://rdrr.io/r/base/bitwise.html" class="external-link">bitwAnd()</a></code>
+</li>
+<li>Writing C wrapper functions that convert between bit-field and standard structs</li>
+<li>Working with raw memory buffers</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="struct-packing">Struct Packing<a class="anchor" aria-label="anchor" href="#struct-packing"></a>
+</h3>
+<p>We do not support special packing or alignment attributes (<code>#pragma pack</code>, <code>__attribute__((packed))</code>). Struct layout is computed by libffi using the platform’s native ABI rules. This is ABI level access to C Routines in dynamic libraries, so care must be taken with alignment issues.</p>
+<p>For cross-platform compatibility, document your assumptions about struct layout and test on each target platform.</p>
+</div>
+<div class="section level3">
+<h3 id="unions-1">Unions<a class="anchor" aria-label="anchor" href="#unions-1"></a>
+</h3>
+<p>Union support has limitations on certain ABIs (particularly AMD64). When mixing float and integer types, the calling convention may not be correctly detected. <strong>Recommendation:</strong> Pass unions by pointer rather than by value whenever possible. See <code>BITFIELDS_STRATEGY.md</code> for details.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>

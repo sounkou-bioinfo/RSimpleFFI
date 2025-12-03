@@ -1138,9 +1138,63 @@ ffi_print_struct(pt, Point)
 
 Current limitations include unnecessary copying, lack of protection,
 potential memory leaks, and type objects are C pointers that are never
-finalized. We do not support complex types or special packing for
-alignment for Structs. This is ABI level access to C Routines in dynamic
-libraries, so care must be taken to alignment issues.
+finalized.
+
+### Bit-fields and Struct Packing
+
+**RSimpleFFI does not support bit-fields** in C structures. This is an
+inherent limitation of libffi. As stated in the libffi manual (section
+2.3.2):
+
+> Note that ‘libffi’ has no special support for bit-fields. You must
+> manage these manually.
+
+If you attempt to parse a header file containing structs with
+bit-fields, you will receive a warning:
+
+``` r
+# Example C struct with bit-fields:
+# typedef struct {
+#   unsigned int enabled : 1;
+#   unsigned int mode : 3;
+#   unsigned int reserved : 4;
+# } Flags;
+
+Bindings <- parse_and_generate_bindings("myheader.h")
+#> Warning: Struct 'Flags' contains bit-fields which are not supported by libffi.
+#>   Fields: 'enabled : 1', 'mode : 3', 'reserved : 4'
+#>   See BITFIELDS_STRATEGY.md for workarounds.
+```
+
+**Workarounds:** See `BITFIELDS_STRATEGY.md` for comprehensive
+strategies including:
+
+- Redesigning structs to use full integer types
+- Manual bit manipulation in R using
+  [`bitwShiftL()`](https://rdrr.io/r/base/bitwise.html) and
+  [`bitwAnd()`](https://rdrr.io/r/base/bitwise.html)
+- Writing C wrapper functions that convert between bit-field and
+  standard structs
+- Working with raw memory buffers
+
+### Struct Packing
+
+We do not support special packing or alignment attributes
+(`#pragma pack`, `__attribute__((packed))`). Struct layout is computed
+by libffi using the platform’s native ABI rules. This is ABI level
+access to C Routines in dynamic libraries, so care must be taken with
+alignment issues.
+
+For cross-platform compatibility, document your assumptions about struct
+layout and test on each target platform.
+
+### Unions
+
+Union support has limitations on certain ABIs (particularly AMD64). When
+mixing float and integer types, the calling convention may not be
+correctly detected. **Recommendation:** Pass unions by pointer rather
+than by value whenever possible. See `BITFIELDS_STRATEGY.md` for
+details.
 
 ## License
 
@@ -1231,6 +1285,8 @@ This project is licensed under the GPL-3 License.
   : Copy array from native memory
 - [`ffi_copy_array_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array_type.md)
   : Copy array from native memory (ArrayType version)
+- [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md)
+  : Create accessor functions for a bit-field structure
 - [`ffi_deref_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_deref_pointer.md)
   : Dereference a pointer
 - [`ffi_double()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.md)
@@ -1239,6 +1295,8 @@ This project is licensed under the GPL-3 License.
   : Create FFI enumeration type
 - [`ffi_enum_to_int()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_enum_to_int.md)
   : Convert enum name to integer value
+- [`ffi_extract_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_bit_field.md)
+  : Extract a single bit-field from a packed value
 - [`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md)
   : Get field information from a struct type
 - [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
@@ -1279,6 +1337,8 @@ This project is licensed under the GPL-3 License.
   : Create a NULL pointer
 - [`ffi_offsetof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.md)
   : Get byte offset of a field in a structure
+- [`ffi_pack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits.md)
+  : Pack bit-fields into an integer
 - [`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md)
   : Parse C header file and create structured result
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
@@ -1289,6 +1349,8 @@ This project is licensed under the GPL-3 License.
   : Char FFI type
 - [`ffi_read_global()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_read_global.md)
   : Read a global variable from a shared library
+- [`ffi_set_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_bit_field.md)
+  : Set a single bit-field in a packed value
 - [`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
   : Set field value in FFI structure
 - [`ffi_short()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_short.md)
@@ -1331,6 +1393,8 @@ This project is licensed under the GPL-3 License.
   : ulonglong FFI type
 - [`ffi_union()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_union.md)
   : Create FFI union type
+- [`ffi_unpack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_unpack_bits.md)
+  : Unpack bit-fields from an integer
 - [`ffi_ushort()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.md)
   : Ushort FFI type
 - [`ffi_void()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.md)
