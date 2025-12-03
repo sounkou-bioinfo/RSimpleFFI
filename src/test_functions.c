@@ -446,3 +446,123 @@ double test_varargs_mixed_types(int npairs, ...) {
     va_end(va);
     return sum;
 }
+
+/* ==========================================================================
+ * Bit-field Test Functions
+ * 
+ * These test that our manual bit-packing strategy works correctly when
+ * interfacing with C functions that expect bit-field structs.
+ * ==========================================================================*/
+
+/* Test bit-field struct - simulated as uint32_t for FFI */
+typedef struct {
+    unsigned int enabled : 1;
+    unsigned int mode : 3;
+    unsigned int priority : 4;
+    unsigned int reserved : 24;
+} SettingsFlags;
+
+/* Union to access bit-field struct as uint32_t */
+typedef union {
+    SettingsFlags flags;
+    uint32_t packed;
+} SettingsUnion;
+
+/* Extract enabled flag from packed uint32_t */
+int test_bitfield_get_enabled(uint32_t packed) {
+    SettingsUnion u;
+    u.packed = packed;
+    return u.flags.enabled;
+}
+
+/* Extract mode from packed uint32_t */
+int test_bitfield_get_mode(uint32_t packed) {
+    SettingsUnion u;
+    u.packed = packed;
+    return u.flags.mode;
+}
+
+/* Extract priority from packed uint32_t */
+int test_bitfield_get_priority(uint32_t packed) {
+    SettingsUnion u;
+    u.packed = packed;
+    return u.flags.priority;
+}
+
+/* Create packed uint32_t from individual fields */
+uint32_t test_bitfield_pack(int enabled, int mode, int priority) {
+    SettingsUnion u;
+    u.packed = 0;
+    u.flags.enabled = enabled & 0x1;
+    u.flags.mode = mode & 0x7;
+    u.flags.priority = priority & 0xF;
+    u.flags.reserved = 0;
+    return u.packed;
+}
+
+/* Verify a packed value has expected field values */
+int test_bitfield_verify(uint32_t packed, int expected_enabled, 
+                         int expected_mode, int expected_priority) {
+    SettingsUnion u;
+    u.packed = packed;
+    
+    return (u.flags.enabled == (unsigned int)(expected_enabled & 0x1)) &&
+           (u.flags.mode == (unsigned int)(expected_mode & 0x7)) &&
+           (u.flags.priority == (unsigned int)(expected_priority & 0xF));
+}
+
+/* Increment priority field, wrapping at 15 */
+uint32_t test_bitfield_increment_priority(uint32_t packed) {
+    SettingsUnion u;
+    u.packed = packed;
+    u.flags.priority = (u.flags.priority + 1) & 0xF;
+    return u.packed;
+}
+
+/* Toggle enabled flag */
+uint32_t test_bitfield_toggle_enabled(uint32_t packed) {
+    SettingsUnion u;
+    u.packed = packed;
+    u.flags.enabled = !u.flags.enabled;
+    return u.packed;
+}
+
+/* Test with a smaller bit-field struct (8-bit) */
+typedef struct {
+    unsigned int syn : 1;
+    unsigned int ack : 1;
+    unsigned int fin : 1;
+    unsigned int rst : 1;
+    unsigned int reserved : 4;
+} PacketFlags;
+
+typedef union {
+    PacketFlags flags;
+    uint8_t packed;
+} PacketUnion;
+
+/* Check if ACK flag is set */
+int test_packet_has_ack(uint8_t packed) {
+    PacketUnion u;
+    u.packed = packed;
+    return u.flags.ack;
+}
+
+/* Create SYN+ACK packet */
+uint8_t test_packet_create_synack(void) {
+    PacketUnion u;
+    u.packed = 0;
+    u.flags.syn = 1;
+    u.flags.ack = 1;
+    u.flags.fin = 0;
+    u.flags.rst = 0;
+    return u.packed;
+}
+
+/* Count set flags in packet */
+int test_packet_count_flags(uint8_t packed) {
+    PacketUnion u;
+    u.packed = packed;
+    return u.flags.syn + u.flags.ack + u.flags.fin + u.flags.rst;
+}
+

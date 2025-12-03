@@ -54,7 +54,7 @@ generate_struct_definition <- function(struct_name, struct_def) {
   if (!is.null(bitfield_warning) && bitfield_warning$has_bitfields) {
     warning(
       sprintf(
-        "Struct '%s' contains bit-fields which are not supported by libffi.\n  Fields: %s\n  See BITFIELDS_STRATEGY.md for workarounds.",
+        "Struct '%s' contains bit-fields which are not supported by libffi.\n  Fields: %s\n  See README section 'Bit-fields and Struct Packing' for workarounds.",
         struct_name,
         paste(bitfield_warning$fields, collapse = ", ")
       ),
