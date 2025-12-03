@@ -253,6 +253,14 @@ generate_function_wrapper <- function(func_def) {
   param_types_c <- character()
   param_types_ffi <- character()
   
+  # Common C type keywords (to detect unnamed parameters)
+  c_types <- c("void", "char", "short", "int", "long", "float", "double", 
+               "signed", "unsigned", "const", "volatile", "struct", "union", 
+               "enum", "size_t", "ssize_t", "ptrdiff_t", "wchar_t",
+               "int8_t", "int16_t", "int32_t", "int64_t",
+               "uint8_t", "uint16_t", "uint32_t", "uint64_t",
+               "FILE", "_Bool", "bool")
+  
   for (part in param_parts) {
     part <- trimws(part)
     if (part == "" || part == "void") next
@@ -265,12 +273,22 @@ generate_function_wrapper <- function(func_def) {
       param_name <- gsub("\\*+", "", param_name)  # Remove *
       param_name <- gsub("\\[.*?\\]", "", param_name)  # Remove []
       param_name <- trimws(param_name)
-      if (param_name != "" && !grepl("^[0-9]", param_name)) {
-        # Escape invalid R names (underscore, reserved words, etc.)
-        param_name <- escape_r_name(param_name)
+      
+      # Check if param_name is actually a C type (meaning no variable name was provided)
+      is_type_keyword <- param_name %in% c_types
+      
+      if (param_name != "" && !grepl("^[0-9]", param_name) && !is_type_keyword) {
+        # Check for duplicate names and make unique
+        if (param_name %in% param_names) {
+          # Generate unique name if duplicate
+          param_name <- paste0("arg", length(param_names) + 1)
+        } else {
+          # Escape invalid R names (underscore, reserved words, etc.)
+          param_name <- escape_r_name(param_name)
+        }
         param_names <- c(param_names, param_name)
       } else {
-        # Generate a name for unnamed parameters
+        # Generate a name for unnamed parameters or type keywords
         param_names <- c(param_names, paste0("arg", length(param_names) + 1))
       }
       
