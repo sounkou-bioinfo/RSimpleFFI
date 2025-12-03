@@ -4,16 +4,19 @@
 \alias{ffi_all_offsets}
 \title{Get all field offsets for a struct}
 \usage{
-ffi_all_offsets(struct_type)
+ffi_all_offsets(struct_type, use_pack = TRUE)
 }
 \arguments{
 \item{struct_type}{StructType object}
+
+\item{use_pack}{Logical, whether to use the struct's pack setting. Default TRUE.}
 }
 \value{
 Named integer vector of offsets
 }
 \description{
 Returns a named integer vector with byte offsets for all fields.
+For packed structs, uses the pack alignment setting.
 }
 \examples{
 \dontrun{
@@ -21,6 +24,12 @@ Point <- ffi_struct(x = ffi_int(), y = ffi_double())
 ffi_all_offsets(Point)
 # x y
 # 0 8
+
+# Packed struct
+Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), pack = 1)
+ffi_all_offsets(Packed)
+# a b
+# 0 1
 }
 
 }

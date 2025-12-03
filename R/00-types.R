@@ -48,6 +48,7 @@ FFIType <- S7::new_class(
 #' @param ref External pointer to ffi_type
 #' @param fields Character vector of field names
 #' @param field_types List of FFIType objects for each field
+#' @param pack Integer packing alignment (NULL for default/natural alignment)
 #' @export
 StructType <- S7::new_class(
   "StructType",
@@ -55,7 +56,8 @@ StructType <- S7::new_class(
   parent = FFIType,
   properties = list(
     fields = S7::class_character,
-    field_types = S7::class_list
+    field_types = S7::class_list,
+    pack = S7::class_any # NULL or integer
   ),
   validator = function(self) {
     if (length(self@fields) != length(self@field_types)) {
@@ -64,6 +66,8 @@ StructType <- S7::new_class(
       !all(sapply(self@field_types, function(x) S7::S7_inherits(x, FFIType)))
     ) {
       "All field types must be FFIType objects"
+    } else if (!is.null(self@pack) && (!is.numeric(self@pack) || self@pack < 1 || self@pack > 16)) {
+      "pack must be NULL or an integer between 1 and 16"
     }
   }
 )
@@ -559,11 +563,48 @@ ffi_wchar_t <- function() create_builtin_type("wchar_t")
 
 
 #' Create FFI structure type
+#'
+#' Creates an FFI structure type from named field types. By default, libffi
+#' uses natural alignment (each field aligned to its size). Use the `pack`
+#' parameter to specify tighter packing similar to `#pragma pack(n)` in C.
+#'
 #' @param ... Named FFIType objects representing struct fields
+#' @param pack Integer specifying packing alignment (1, 2, 4, 8, or 16), or NULL
+#'   for default/natural alignment. When pack=1, fields are byte-aligned (no padding).
+#'
+#' @section Packing and libffi:
+#' The `pack` parameter affects how `ffi_offsetof()`, `ffi_sizeof()`,
+#' `ffi_get_field()`, and `ffi_set_field()` calculate field offsets and struct size.
+#' This is useful when working with memory buffers that use packed C structs.
+#'
+#' **Important**: libffi internally always uses natural alignment when passing
+
+#' structs by value in function calls. Packed structs work correctly when:
+#' - Reading/writing to memory buffers (ffi_alloc, ffi_get_field, ffi_set_field)
+#' - Passing struct pointers to C functions (the C code handles the packed layout)
+#' - Computing offsets for manual memory manipulation
+#'
+#' However, passing a packed struct **by value** to ffi_call may not work correctly
+#' because libffi will use natural alignment for the call.
+#'
 #' @return StructType object
 #' @keywords Types
+#' @examples
+#' # Natural alignment (default)
+#' Point <- ffi_struct(x = ffi_int(), y = ffi_int())
+#'
+#' # Packed struct (1-byte alignment)
+#' PackedData <- ffi_struct(
+#'   flag = ffi_uint8(),
+#'   value = ffi_int32(),
+#'   pack = 1
+#' )
+#'
+#' # Check sizes
+#' ffi_sizeof(Point) # Natural size
+#' ffi_sizeof(PackedData) # Packed size (smaller)
 #' @export
-ffi_struct <- function(...) {
+ffi_struct <- function(..., pack = NULL) {
   fields <- list(...)
 
   if (length(fields) == 0) {
@@ -572,6 +613,17 @@ ffi_struct <- function(...) {
 
   if (is.null(names(fields)) || any(names(fields) == "")) {
     stop("All struct fields must be named")
+  }
+
+  # Validate pack parameter
+  if (!is.null(pack)) {
+    if (!is.numeric(pack) || length(pack) != 1 || pack < 1 || pack > 16) {
+      stop("pack must be NULL or an integer between 1 and 16")
+    }
+    if (!(pack %in% c(1, 2, 4, 8, 16))) {
+      stop("pack must be a power of 2: 1, 2, 4, 8, or 16")
+    }
+    pack <- as.integer(pack)
   }
 
   # Validate all fields are FFIType objects
@@ -590,7 +642,8 @@ ffi_struct <- function(...) {
     size = struct_size,
     ref = struct_ref,
     fields = field_names,
-    field_types = unname(fields)
+    field_types = unname(fields),
+    pack = pack
   )
 }
 
@@ -693,6 +746,13 @@ S7::method(
       "' in struct. Available fields: ",
       paste(struct_type@fields, collapse = ", ")
     )
+  }
+
+  # For packed structs, use offset-based access
+  if (!is.null(struct_type@pack)) {
+    offset <- ffi_packed_offset(struct_type, field_index)
+    field_type <- struct_type@field_types[[field_index]]
+    return(.Call("R_get_struct_field_at_offset", ptr, as.integer(offset), field_type@ref))
   }
 
   .Call("R_get_struct_field", ptr, as.integer(field_index - 1), struct_type@ref)
@@ -891,6 +951,34 @@ ffi_sizeof <- S7::new_generic("ffi_sizeof", "type")
 #' @export
 S7::method(ffi_sizeof, FFIType) <- function(type) type@size
 
+#' @export
+S7::method(ffi_sizeof, StructType) <- function(type) {
+  # For packed structs, compute packed size
+  if (!is.null(type@pack)) {
+    return(ffi_packed_size(type))
+  }
+  type@size
+}
+
+#' Compute packed size for a struct
+#'
+#' Computes the total size of a struct using packed alignment rules.
+#' The size includes any trailing padding needed for array alignment.
+#' Uses C implementation for accurate compiler-matching behavior.
+#'
+#' @param struct_type StructType object with pack property set
+#' @return Integer size in bytes
+#' @keywords internal
+ffi_packed_size <- function(struct_type) {
+  pack <- struct_type@pack
+  if (is.null(pack)) {
+    return(struct_type@size)
+  }
+
+  # Use C function for packed size calculation
+  .Call("R_get_packed_struct_size", struct_type@ref, as.integer(pack))
+}
+
 
 #####################################
 #
@@ -997,8 +1085,13 @@ ffi_field_info <- function(struct_type, field) {
 #' Returns the byte offset of a field within a structure, accounting for
 #' alignment requirements. Similar to C's offsetof() macro.
 #'
+#' For packed structures (created with `pack` parameter), this function computes
+#' the offset using the specified packing alignment rather than natural alignment.
+#'
 #' @param struct_type StructType object
 #' @param field Character field name or integer field index (1-based)
+#' @param use_pack Logical, whether to use the struct's pack setting. Default TRUE.
+#'   Set to FALSE to get libffi's natural alignment offset even for packed structs.
 #' @return Integer byte offset
 #'
 #' @examples
@@ -1006,19 +1099,72 @@ ffi_field_info <- function(struct_type, field) {
 #' Point <- ffi_struct(x = ffi_int(), y = ffi_double())
 #' ffi_offsetof(Point, "x") # 0
 #' ffi_offsetof(Point, "y") # 8 (aligned to 8-byte boundary)
+#'
+#' # Packed struct example
+#' Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), pack = 1)
+#' ffi_offsetof(Packed, "b") # 1 (no padding with pack=1)
 #' }
 #'
 #' @export
-ffi_offsetof <- function(struct_type, field) {
+ffi_offsetof <- function(struct_type, field, use_pack = TRUE) {
+  if (!S7::S7_inherits(struct_type, StructType)) {
+    stop("struct_type must be a StructType object")
+  }
+
+  # Get field index
+  if (is.character(field)) {
+    field_index <- match(field, struct_type@fields)
+    if (is.na(field_index)) {
+      stop("Field '", field, "' not found in struct")
+    }
+  } else {
+    field_index <- as.integer(field)
+  }
+
+  # If struct is packed and use_pack is TRUE, compute packed offset
+  if (use_pack && !is.null(struct_type@pack)) {
+    return(ffi_packed_offset(struct_type, field_index))
+  }
+
+  # Otherwise use libffi's natural alignment
   info <- ffi_field_info(struct_type, field)
   info@offset
+}
+
+#' Compute packed offset for a field
+#'
+#' Computes the byte offset of a field using packed alignment rules.
+#' This is used internally when a struct has a pack parameter set.
+#' Uses C implementation for accurate compiler-matching behavior.
+#'
+#' @param struct_type StructType object with pack property set
+#' @param field_index Integer field index (1-based)
+#' @return Integer byte offset
+#' @keywords internal
+ffi_packed_offset <- function(struct_type, field_index) {
+  pack <- struct_type@pack
+  if (is.null(pack)) {
+    # No packing - use natural alignment via C
+    return(.Call(
+      "R_get_packed_field_offset", struct_type@ref,
+      as.integer(field_index - 1), as.integer(0)
+    ))
+  }
+
+  # Use C function for packed offset calculation
+  .Call(
+    "R_get_packed_field_offset", struct_type@ref,
+    as.integer(field_index - 1), as.integer(pack)
+  )
 }
 
 #' Get all field offsets for a struct
 #'
 #' Returns a named integer vector with byte offsets for all fields.
+#' For packed structs, uses the pack alignment setting.
 #'
 #' @param struct_type StructType object
+#' @param use_pack Logical, whether to use the struct's pack setting. Default TRUE.
 #' @return Named integer vector of offsets
 #'
 #' @examples
@@ -1027,13 +1173,31 @@ ffi_offsetof <- function(struct_type, field) {
 #' ffi_all_offsets(Point)
 #' # x y
 #' # 0 8
+#'
+#' # Packed struct
+#' Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), pack = 1)
+#' ffi_all_offsets(Packed)
+#' # a b
+#' # 0 1
 #' }
 #'
 #' @export
-ffi_all_offsets <- function(struct_type) {
+ffi_all_offsets <- function(struct_type, use_pack = TRUE) {
   if (!S7::S7_inherits(struct_type, StructType)) {
     stop("struct_type must be a StructType object")
   }
+
+  # If packed and use_pack, compute packed offsets via C
+  if (use_pack && !is.null(struct_type@pack)) {
+    offsets <- .Call(
+      "R_get_all_packed_field_offsets", struct_type@ref,
+      as.integer(struct_type@pack)
+    )
+    names(offsets) <- struct_type@fields
+    return(offsets)
+  }
+
+  # Otherwise use libffi's natural alignment
   offsets <- .Call("R_get_all_field_offsets", struct_type@ref)
   names(offsets) <- struct_type@fields
   offsets

@@ -1,5 +1,33 @@
 # Header Parsing and Code Generation (Functional Style)
 
+#' Strip C type qualifiers from a type string
+#'
+#' Removes const, volatile, restrict, _Atomic, and related qualifiers
+#' from a C type string, normalizing whitespace.
+#'
+#' @param type_str Character string containing a C type
+#' @return Cleaned type string with qualifiers removed
+#' @keywords internal
+strip_type_qualifiers <- function(type_str) {
+  # Remove qualifiers (word boundaries to avoid partial matches)
+  type_str <- gsub("\\bconst\\b", "", type_str)
+  type_str <- gsub("\\bvolatile\\b", "", type_str)
+  type_str <- gsub("\\brestrict\\b", "", type_str)
+  type_str <- gsub("\\b__restrict\\b", "", type_str)
+  type_str <- gsub("\\b__restrict__\\b", "", type_str)
+  type_str <- gsub("\\b_Atomic\\b", "", type_str)
+  type_str <- gsub("\\bregister\\b", "", type_str)
+  type_str <- gsub("\\binline\\b", "", type_str)
+  type_str <- gsub("\\b__inline\\b", "", type_str)
+  type_str <- gsub("\\b__inline__\\b", "", type_str)
+  type_str <- gsub("\\bextern\\b", "", type_str)
+  type_str <- gsub("\\bstatic\\b", "", type_str)
+  # Normalize whitespace
+
+  type_str <- gsub("\\s+", " ", type_str)
+  trimws(type_str)
+}
+
 #' Generate bit-field accessor code
 #' @param struct_name Name of the struct
 #' @param bitfield_specs Character vector of "'name : width'" strings
@@ -46,7 +74,7 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
 #' Parse C header file and create structured result
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
-#' @return List with parsed components (file, defines, structs, unions, enums, functions)
+#' @return List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
 #' @export
 ffi_parse_header <- function(header_file, includes = NULL) {
   if (!tcc_available()) {
@@ -69,6 +97,7 @@ ffi_parse_header <- function(header_file, includes = NULL) {
   unions <- tcc_extract_unions(preprocessed)
   enums <- tcc_extract_enums(preprocessed)
   functions <- tcc_extract_functions(preprocessed)
+  typedefs <- tcc_extract_typedefs(preprocessed)
 
   # Create structured result
   structure(
@@ -78,7 +107,8 @@ ffi_parse_header <- function(header_file, includes = NULL) {
       structs = structs,
       unions = unions,
       enums = enums,
-      functions = functions
+      functions = functions,
+      typedefs = typedefs
     ),
     class = "parsed_header"
   )
@@ -150,7 +180,7 @@ generate_struct_definition <- function(struct_name, struct_def) {
   # Generate field definitions
   field_defs <- character()
   for (field in struct_def) {
-    field_type <- trimws(field$type)
+    field_type <- strip_type_qualifiers(trimws(field$type))
     field_name <- field$name
 
     # Handle arrays: name[N] or name[N][M] -> extract name and sizes
@@ -309,7 +339,7 @@ generate_union_definition <- function(union_name, union_def) {
   # Generate field definitions
   field_defs <- character()
   for (field in union_def) {
-    field_type <- trimws(field$type)
+    field_type <- strip_type_qualifiers(trimws(field$type))
     field_name <- field$name
 
     # Get FFI type
@@ -346,6 +376,179 @@ generate_union_definition <- function(union_name, union_def) {
   )
 
   paste(code, collapse = "\n")
+}
+
+#' Check if a typedef can be fully resolved to a real type
+#'
+#' Recursively follows typedef chains to see if the final base type
+#' can be mapped to an FFI type. Returns FALSE for unresolvable types
+#' like `__builtin_va_list`.
+#'
+#' @param base_type The underlying C type string
+#' @param known_typedefs Named character vector of typedefs
+#' @param known_structs Character vector of known struct names
+#' @param visited Set of already-visited typedefs (to detect cycles)
+#' @return TRUE if resolvable, FALSE otherwise
+#' @keywords internal
+can_resolve_typedef <- function(base_type, known_typedefs, known_structs = character(), visited = character()) {
+  # Strip qualifiers
+  base_type <- strip_type_qualifiers(base_type)
+
+  # Avoid infinite loops from cycles
+
+  if (base_type %in% visited) {
+    return(FALSE)
+  }
+  visited <- c(visited, base_type)
+
+  # Basic type map (subset for checking)
+  basic_types <- c(
+    "char", "signed char", "unsigned char",
+    "short", "short int", "signed short", "signed short int",
+    "unsigned short", "unsigned short int",
+    "int", "signed", "signed int", "unsigned", "unsigned int",
+    "long", "long int", "signed long", "signed long int",
+    "unsigned long", "unsigned long int",
+    "long long", "long long int", "signed long long", "signed long long int",
+    "unsigned long long", "unsigned long long int",
+    "float", "double", "long double", "void",
+    "size_t", "ssize_t", "ptrdiff_t",
+    "int8_t", "int16_t", "int32_t", "int64_t",
+    "uint8_t", "uint16_t", "uint32_t", "uint64_t",
+    "bool", "_Bool"
+  )
+
+  # Pointer types are always resolvable
+  if (grepl("\\*", base_type)) {
+    return(TRUE)
+  }
+
+  # Basic types are resolvable
+  if (base_type %in% basic_types) {
+    return(TRUE)
+  }
+
+  # Struct types
+  if (grepl("^struct\\s+", base_type)) {
+    struct_name <- sub("^struct\\s+", "", base_type)
+    return(struct_name %in% known_structs)
+  }
+
+  # If it's another typedef, recursively check
+  if (base_type %in% names(known_typedefs)) {
+    underlying <- known_typedefs[[base_type]]
+    return(can_resolve_typedef(underlying, known_typedefs, known_structs, visited))
+  }
+
+  # Unknown/unresolvable type
+  FALSE
+}
+
+#' Generate R typedef alias from parsed typedef
+#'
+#' Creates R code that maps a typedef alias to its underlying FFI type.
+#' Handles simple type aliases (e.g., typedef int my_int) and struct typedefs.
+#'
+#' @param alias_name Name of the typedef alias
+#' @param base_type The underlying C type string
+#' @param known_structs Character vector of known struct names (for struct type resolution)
+#' @param known_typedefs Named character vector of already-processed typedefs (for chained resolution)
+#' @return Character string with R code, or NULL if type cannot be mapped
+#' @export
+generate_typedef_definition <- function(alias_name, base_type, known_structs = character(), known_typedefs = character()) {
+  # Strip qualifiers from base type
+  base_type <- strip_type_qualifiers(base_type)
+
+
+  # Type map for basic C types (same as in generate_struct_definition)
+  type_map <- c(
+    "char" = "ffi_char()",
+    "signed char" = "ffi_char()",
+    "unsigned char" = "ffi_uchar()",
+    "short" = "ffi_short()",
+    "short int" = "ffi_short()",
+    "signed short" = "ffi_short()",
+    "signed short int" = "ffi_short()",
+    "unsigned short" = "ffi_ushort()",
+    "unsigned short int" = "ffi_ushort()",
+    "int" = "ffi_int()",
+    "signed" = "ffi_int()",
+    "signed int" = "ffi_int()",
+    "unsigned" = "ffi_uint()",
+    "unsigned int" = "ffi_uint()",
+    "long" = "ffi_long()",
+    "long int" = "ffi_long()",
+    "signed long" = "ffi_long()",
+    "signed long int" = "ffi_long()",
+    "unsigned long" = "ffi_ulong()",
+    "unsigned long int" = "ffi_ulong()",
+    "long long" = "ffi_longlong()",
+    "long long int" = "ffi_longlong()",
+    "signed long long" = "ffi_longlong()",
+    "signed long long int" = "ffi_longlong()",
+    "unsigned long long" = "ffi_ulonglong()",
+    "unsigned long long int" = "ffi_ulonglong()",
+    "float" = "ffi_float()",
+    "double" = "ffi_double()",
+    "long double" = "ffi_longdouble()",
+    "void" = "ffi_void()",
+    "size_t" = "ffi_size_t()",
+    "ssize_t" = "ffi_ssize_t()",
+    "ptrdiff_t" = "ffi_ssize_t()",
+    "int8_t" = "ffi_int8()",
+    "int16_t" = "ffi_int16()",
+    "int32_t" = "ffi_int32()",
+    "int64_t" = "ffi_int64()",
+    "uint8_t" = "ffi_uint8()",
+    "uint16_t" = "ffi_uint16()",
+    "uint32_t" = "ffi_uint32()",
+    "uint64_t" = "ffi_uint64()",
+    "bool" = "ffi_bool()",
+    "_Bool" = "ffi_bool()"
+  )
+
+  escaped_alias <- escape_r_name(alias_name)
+
+  # Check for pointer types
+  if (grepl("\\*", base_type)) {
+    # char* or const char* -> ffi_string()
+    if (grepl("char\\s*\\*", base_type)) {
+      return(sprintf("%s <- ffi_string()  # typedef %s", escaped_alias, base_type))
+    }
+    # Other pointers -> ffi_pointer()
+    return(sprintf("%s <- ffi_pointer()  # typedef %s", escaped_alias, base_type))
+  }
+
+  # Check exact match in type_map
+  if (base_type %in% names(type_map)) {
+    return(sprintf("%s <- %s  # typedef %s", escaped_alias, type_map[[base_type]], base_type))
+  }
+
+  # Check for struct type: "struct Name"
+  if (grepl("^struct\\s+", base_type)) {
+    struct_name <- sub("^struct\\s+", "", base_type)
+    escaped_struct <- escape_r_name(struct_name)
+    if (struct_name %in% known_structs) {
+      # Reference to a known struct - alias points to the struct
+      return(sprintf("%s <- %s  # typedef struct %s", escaped_alias, escaped_struct, struct_name))
+    } else {
+      # Forward declaration or unknown struct - comment only
+      return(sprintf("# %s: forward declaration of struct %s (define struct first)", escaped_alias, struct_name))
+    }
+  }
+
+  # Check for typedef-of-typedef (base_type is another typedef)
+  # Only chain if the underlying typedef can actually be resolved
+  if (base_type %in% names(known_typedefs)) {
+    if (can_resolve_typedef(base_type, known_typedefs, known_structs)) {
+      # Chain to the underlying typedef
+      return(sprintf("%s <- %s  # typedef %s", escaped_alias, escape_r_name(base_type), base_type))
+    }
+    # Otherwise fall through to unknown type handling
+  }
+
+  # Unknown type - add as comment
+  sprintf("# %s: unknown type '%s' - manual mapping required", escaped_alias, base_type)
 }
 
 #' Escape R name with backticks if needed
@@ -417,7 +620,7 @@ generate_function_wrapper <- function(func_def) {
 
   # Function to map a C type to FFI type (handles both "type name" and "type")
   map_type_from_string <- function(type_string) {
-    type_string <- trimws(type_string)
+    type_string <- strip_type_qualifiers(trimws(type_string))
 
     # Check for pointer types (treat as ffi_pointer())
     if (grepl("\\*", type_string) && !grepl("char\\s*\\*", type_string)) {
@@ -436,11 +639,11 @@ generate_function_wrapper <- function(func_def) {
     param_decl <- trimws(param_decl)
     tokens <- strsplit(param_decl, "\\s+")[[1]]
     if (length(tokens) < 2) {
-      return(param_decl) # No variable name, just type
+      return(strip_type_qualifiers(param_decl)) # No variable name, just type
     }
     # Type is all tokens except the last (which is the variable name)
     type_part <- paste(tokens[-length(tokens)], collapse = " ")
-    return(trimws(type_part))
+    return(strip_type_qualifiers(trimws(type_part)))
   }
 
   # Parse parameters
@@ -544,6 +747,71 @@ generate_function_wrapper <- function(func_def) {
   )
 
   paste(code, collapse = "\n")
+}
+
+#' Sort typedefs by dependency order (topological sort)
+#'
+#' Ensures that typedef-of-typedef chains are ordered correctly,
+#' with base types defined before types that depend on them.
+#'
+#' @param typedefs Named character vector where names are aliases and values are base types
+#' @return Character vector of typedef names in dependency order
+#' @keywords internal
+sort_typedefs_by_dependency <- function(typedefs) {
+  if (length(typedefs) == 0) {
+    return(character())
+  }
+
+  typedef_names <- names(typedefs)
+  n <- length(typedef_names)
+
+  # Build dependency graph
+  # deps[[name]] = names that 'name' depends on (its base type if also a typedef)
+  deps <- vector("list", n)
+  names(deps) <- typedef_names
+
+  for (alias_name in typedef_names) {
+    base_type <- typedefs[[alias_name]]
+    # Check if base_type is another typedef in our list
+    if (base_type %in% typedef_names) {
+      deps[[alias_name]] <- base_type
+    } else {
+      deps[[alias_name]] <- character(0)
+    }
+  }
+
+  # Kahn's algorithm for topological sort
+  # Count incoming edges (how many typedefs depend on each)
+  in_degree <- setNames(rep(0L, n), typedef_names)
+  for (alias_name in typedef_names) {
+    for (dep in deps[[alias_name]]) {
+      in_degree[[dep]] <- in_degree[[dep]] + 1L
+    }
+  }
+
+  # Start with nodes that have no dependencies pointing to them
+  # BUT we want base types first, so we want types with no deps first
+  result <- character(0)
+  processed <- setNames(rep(FALSE, n), typedef_names)
+
+  # Simple DFS-based topological sort
+  visit <- function(name) {
+    if (processed[[name]]) {
+      return()
+    }
+    # Visit dependencies first
+    for (dep in deps[[name]]) {
+      visit(dep)
+    }
+    result <<- c(result, name)
+    processed[[name]] <- TRUE
+  }
+
+  for (name in typedef_names) {
+    visit(name)
+  }
+
+  result
 }
 
 #' Generate R bindings from parsed header
@@ -714,6 +982,39 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
         )
       }
     }
+  }
+
+  # Typedef aliases
+  if (length(parsed_header$typedefs) > 0) {
+    code_sections$typedefs <- c(
+      "# Type aliases (typedefs)",
+      ""
+    )
+
+    # Get known struct names for resolution
+    known_structs <- names(parsed_header$structs)
+    typedefs <- parsed_header$typedefs
+
+    # Sort typedefs by dependency order (topological sort)
+    # A typedef depends on another if its base_type is another typedef name
+    sorted_names <- sort_typedefs_by_dependency(typedefs)
+
+    for (alias_name in sorted_names) {
+      base_type <- typedefs[[alias_name]]
+      typedef_code <- generate_typedef_definition(
+        alias_name,
+        base_type,
+        known_structs = known_structs,
+        known_typedefs = typedefs
+      )
+      if (!is.null(typedef_code)) {
+        code_sections$typedefs <- c(
+          code_sections$typedefs,
+          typedef_code
+        )
+      }
+    }
+    code_sections$typedefs <- c(code_sections$typedefs, "")
   }
 
   # Function wrappers

@@ -12,7 +12,7 @@ tcc_parse_header(header_file, includes = NULL)
 \item{includes}{Additional include directories}
 }
 \value{
-List with components: functions, structs, unions, enums, defines
+List with components: functions, structs, unions, enums, defines, typedefs
 }
 \description{
 Parse C header file and extract all declarations

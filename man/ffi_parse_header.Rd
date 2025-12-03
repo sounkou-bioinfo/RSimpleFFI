@@ -12,7 +12,7 @@ ffi_parse_header(header_file, includes = NULL)
 \item{includes}{Additional include directories}
 }
 \value{
-List with parsed components (file, defines, structs, unions, enums, functions)
+List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
 }
 \description{
 Parse C header file and create structured result

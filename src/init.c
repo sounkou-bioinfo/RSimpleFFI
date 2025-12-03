@@ -17,6 +17,8 @@ SEXP R_ffi_call(SEXP cif_ptr, SEXP func_ptr, SEXP args, SEXP na_check);
 SEXP R_alloc_struct(SEXP struct_type);
 SEXP R_get_struct_field(SEXP ptr, SEXP field_index, SEXP struct_type);
 SEXP R_set_struct_field(SEXP ptr, SEXP field_index, SEXP value, SEXP struct_type);
+SEXP R_get_struct_field_at_offset(SEXP ptr, SEXP offset, SEXP field_type);
+SEXP R_set_struct_field_at_offset(SEXP ptr, SEXP offset, SEXP value, SEXP field_type);
 SEXP R_get_union_field(SEXP union_ptr, SEXP field_type);
 SEXP R_set_union_field(SEXP union_ptr, SEXP value, SEXP field_type);
 SEXP R_is_null_pointer(SEXP ptr);
@@ -29,6 +31,11 @@ SEXP R_get_struct_size(SEXP struct_type);
 SEXP R_get_struct_num_fields(SEXP struct_type);
 SEXP R_get_field_info(SEXP struct_type, SEXP field_index);
 SEXP R_get_all_field_offsets(SEXP struct_type);
+
+/* Packed struct support */
+SEXP R_get_packed_field_offset(SEXP struct_type, SEXP field_index, SEXP pack);
+SEXP R_get_all_packed_field_offsets(SEXP struct_type, SEXP pack);
+SEXP R_get_packed_struct_size(SEXP struct_type, SEXP pack);
 
 SEXP R_alloc_buffer(SEXP r_size);
 SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n);
@@ -143,6 +150,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_alloc_struct",            (DL_FUNC) &R_alloc_struct,            1},
     {"R_get_struct_field",        (DL_FUNC) &R_get_struct_field,        3},
     {"R_set_struct_field",        (DL_FUNC) &R_set_struct_field,        4},
+    {"R_get_struct_field_at_offset", (DL_FUNC) &R_get_struct_field_at_offset, 3},
+    {"R_set_struct_field_at_offset", (DL_FUNC) &R_set_struct_field_at_offset, 4},
     {"R_get_union_field",         (DL_FUNC) &R_get_union_field,         2},
     {"R_set_union_field",         (DL_FUNC) &R_set_union_field,         3},
     {"R_is_null_pointer",         (DL_FUNC) &R_is_null_pointer,         1},
@@ -154,6 +163,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_get_struct_num_fields",   (DL_FUNC) &R_get_struct_num_fields,   1},
     {"R_get_field_info",          (DL_FUNC) &R_get_field_info,          2},
     {"R_get_all_field_offsets",   (DL_FUNC) &R_get_all_field_offsets,   1},
+    /* Packed struct support */
+    {"R_get_packed_field_offset",      (DL_FUNC) &R_get_packed_field_offset,      3},
+    {"R_get_all_packed_field_offsets", (DL_FUNC) &R_get_all_packed_field_offsets, 2},
+    {"R_get_packed_struct_size",       (DL_FUNC) &R_get_packed_struct_size,       2},
     {"R_pointer_to_string",       (DL_FUNC) &R_pointer_to_string,       1},
     {"R_make_typed_pointer",      (DL_FUNC) &R_make_typed_pointer,      2},
     {"R_get_pointer_type",        (DL_FUNC) &R_get_pointer_type,        1},

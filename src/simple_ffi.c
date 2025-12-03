@@ -1194,7 +1194,7 @@ SEXP R_alloc_struct(SEXP r_struct_type) {
     return extPtr;
 }
 
-// Simple offset calculation for struct fields
+// Simple offset calculation for struct fields (natural alignment)
 static size_t calculate_field_offset(ffi_type* struct_type, int field_index) {
     if (!struct_type->elements || field_index < 0) return 0;
     
@@ -1220,6 +1220,123 @@ static size_t calculate_field_offset(ffi_type* struct_type, int field_index) {
     }
     
     return offset;
+}
+
+// Packed offset calculation - respects pack parameter like #pragma pack(n)
+// pack: alignment limit (1, 2, 4, 8, 16). 0 means natural alignment.
+static size_t calculate_packed_field_offset(ffi_type* struct_type, int field_index, int pack) {
+    if (!struct_type->elements || field_index < 0) return 0;
+    if (pack <= 0) return calculate_field_offset(struct_type, field_index);
+    
+    size_t offset = 0;
+    for (int i = 0; i < field_index && struct_type->elements[i]; i++) {
+        ffi_type* field_type = struct_type->elements[i];
+        
+        // Effective alignment is min(natural_alignment, pack)
+        size_t natural_align = field_type->alignment;
+        size_t effective_align = (natural_align < (size_t)pack) ? natural_align : (size_t)pack;
+        
+        // Align to effective boundary
+        if (effective_align > 0) {
+            offset = (offset + effective_align - 1) & ~(effective_align - 1);
+        }
+        
+        offset += field_type->size;
+    }
+    
+    // Final alignment for the target field
+    if (struct_type->elements[field_index]) {
+        size_t natural_align = struct_type->elements[field_index]->alignment;
+        size_t effective_align = (natural_align < (size_t)pack) ? natural_align : (size_t)pack;
+        if (effective_align > 0) {
+            offset = (offset + effective_align - 1) & ~(effective_align - 1);
+        }
+    }
+    
+    return offset;
+}
+
+// Calculate packed struct size (for arrays of packed structs)
+static size_t calculate_packed_struct_size(ffi_type* struct_type, int pack) {
+    if (!struct_type->elements) return 0;
+    if (pack <= 0) return struct_type->size;
+    
+    size_t offset = 0;
+    size_t max_align = 1;
+    
+    for (int i = 0; struct_type->elements[i]; i++) {
+        ffi_type* field_type = struct_type->elements[i];
+        
+        size_t natural_align = field_type->alignment;
+        size_t effective_align = (natural_align < (size_t)pack) ? natural_align : (size_t)pack;
+        if (effective_align > max_align) max_align = effective_align;
+        
+        // Align to effective boundary
+        if (effective_align > 0) {
+            offset = (offset + effective_align - 1) & ~(effective_align - 1);
+        }
+        
+        offset += field_type->size;
+    }
+    
+    // Struct alignment is min(max field alignment, pack) for trailing padding
+    size_t struct_align = (max_align < (size_t)pack) ? max_align : (size_t)pack;
+    if (struct_align > 0) {
+        offset = (offset + struct_align - 1) & ~(struct_align - 1);
+    }
+    
+    return offset;
+}
+
+// R interface to get packed field offset
+SEXP R_get_packed_field_offset(SEXP r_struct_type, SEXP r_field_index, SEXP r_pack) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    int field_index = INTEGER(r_field_index)[0];
+    int pack = INTEGER(r_pack)[0];
+    
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
+        Rf_error("Invalid structure type");
+    }
+    
+    size_t offset = calculate_packed_field_offset(struct_type, field_index, pack);
+    return ScalarInteger((int)offset);
+}
+
+// R interface to get all packed field offsets
+SEXP R_get_all_packed_field_offsets(SEXP r_struct_type, SEXP r_pack) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    int pack = INTEGER(r_pack)[0];
+    
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
+        Rf_error("Invalid structure type");
+    }
+    
+    // Count fields
+    int num_fields = 0;
+    while (struct_type->elements[num_fields]) num_fields++;
+    
+    SEXP result = PROTECT(allocVector(INTSXP, num_fields));
+    int* offsets = INTEGER(result);
+    
+    for (int i = 0; i < num_fields; i++) {
+        offsets[i] = (int)calculate_packed_field_offset(struct_type, i, pack);
+    }
+    
+    UNPROTECT(1);
+    return result;
+}
+
+// R interface to get packed struct size
+SEXP R_get_packed_struct_size(SEXP r_struct_type, SEXP r_pack) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    int pack = INTEGER(r_pack)[0];
+    
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
+        Rf_error("Invalid structure type");
+    }
+    
+    size_t size = calculate_packed_struct_size(struct_type, pack);
+    return ScalarInteger((int)size);
 }
 
 // Get structure field value
@@ -1259,6 +1376,38 @@ SEXP R_set_struct_field(SEXP r_struct_ptr, SEXP r_field_index, SEXP r_value, SEX
     size_t offset = calculate_field_offset(struct_type, field_index);
     void* field_ptr = (char*)struct_ptr + offset;
     
+    void* value_ptr = convert_r_to_native(r_value, field_type);
+    memcpy(field_ptr, value_ptr, field_type->size);
+    
+    return R_NilValue;
+}
+
+// Get struct field value at explicit offset (for packed structs)
+// This allows R to compute the offset for packed structs instead of using libffi's alignment
+SEXP R_get_struct_field_at_offset(SEXP r_struct_ptr, SEXP r_offset, SEXP r_field_type) {
+    void* struct_ptr = R_ExternalPtrAddr(r_struct_ptr);
+    int offset = INTEGER(r_offset)[0];
+    ffi_type* field_type = (ffi_type*)R_ExternalPtrAddr(r_field_type);
+    
+    if (!struct_ptr) Rf_error("Invalid structure pointer");
+    if (!field_type) Rf_error("Invalid field type");
+    if (offset < 0) Rf_error("Invalid offset: %d", offset);
+    
+    void* field_ptr = (char*)struct_ptr + offset;
+    return convert_native_to_r(field_ptr, field_type);
+}
+
+// Set struct field value at explicit offset (for packed structs)
+SEXP R_set_struct_field_at_offset(SEXP r_struct_ptr, SEXP r_offset, SEXP r_value, SEXP r_field_type) {
+    void* struct_ptr = R_ExternalPtrAddr(r_struct_ptr);
+    int offset = INTEGER(r_offset)[0];
+    ffi_type* field_type = (ffi_type*)R_ExternalPtrAddr(r_field_type);
+    
+    if (!struct_ptr) Rf_error("Invalid structure pointer");
+    if (!field_type) Rf_error("Invalid field type");
+    if (offset < 0) Rf_error("Invalid offset: %d", offset);
+    
+    void* field_ptr = (char*)struct_ptr + offset;
     void* value_ptr = convert_r_to_native(r_value, field_type);
     memcpy(field_ptr, value_ptr, field_type->size);
     

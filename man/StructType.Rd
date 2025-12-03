@@ -9,7 +9,8 @@ StructType(
   size = integer(0),
   ref = NULL,
   fields = character(0),
-  field_types = list()
+  field_types = list(),
+  pack = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ StructType(
 \item{fields}{Character vector of field names}
 
 \item{field_types}{List of FFIType objects for each field}
+
+\item{pack}{Integer packing alignment (NULL for default/natural alignment)}
 }
 \description{
 FFI Structure Type
