@@ -942,6 +942,40 @@ dll_unload(libc_path)
 unlink(c(tmpfile, libc_header))
 ```
 
+### Parsing R's C API
+
+The `bindgen_r_api()` function parses R's own header files (Rinternals.h, Rmath.h) and generates FFI bindings. This provides access to R's internal C functions without writing C code. Educational purpose only ! (also to test the parsing code)
+
+```{r}
+result <- bindgen_r_api(headers = c("Rinternals.h", "Rmath.h"))
+
+names(result)
+length(result$Rinternals$functions)
+names(result$Rinternals$enums)
+```
+
+Generate bindings and call statistical distribution functions directly:
+
+```{r}
+outfile <- tempfile(fileext = ".R")
+bindgen_r_api(output_file = outfile, headers = "Rmath.h")
+source(outfile)
+
+r_Rf_dnorm4(0, 0, 1, 0L)
+dnorm(0, 0, 1)
+
+r_Rf_pnorm5(1.96, 0, 1, 1L, 0L)
+pnorm(1.96)
+
+r_Rf_qnorm5(0.975, 0, 1, 1L, 0L)
+qnorm(0.975)
+
+r_Rf_gammafn(5)
+gamma(5)
+
+unlink(outfile)
+```
+
 ### Create R Packages
 
 ```{r}
