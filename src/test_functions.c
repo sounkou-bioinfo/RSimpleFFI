@@ -79,6 +79,31 @@ bool test_bool_func(bool value) {
     return !value;  // Return the opposite for testing
 }
 
+/* ==========================================================================
+ * Struct by-value test functions
+ * ==========================================================================*/
+
+/* Function taking struct by value, returning int */
+int test_point_sum(TestPoint p) {
+    return p.x + p.y;
+}
+
+/* Function returning struct by value */
+TestPoint test_point_create(int x, int y) {
+    TestPoint p;
+    p.x = x;
+    p.y = y;
+    return p;
+}
+
+/* Function taking struct by value, returning modified struct */
+TestPoint test_point_scale(TestPoint p, int factor) {
+    TestPoint result;
+    result.x = p.x * factor;
+    result.y = p.y * factor;
+    return result;
+}
+
 /* Pointer operations */
 void* test_return_pointer(void* ptr) {
     return ptr;
