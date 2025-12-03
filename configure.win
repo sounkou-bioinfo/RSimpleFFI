@@ -60,16 +60,13 @@ if [ -d "$TINYCC_SRC" ]; then
     # command-line compiler used for preprocessing headers.
     "$MAKE" tcc || "$MAKE" tcc.exe || { echo "Failed to build tcc executable" >&2; exit 1; }
 
-    # Ensure destination bin exists and copy tcc executable there
-    mkdir -p "$TINYCC_DEST/bin"
+    # On Windows, TCC searches for include/lib directories relative to the executable location
+    # We need tcc.exe to be in the root of tinycc/, not in bin/, so it finds include/ and lib/
+    mkdir -p "$TINYCC_DEST"
     if [ -f "tcc.exe" ]; then
-        cp -f "tcc.exe" "$TINYCC_DEST/bin/"
+        cp -f "tcc.exe" "$TINYCC_DEST/"
     elif [ -f "tcc" ]; then
-        cp -f "tcc" "$TINYCC_DEST/bin/"
-    elif [ -f "./tcc.exe" ]; then
-        cp -f "./tcc.exe" "$TINYCC_DEST/bin/"
-    elif [ -f "./tcc" ]; then
-        cp -f "./tcc" "$TINYCC_DEST/bin/"
+        cp -f "tcc" "$TINYCC_DEST/"
     else
         echo "tcc executable not found after build" >&2
         exit 1
@@ -87,9 +84,9 @@ if [ -d "$TINYCC_SRC" ]; then
     cp -f win32/lib/*.def "$TINYCC_DEST/lib/" 2>/dev/null || true
     
     echo "TinyCC tcc executable and support files installed to $TINYCC_DEST"
-    ls -la "$TINYCC_DEST/bin/" "$TINYCC_DEST/include/" "$TINYCC_DEST/lib/" 2>/dev/null || true
+    ls -la "$TINYCC_DEST/" "$TINYCC_DEST/include/" "$TINYCC_DEST/lib/" 2>/dev/null || true
     echo "Verifying tcc.exe exists:"
-    ls -la "$TINYCC_DEST/bin/tcc.exe" || echo "ERROR: tcc.exe not found at expected location!"
+    ls -la "$TINYCC_DEST/tcc.exe" || echo "ERROR: tcc.exe not found at expected location!"
 else
     echo "Error: tinycc source directory $TINYCC_SRC does not exist."
     exit 1

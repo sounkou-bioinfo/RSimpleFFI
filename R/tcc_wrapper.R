@@ -3,7 +3,8 @@
 #' @export
 tcc_binary_path <- function() {
     if(.Platform$OS.type == "windows") {
-        tcc_path <- system.file("tinycc", "bin", "tcc.exe", package = "RSimpleFFI")
+        # On Windows, tcc.exe must be in the root of tinycc/ so it can find include/ and lib/ subdirectories
+        tcc_path <- system.file("tinycc", "tcc.exe", package = "RSimpleFFI")
         message("TCC path (Windows): ", tcc_path)
         if (nzchar(tcc_path) && file.exists(tcc_path)) {
             tcc_path <- normalizePath(tcc_path)
