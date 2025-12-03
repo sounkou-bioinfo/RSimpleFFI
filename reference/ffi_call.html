@@ -67,7 +67,27 @@
     <p>The method implementations accept an additional <code>na_check</code> argument (logical,
 default TRUE). When TRUE, the function checks for NA values in arguments and
 errors if found. Set to FALSE to skip NA checking for better performance
-(at your own risk).</p>
+(at your own risk).</p><div class="section">
+<h3 id="error-handling-limitations">Error Handling Limitations<a class="anchor" aria-label="anchor" href="#error-handling-limitations"></a></h3>
+
+
+<p><strong>Important:</strong> libffi provides no error handling for the actual C function call.
+If the called C function crashes (segmentation fault, illegal instruction,
+abort, etc.), R itself will crash. This is a fundamental limitation of FFI</p><ul><li><p>there is no portable way to catch such errors in C code.</p></li>
+</ul><p>Before making FFI calls, ensure:</p><ul><li><p>The function pointer is valid (not NULL, points to executable code)</p></li>
+<li><p>All pointer arguments are valid (use <code><a href="ffi_is_null.html">ffi_is_null</a></code> to check)</p></li>
+<li><p>Array/buffer sizes are correct - buffer overruns cause undefined behavior</p></li>
+<li><p>The CIF signature exactly matches the C function's signature</p></li>
+<li><p>Struct layouts match between R types and C (check alignment/padding)</p></li>
+</ul><p>For debugging crashes:</p><ul><li><p>Run R under a debugger: <code>R -d gdb</code></p></li>
+<li><p>Enable core dumps: <code>ulimit -c unlimited</code></p></li>
+<li><p>Use address sanitizers when building the library being called</p></li>
+</ul></div>
+
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="ffi_is_null.html">ffi_is_null</a></code> for checking pointer validity</p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

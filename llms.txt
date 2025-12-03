@@ -1607,6 +1607,8 @@ This project is licensed under the GPL-3 License.
   : Unpack bit-fields from a 64-bit value
 - [`ffi_ushort()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.md)
   : Ushort FFI type
+- [`ffi_validate_call()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_validate_call.md)
+  : Validate FFI call prerequisites
 - [`ffi_void()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.md)
   : void FFI type
 - [`ffi_wchar_t()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_wchar_t.md)
@@ -1623,6 +1625,8 @@ This project is licensed under the GPL-3 License.
   : Generate R bindings from parsed header
 - [`generate_struct_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.md)
   : Generate R struct definition from parsed struct
+- [`generate_struct_helpers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_helpers.md)
+  : Generate struct helper functions (allocator, from_list, to_list)
 - [`generate_typedef_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_typedef_definition.md)
   : Generate R typedef alias from parsed typedef
 - [`generate_union_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_union_definition.md)
