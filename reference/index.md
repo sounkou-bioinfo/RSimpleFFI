@@ -22,6 +22,10 @@
   : FFI Union Type
 - [`ffi_alloc()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/alloc.md)
   : Allocate a buffer for a given FFI type
+- [`bindgen_r_api()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/bindgen_r_api.md)
+  : Generate FFI bindings for R's C API
+- [`bindgen_r_api_summary()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/bindgen_r_api_summary.md)
+  : Get summary of R API bindings
 - [`create_builtin_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/create_builtin_type.md)
   : Create built-in FFI type
 - [`dll_ffi_symbol()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_ffi_symbol.md)
