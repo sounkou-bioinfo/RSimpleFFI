@@ -23,8 +23,11 @@ AR=`"${R_HOME}/bin/R" CMD config AR`
 
 # Build TinyCC
 THISDir=$(dirname "$0")
+THISDir=$(cd "$THISDir" && pwd)
 TINYCC_SRC="${THISDir}/src/tinycc"
 TINYCC_DEST="${THISDir}/inst/tinycc"
+echo "Package source directory: $THISDir"
+echo "TinyCC will be installed to: $TINYCC_DEST"
 MSYSTEM=MINGW64
 MSYS2_PATH_TYPE=inherit
 CHERE_INVOKING=yes
@@ -85,6 +88,8 @@ if [ -d "$TINYCC_SRC" ]; then
     
     echo "TinyCC tcc executable and support files installed to $TINYCC_DEST"
     ls -la "$TINYCC_DEST/bin/" "$TINYCC_DEST/include/" "$TINYCC_DEST/lib/" 2>/dev/null || true
+    echo "Verifying tcc.exe exists:"
+    ls -la "$TINYCC_DEST/bin/tcc.exe" || echo "ERROR: tcc.exe not found at expected location!"
 else
     echo "Error: tinycc source directory $TINYCC_SRC does not exist."
     exit 1
