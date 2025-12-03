@@ -1,6 +1,8 @@
 # Generate complete package from header files
 
-Creates all necessary R files for a package wrapping a C library
+Creates all necessary R files for a package wrapping a C library.
+Generates a proper R package structure with DESCRIPTION, NAMESPACE, and
+R code in the R/ subfolder. Uses templates from inst/templates/.
 
 ## Usage
 
@@ -9,9 +11,12 @@ generate_package_from_headers(
   header_files,
   package_name,
   library_name,
-  output_dir = "R",
+  output_dir = package_name,
   use_system_lib = TRUE,
-  include_helpers = TRUE
+  include_helpers = TRUE,
+  authors_r = NULL,
+  title = NULL,
+  description = NULL
 )
 ```
 
@@ -31,7 +36,7 @@ generate_package_from_headers(
 
 - output_dir:
 
-  Directory to write generated files
+  Directory to create the package (package root)
 
 - use_system_lib:
 
@@ -40,6 +45,19 @@ generate_package_from_headers(
 - include_helpers:
 
   Logical: include allocation helper functions
+
+- authors_r:
+
+  Authors@R field for DESCRIPTION (R code string). Default creates a
+  placeholder person().
+
+- title:
+
+  Package title (default: auto-generated)
+
+- description:
+
+  Package description (default: auto-generated)
 
 ## Value
 
@@ -53,8 +71,9 @@ generate_package_from_headers(
   header_files = c("mylib.h", "mylib_utils.h"),
   package_name = "MyRPackage",
   library_name = "mylib",
-  output_dir = "MyRPackage/R",
-  use_system_lib = TRUE
+  output_dir = "MyRPackage",
+  use_system_lib = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
 } # }
 ```

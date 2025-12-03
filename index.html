@@ -288,10 +288,53 @@
 <span><span class="co">#&gt; FieldInfo('b' type=double, offset=8, size=8)</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="struct-packing">Struct Packing<a class="anchor" aria-label="anchor" href="#struct-packing"></a>
+</h3>
+<p>By default, structs use natural alignment (platform ABI). Use the <code>pack</code> parameter to control alignment, matching C’s <code>#pragma pack(n)</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Natural alignment: int (4) + padding (4) + double (8) = 16 bytes</span></span>
+<span><span class="va">Natural</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_struct.html">ffi_struct</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, b <span class="op">=</span> <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_sizeof.html">ffi_sizeof</a></span><span class="op">(</span><span class="va">Natural</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 16</span></span>
+<span></span>
+<span><span class="co"># Packed (no padding): int (4) + double (8) = 12 bytes</span></span>
+<span><span class="va">Packed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_struct.html">ffi_struct</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, b <span class="op">=</span> <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span>, pack <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_sizeof.html">ffi_sizeof</a></span><span class="op">(</span><span class="va">Packed</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 12</span></span>
+<span></span>
+<span><span class="co"># Field offsets differ between packed and natural</span></span>
+<span><span class="fu"><a href="reference/ffi_offsetof.html">ffi_offsetof</a></span><span class="op">(</span><span class="va">Natural</span>, <span class="st">"b"</span><span class="op">)</span>  <span class="co"># 8 (aligned to 8-byte boundary)</span></span>
+<span><span class="co">#&gt; [1] 8</span></span>
+<span><span class="fu"><a href="reference/ffi_offsetof.html">ffi_offsetof</a></span><span class="op">(</span><span class="va">Packed</span>, <span class="st">"b"</span><span class="op">)</span>   <span class="co"># 4 (immediately after int)</span></span>
+<span><span class="co">#&gt; [1] 4</span></span></code></pre></div>
+<p>Pack values work like GCC/Clang/MSVC: each field’s alignment is <code>min(natural_alignment, pack)</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># pack=2: fields aligned to at most 2-byte boundaries</span></span>
+<span><span class="va">Pack2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_struct.html">ffi_struct</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, b <span class="op">=</span> <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span>, pack <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_sizeof.html">ffi_sizeof</a></span><span class="op">(</span><span class="va">Pack2</span><span class="op">)</span>   <span class="co"># 12 bytes</span></span>
+<span><span class="co">#&gt; [1] 12</span></span>
+<span><span class="fu"><a href="reference/ffi_offsetof.html">ffi_offsetof</a></span><span class="op">(</span><span class="va">Pack2</span>, <span class="st">"b"</span><span class="op">)</span>  <span class="co"># 4</span></span>
+<span><span class="co">#&gt; [1] 4</span></span>
+<span></span>
+<span><span class="co"># pack=4: useful for matching 32-bit packed structures</span></span>
+<span><span class="va">Pack4</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_struct.html">ffi_struct</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, b <span class="op">=</span> <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span>, pack <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_sizeof.html">ffi_sizeof</a></span><span class="op">(</span><span class="va">Pack4</span><span class="op">)</span>  <span class="co"># 12 bytes</span></span>
+<span><span class="co">#&gt; [1] 12</span></span></code></pre></div>
+<p>Use <code><a href="reference/ffi_all_offsets.html">ffi_all_offsets()</a></code> to see the complete layout:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Compare layouts</span></span>
+<span><span class="fu"><a href="reference/ffi_all_offsets.html">ffi_all_offsets</a></span><span class="op">(</span><span class="va">Natural</span><span class="op">)</span>  <span class="co"># a=0, b=8</span></span>
+<span><span class="co">#&gt; a b </span></span>
+<span><span class="co">#&gt; 0 8</span></span>
+<span><span class="fu"><a href="reference/ffi_all_offsets.html">ffi_all_offsets</a></span><span class="op">(</span><span class="va">Packed</span><span class="op">)</span>   <span class="co"># a=0, b=4</span></span>
+<span><span class="co">#&gt; a b </span></span>
+<span><span class="co">#&gt; 0 4</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="enumerations">Enumerations<a class="anchor" aria-label="anchor" href="#enumerations"></a>
 </h3>
 <p>Enums map named constants to integer values, useful for flags, status codes, or options:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define an enum type</span></span>
 <span><span class="va">Color</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_enum.html">ffi_enum</a></span><span class="op">(</span>RED <span class="op">=</span> <span class="fl">0L</span>, GREEN <span class="op">=</span> <span class="fl">1L</span>, BLUE <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
 <span></span>
@@ -322,7 +365,7 @@
 <h3 id="unions">Unions<a class="anchor" aria-label="anchor" href="#unions"></a>
 </h3>
 <p>Unions allow multiple fields to share the same memory location, useful for variant types or memory-efficient data structures:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define a union (all fields share the same memory)</span></span>
 <span><span class="va">Value</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_union.html">ffi_union</a></span><span class="op">(</span></span>
 <span>  as_int <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -367,7 +410,7 @@
 <h3 id="basic-function-calls">Basic Function Calls<a class="anchor" aria-label="anchor" href="#basic-function-calls"></a>
 </h3>
 <p>The package comes with some built-in C test functions for testing, they are defined in <a href="src/test_functions.c">src/test_functions.c</a></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">void_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_symbol.html">ffi_symbol</a></span><span class="op">(</span><span class="st">"test_void_function"</span><span class="op">)</span></span>
 <span><span class="va">void_cif</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_cif.html">ffi_cif</a></span><span class="op">(</span><span class="va">void_type</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/ffi_call.html">ffi_call</a></span><span class="op">(</span><span class="va">void_cif</span>, <span class="va">void_func</span><span class="op">)</span></span>
@@ -381,7 +424,7 @@
 <div class="section level4">
 <h4 id="testing-integer-types">Testing Integer Types<a class="anchor" aria-label="anchor" href="#testing-integer-types"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># test_int8_func: returns input + 1</span></span>
 <span><span class="va">int8_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_symbol.html">ffi_symbol</a></span><span class="op">(</span><span class="st">"test_int8_func"</span><span class="op">)</span></span>
 <span><span class="va">int8_cif</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_cif.html">ffi_cif</a></span><span class="op">(</span><span class="va">int8_type</span>, <span class="va">int8_type</span><span class="op">)</span></span>
@@ -406,7 +449,7 @@
 <div class="section level4">
 <h4 id="floating-point-types">Floating-Point Types<a class="anchor" aria-label="anchor" href="#floating-point-types"></a>
 </h4>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">add_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_symbol.html">ffi_symbol</a></span><span class="op">(</span><span class="st">"test_add_int"</span><span class="op">)</span></span>
 <span><span class="va">add_cif</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_cif.html">ffi_cif</a></span><span class="op">(</span><span class="va">int_type</span>, <span class="va">int_type</span>, <span class="va">int_type</span><span class="op">)</span></span>
 <span><span class="va">int_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_call.html">ffi_call</a></span><span class="op">(</span><span class="va">add_cif</span>, <span class="va">add_func</span>, <span class="fl">10L</span>, <span class="fl">5L</span><span class="op">)</span></span>
@@ -429,7 +472,7 @@
 <h4 id="string-output-example">String output example<a class="anchor" aria-label="anchor" href="#string-output-example"></a>
 </h4>
 <p>This calls a C function that returns a string (const char*). With <code><a href="reference/ffi_string.html">ffi_string()</a></code> type, strings are returned directly as R character vectors.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">string_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_symbol.html">ffi_symbol</a></span><span class="op">(</span><span class="st">"test_return_string"</span><span class="op">)</span></span>
 <span><span class="va">string_cif</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_cif.html">ffi_cif</a></span><span class="op">(</span><span class="va">string_type</span><span class="op">)</span></span>
 <span><span class="va">string_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_call.html">ffi_call</a></span><span class="op">(</span><span class="va">string_cif</span>, <span class="va">string_func</span><span class="op">)</span></span>
@@ -439,7 +482,7 @@
 <div class="section level4">
 <h4 id="struct-types-1">Struct Types<a class="anchor" aria-label="anchor" href="#struct-types-1"></a>
 </h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define struct type: struct Point { int x; double y; }</span></span>
 <span><span class="va">point_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_struct.html">ffi_struct</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -459,7 +502,7 @@
 <h4 id="type-conversions">Type Conversions<a class="anchor" aria-label="anchor" href="#type-conversions"></a>
 </h4>
 <p>RSimpleFFI converts between R and C types following C99 semantics. Doubles are truncated to integers, overflow uses modular arithmetic, and negative values convert to unsigned types via two’s complement (e.g., <code>-1L</code> -&gt; <code>uint8</code> = 255). Large integers (64-bit) return as doubles and may lose precision beyond 2^53.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Integer truncation: 5.7 -&gt; 5</span></span>
 <span><span class="va">int_type</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">add_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_add_int"</span>, <span class="va">int_type</span>, <span class="va">int_type</span>, <span class="va">int_type</span><span class="op">)</span></span>
@@ -490,13 +533,13 @@
 <h4 id="na-handling">NA Handling<a class="anchor" aria-label="anchor" href="#na-handling"></a>
 </h4>
 <p>By default, NA values in arguments raise an error to prevent silent data corruption (<code>NA_integer_</code> becomes <code>INT_MIN</code>, <code>NA_real_</code> becomes a NaN that C doesn’t recognize as missing).</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># NA values cause errors by default</span></span>
 <span><span class="va">add_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_add_int"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">add_fn</span><span class="op">(</span><span class="cn">NA_integer_</span>, <span class="fl">5L</span><span class="op">)</span>  <span class="co"># Error: NA values in arguments</span></span>
 <span><span class="co">#&gt; Error: NA value not allowed in argument 1. Use na_check=FALSE to allow (at your own risk).</span></span></code></pre></div>
 <p>If you know what you’re doing and want to pass NA values (e.g., when working with sentinel values), you can disable the check:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Disable NA check with na_check = FALSE</span></span>
 <span><span class="va">add_fn_unsafe</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_add_int"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, na_check <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu">add_fn_unsafe</span><span class="op">(</span><span class="cn">NA_integer_</span>, <span class="fl">5L</span><span class="op">)</span>  <span class="co"># Passes NA as INT_MIN</span></span>
@@ -508,7 +551,7 @@
 <span><span class="fu"><a href="reference/ffi_call.html">ffi_call</a></span><span class="op">(</span><span class="va">cif</span>, <span class="va">sym</span>, <span class="cn">NA_integer_</span>, <span class="fl">5L</span>, na_check <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -2147483643</span></span></code></pre></div>
 <p>Note that <code>NaN</code> (Not a Number) values are allowed through because they have well-defined IEEE 754 semantics that C understands:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># NaN passes through - it has IEEE semantics</span></span>
 <span><span class="va">double_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_add_double"</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">double_fn</span><span class="op">(</span><span class="cn">NaN</span>, <span class="fl">5.0</span><span class="op">)</span>  <span class="co"># NaN + 5 = NaN</span></span>
@@ -519,7 +562,7 @@
 <h3 id="closures-r-callbacks-for-c">Closures (R callbacks for C)<a class="anchor" aria-label="anchor" href="#closures-r-callbacks-for-c"></a>
 </h3>
 <p>The closure API lets you wrap R functions as C callbacks. This is useful when C code expects a function pointer (e.g., qsort comparator, event handlers).</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create an R function to use as callback</span></span>
 <span><span class="va">add_ten</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span> <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"adding "</span> , <span class="va">x</span>, <span class="st">" to 10"</span><span class="op">)</span><span class="op">)</span></span>
@@ -544,7 +587,7 @@
 <span><span class="co">#&gt; [1] "adding 5 to 10"</span></span>
 <span><span class="co">#&gt; [1] 15</span></span></code></pre></div>
 <p>Closures work with any signature:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># double (*transform)(double)</span></span>
 <span><span class="va">square</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span> <span class="op">*</span> <span class="va">x</span></span>
 <span><span class="va">square_closure</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_closure.html">ffi_closure</a></span><span class="op">(</span><span class="va">square</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -566,23 +609,23 @@
 <div class="section level4">
 <h4 id="search-so-files-in-system-paths">Search so files in system paths<a class="anchor" aria-label="anchor" href="#search-so-files-in-system-paths"></a>
 </h4>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Example: call the C standard library rand() function</span></span>
 <span><span class="va">libc_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dynamic_library_management.html">dll_load_system</a></span><span class="op">(</span><span class="st">"libc.so.6"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading system library from: /usr/lib/x86_64-linux-gnu/libc.so.6</span></span>
 <span><span class="va">rand_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dll_ffi_symbol.html">dll_ffi_symbol</a></span><span class="op">(</span><span class="st">"rand"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 1530020626</span></span>
+<span><span class="co">#&gt; [1] 789645863</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 661281513</span></span>
+<span><span class="co">#&gt; [1] 2063065658</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">libc_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="explicitly-load-shared-libraries">Explicitly load shared libraries<a class="anchor" aria-label="anchor" href="#explicitly-load-shared-libraries"></a>
 </h4>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Find the libc shared object (libc is always present)</span></span>
 <span><span class="va">so_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="st">"/lib/x86_64-linux-gnu"</span>, pattern <span class="op">=</span> <span class="st">"^libc[.]so[.]6$"</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">so_files</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"libc.so.6 not found"</span><span class="op">)</span></span>
@@ -598,7 +641,7 @@
 <span></span>
 <span><span class="co"># Fill the buffer with ASCII 'A' (0x41)</span></span>
 <span><span class="fu">memset_fn</span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fl">0x41</span><span class="op">)</span>, <span class="fl">8L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x646b26ff7e60&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x6466eea69360&gt;</span></span>
 <span></span>
 <span><span class="co"># Read back the buffer and print as string</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rawConversion.html" class="external-link">rawToChar</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fl">8L</span>, <span class="va">raw_type</span><span class="op">)</span><span class="op">)</span></span>
@@ -614,7 +657,7 @@
 <h3 id="compile-and-load-c-code">Compile and Load C Code<a class="anchor" aria-label="anchor" href="#compile-and-load-c-code"></a>
 </h3>
 <p>The package provides facilities to load C code on the fly. The compiler uses R CMD SHLIB under the hood</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">c_code</span> <span class="op">&lt;-</span> <span class="st">'</span></span>
 <span><span class="st">int add_numbers(int a, int b) {</span></span>
 <span><span class="st">    return a + b;</span></span>
@@ -629,7 +672,7 @@
 <span><span class="co">#&gt; [1] 15</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">math_code</span> <span class="op">&lt;-</span> <span class="st">'</span></span>
 <span><span class="st">#include &lt;math.h&gt;</span></span>
 <span><span class="st">double compute_distance(double x1, double y1, double x2, double y2) {</span></span>
@@ -656,7 +699,7 @@
 <div class="section level3">
 <h3 id="r-builtin-c-functions">R builtin C functions<a class="anchor" aria-label="anchor" href="#r-builtin-c-functions"></a>
 </h3>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
@@ -685,15 +728,15 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 native_r       13µs   28.9µs    36738.    78.2KB        0</span></span>
-<span><span class="co">#&gt; 2 ffi_call     99.1µs  123.2µs     8170.    78.7KB        0</span></span>
+<span><span class="co">#&gt; 1 native_r       13µs   29.2µs    33643.    78.2KB      0  </span></span>
+<span><span class="co">#&gt; 2 ffi_call     97.1µs  109.7µs     8762.    78.7KB     88.5</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="interpreted-r-code">Interpreted R Code<a class="anchor" aria-label="anchor" href="#interpreted-r-code"></a>
 </h3>
 <p>We compare a pure C convolution (via FFI) to a simple R implementation.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Slow R convolution</span></span>
 <span><span class="va">slow_convolve</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">ab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/double.html" class="external-link">double</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -767,7 +810,7 @@
 <span>      <span class="va">out_ptr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span><span class="va">out_ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x646b298953f0&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x6466f4779230&gt;</span></span>
 <span><span class="va">c_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">out_ptr</span>, <span class="va">n_out</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run R convolution</span></span>
@@ -799,8 +842,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 r             2.6ms   2.91ms      356.    78.2KB     18.8</span></span>
-<span><span class="co">#&gt; 2 c_ffi         103µs 106.56µs     8643.    78.7KB      0</span></span>
+<span><span class="co">#&gt; 1 r            2.52ms   2.68ms      357.    78.2KB     18.8</span></span>
+<span><span class="co">#&gt; 2 c_ffi         102µs  112.8µs     8077.    78.7KB      0</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -809,7 +852,7 @@
 <h2 id="dangerous-calling-r-api-exported-symbols">Dangerous: Calling R API Exported Symbols<a class="anchor" aria-label="anchor" href="#dangerous-calling-r-api-exported-symbols"></a>
 </h2>
 <p>Since <code>libR.so</code> is loaded we can use its exported symbols and functions. This allows calling R’s internal C API directly via FFI - the same functions that R packages use in their C code. This is for educational purposes only! Calling R internals incorrectly can crash R or corrupt memory.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Rf_ScalarInteger - create an R integer scalar (returns SEXP pointer)</span></span>
 <span><span class="va">rf_ScalarInteger</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_ScalarInteger"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rf_ScalarReal</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_ScalarReal"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -827,7 +870,7 @@
 <span><span class="fu">rf_REAL_ELT</span><span class="op">(</span><span class="va">dbl_sexp</span>, <span class="fl">0L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3.14159</span></span></code></pre></div>
 <p>We can also create and extract strings:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Rf_mkString creates a STRSXP (character vector)</span></span>
 <span><span class="va">rf_mkString</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_mkString"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_string.html">ffi_string</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rf_STRING_ELT</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"STRING_ELT"</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_long.html">ffi_long</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -838,7 +881,7 @@
 <span><span class="fu">rf_R_CHAR</span><span class="op">(</span><span class="va">char_sexp</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Hello from C!"</span></span></code></pre></div>
 <p>We can also read global variables from shared libraries using <code><a href="reference/ffi_deref_pointer.html">ffi_deref_pointer()</a></code> and <code><a href="reference/ffi_read_global.html">ffi_read_global()</a></code>:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Read global variables from our test library</span></span>
 <span><span class="va">int_addr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/getNativeSymbolInfo.html" class="external-link">getNativeSymbolInfo</a></span><span class="op">(</span><span class="st">"test_global_int"</span>, <span class="st">"RSimpleFFI"</span><span class="op">)</span><span class="op">$</span><span class="va">address</span></span>
 <span><span class="fu"><a href="reference/ffi_read_global.html">ffi_read_global</a></span><span class="op">(</span><span class="va">int_addr</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -853,7 +896,7 @@
 <span><span class="fu"><a href="reference/pointer_to_string.html">pointer_to_string</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_deref_pointer.html">ffi_deref_pointer</a></span><span class="op">(</span><span class="va">str_ptr_addr</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Hello from global!"</span></span></code></pre></div>
 <p>Now let’s call R functions entirely through the C API:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get R_GlobalEnv - it's a global pointer variable</span></span>
 <span><span class="va">R_GlobalEnv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_deref_pointer.html">ffi_deref_pointer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getNativeSymbolInfo.html" class="external-link">getNativeSymbolInfo</a></span><span class="op">(</span><span class="st">"R_GlobalEnv"</span><span class="op">)</span><span class="op">$</span><span class="va">address</span><span class="op">)</span></span>
 <span></span>
@@ -868,7 +911,7 @@
 <span><span class="va">call_expr</span> <span class="op">&lt;-</span> <span class="fu">rf_lang1</span><span class="op">(</span><span class="va">sys_time_sym</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">rf_eval</span><span class="op">(</span><span class="va">call_expr</span>, <span class="va">R_GlobalEnv</span><span class="op">)</span></span>
 <span><span class="fu">rf_REAL_ELT</span><span class="op">(</span><span class="va">result</span>, <span class="fl">0L</span><span class="op">)</span>  <span class="co"># Unix timestamp</span></span>
-<span><span class="co">#&gt; [1] 1764780887</span></span>
+<span><span class="co">#&gt; [1] 1764782417</span></span>
 <span></span>
 <span><span class="co"># Call abs(-42) via C API</span></span>
 <span><span class="va">abs_sym</span> <span class="op">&lt;-</span> <span class="fu">rf_install</span><span class="op">(</span><span class="st">"abs"</span><span class="op">)</span></span>
@@ -885,7 +928,7 @@
 <div class="section level3">
 <h3 id="parse-headers">Parse Headers<a class="anchor" aria-label="anchor" href="#parse-headers"></a>
 </h3>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Parse a C header file using tinycc preprocessor</span></span>
 <span><span class="va">header_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"simple_types.h"</span>, package <span class="op">=</span> <span class="st">"RSimpleFFI"</span><span class="op">)</span></span>
 <span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_parse_header.html">ffi_parse_header</a></span><span class="op">(</span><span class="va">header_file</span><span class="op">)</span></span>
@@ -901,13 +944,13 @@
 <div class="section level3">
 <h3 id="generate-r-bindings">Generate R Bindings<a class="anchor" aria-label="anchor" href="#generate-r-bindings"></a>
 </h3>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate complete R code</span></span>
 <span><span class="va">code</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/generate_r_bindings.html">generate_r_bindings</a></span><span class="op">(</span><span class="va">parsed</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Preview first part of generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">code</span>, <span class="fl">1</span>, <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 17:54:46.86768\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"</span></span>
+<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:20:16.647813\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"</span></span>
 <span></span>
 <span><span class="co"># The generated code includes:</span></span>
 <span><span class="co"># - Constants from #define</span></span>
@@ -917,7 +960,7 @@
 <div class="section level3">
 <h3 id="source-generated-code">Source Generated Code<a class="anchor" aria-label="anchor" href="#source-generated-code"></a>
 </h3>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Write to temp file and source it</span></span>
 <span><span class="va">tmpfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".R"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="va">code</span>, <span class="va">tmpfile</span><span class="op">)</span></span>
@@ -945,7 +988,7 @@
 <h3 id="generate-bindings-for-system-libraries">Generate Bindings for System Libraries<a class="anchor" aria-label="anchor" href="#generate-bindings-for-system-libraries"></a>
 </h3>
 <p>Let’s create bindings for real C library functions:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a simple header with libc function signatures</span></span>
 <span><span class="va">libc_header</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".h"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -963,8 +1006,8 @@
 <span></span>
 <span><span class="co"># Preview generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">libc_code</span>, <span class="fl">1</span>, <span class="fl">600</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # Auto-generated R bindings for file3e770cdc7518a.h</span></span>
-<span><span class="co">#&gt; # Generated on: 2025-12-03 17:54:46.887514</span></span>
+<span><span class="co">#&gt; # Auto-generated R bindings for file3f66a07f8bd5e.h</span></span>
+<span><span class="co">#&gt; # Generated on: 2025-12-03 18:20:16.669924</span></span>
 <span><span class="co">#&gt; #</span></span>
 <span><span class="co">#&gt; # NOTE: These functions expect symbols to be available in the current process.</span></span>
 <span><span class="co">#&gt; # For external libraries, load them first with dll_load() or use dll_ffi_symbol().</span></span>
@@ -1004,7 +1047,7 @@
 <div class="section level3">
 <h3 id="create-r-packages">Create R Packages<a class="anchor" aria-label="anchor" href="#create-r-packages"></a>
 </h3>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate complete package scaffolding</span></span>
 <span><span class="va">tmpdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">tmpdir</span><span class="op">)</span></span>
@@ -1014,37 +1057,21 @@
 <span>  package_name <span class="op">=</span> <span class="st">"MyRPackage"</span>,</span>
 <span>  library_name <span class="op">=</span> <span class="st">"mylib"</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="va">tmpdir</span>,</span>
-<span>  use_system_lib <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  use_system_lib <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  authors_r <span class="op">=</span> <span class="st">'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Generating package initialization (zzz.R)...</span></span>
-<span><span class="co">#&gt; Processing header: /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h </span></span>
-<span><span class="co">#&gt; Generating helper functions...</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ========================================</span></span>
-<span><span class="co">#&gt; Package generation complete!</span></span>
-<span><span class="co">#&gt; ========================================</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Generated files:</span></span>
-<span><span class="co">#&gt;   - /tmp/RtmpDA8zD7/file3e770c43b690e6/zzz.R </span></span>
-<span><span class="co">#&gt;   - /tmp/RtmpDA8zD7/file3e770c43b690e6/simple_types_bindings.R </span></span>
-<span><span class="co">#&gt;   - /tmp/RtmpDA8zD7/file3e770c43b690e6/helpers.R </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Next steps:</span></span>
-<span><span class="co">#&gt; 1. Review generated R files in /tmp/RtmpDA8zD7/file3e770c43b690e6 </span></span>
-<span><span class="co">#&gt; 2. Add DESCRIPTION file with dependencies: RSimpleFFI</span></span>
-<span><span class="co">#&gt; 3. Generate NAMESPACE with: devtools::document()</span></span>
-<span><span class="co">#&gt; 4. Build package: R CMD build</span></span>
-<span><span class="co">#&gt; 5. Install: R CMD INSTALL</span></span>
 <span></span>
-<span><span class="co"># Check what was created</span></span>
+<span><span class="co"># Check what was created - proper R package structure</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="va">tmpdir</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "DESCRIPTION" "LICENSE"     "NAMESPACE"   "R"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">tmpdir</span>, <span class="st">"R"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "helpers.R"               "simple_types_bindings.R"</span></span>
 <span><span class="co">#&gt; [3] "zzz.R"</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="helper-functions">Helper Functions<a class="anchor" aria-label="anchor" href="#helper-functions"></a>
 </h3>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert struct to/from R lists</span></span>
 <span><span class="va">Point</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_struct.html">ffi_struct</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -1079,12 +1106,12 @@
 </h3>
 <p>Bit-field structs are laid out by the compiler as compact integers. While they are structs in C, <code><a href="reference/ffi_struct.html">ffi_struct()</a></code> models each field as a separate full-sized type, mismatching the actual memory layout.</p>
 <p>Example:</p>
-<div class="sourceCode" id="cb39"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span> <span class="dt">unsigned</span> enabled<span class="op">:</span><span class="dv">1</span><span class="op">;</span> mode<span class="op">:</span><span class="dv">3</span><span class="op">;</span> priority<span class="op">:</span><span class="dv">4</span><span class="op">;</span> reserved<span class="op">:</span><span class="dv">24</span><span class="op">;</span> <span class="op">}</span> SettingsFlags<span class="op">;</span></span>
-<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a><span class="dt">int</span> get_mode<span class="op">(</span>SettingsFlags settings<span class="op">);</span></span>
-<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>SettingsFlags increment<span class="op">(</span>SettingsFlags settings<span class="op">);</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span> <span class="dt">unsigned</span> enabled<span class="op">:</span><span class="dv">1</span><span class="op">;</span> mode<span class="op">:</span><span class="dv">3</span><span class="op">;</span> priority<span class="op">:</span><span class="dv">4</span><span class="op">;</span> reserved<span class="op">:</span><span class="dv">24</span><span class="op">;</span> <span class="op">}</span> SettingsFlags<span class="op">;</span></span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a><span class="dt">int</span> get_mode<span class="op">(</span>SettingsFlags settings<span class="op">);</span></span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a>SettingsFlags increment<span class="op">(</span>SettingsFlags settings<span class="op">);</span></span></code></pre></div>
 <p>Modeling with <code>ffi_struct(enabled=ffi_int(), mode=ffi_int(), ...)</code> creates a 16-byte struct (4 fields × 4 bytes), but the C compiler packs <code>SettingsFlags</code> into 4 bytes (32 bits total).</p>
 <p>Model bit-field structs as their packed integer type. Sum bit widths (1+3+4+24 = 32 bits) and use the corresponding <code>ffi_uintN()</code> type (<code><a href="reference/ffi_uint32.html">ffi_uint32()</a></code> here).</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># C functions that take/return SettingsFlags (32-bit bit-field struct)</span></span>
 <span><span class="co"># Model the struct as uint32_t in the FFI signature</span></span>
 <span></span>
@@ -1110,7 +1137,7 @@
 <span><span class="fu">get_priority_fn</span><span class="op">(</span><span class="va">incremented</span><span class="op">)</span> <span class="co"># After increment: 11</span></span>
 <span><span class="co">#&gt; [1] 11</span></span></code></pre></div>
 <p>Bit-field structs passed by pointer:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># C functions that take SettingsFlags* (pointer to bit-field struct)</span></span>
 <span></span>
 <span><span class="co"># Allocate buffer for 32-bit bit-field struct</span></span>
@@ -1132,7 +1159,7 @@
 <span><span class="fu">ptr_get_fn</span><span class="op">(</span><span class="va">buf</span><span class="op">)</span>  <span class="co"># Verify: now 5</span></span>
 <span><span class="co">#&gt; [1] 5</span></span></code></pre></div>
 <p>For convenient access, use bitfield helpers:</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_create_bitfield_accessors.html">ffi_create_bitfield_accessors</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>enabled <span class="op">=</span> <span class="fl">1L</span>, mode <span class="op">=</span> <span class="fl">3L</span>, priority <span class="op">=</span> <span class="fl">4L</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -1148,7 +1175,7 @@
 <h3 id="id_64-bit-bitfields">64-bit Bitfields<a class="anchor" aria-label="anchor" href="#id_64-bit-bitfields"></a>
 </h3>
 <p>For bitfields exceeding 32 bits or requiring full 64-bit range, use the 64-bit variants:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Pack fields totaling more than 32 bits</span></span>
 <span><span class="va">packed64</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_pack_bits64.html">ffi_pack_bits64</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">0x7FFFFFFFL</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">31L</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">packed64</span></span>
@@ -1168,7 +1195,7 @@
 <h3 id="signed-bitfields">Signed Bitfields<a class="anchor" aria-label="anchor" href="#signed-bitfields"></a>
 </h3>
 <p>For signed integer fields (common in hardware registers), use signed extraction:</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Pack value 13 (0xD) which represents -3 in signed 4-bit</span></span>
 <span><span class="va">packed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_pack_bits.html">ffi_pack_bits</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">13L</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4L</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>

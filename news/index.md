@@ -4,7 +4,23 @@
 
 ### New Features
 
+- Added `pack` parameter to
+  [`ffi_struct()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct.md)
+  for controlling struct alignment:
+
+  - `pack = 1` for byte-packed structs (no padding)
+  - `pack = 2`, `4`, `8`, or `16` for specific alignment boundaries
+  - `pack = NULL` (default) uses natural alignment
+  - Matches GCC/Clang `#pragma pack(n)` and MSVC packing behavior
+
+- Added
+  [`ffi_packed_offset()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_packed_offset.md)
+  and
+  [`ffi_packed_size()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_packed_size.md)
+  for computing packed struct layouts
+
 - Added bit-field helper functions for manual bit manipulation:
+
   - [`ffi_pack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits.md)
     /
     [`ffi_unpack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_unpack_bits.md) -
@@ -15,14 +31,52 @@
     single field operations
   - [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md) -
     generate accessor functions for bit-field structs
+  - 64-bit bit-field support with
+    [`ffi_longlong()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_longlong.md)
+    /
+    [`ffi_ulonglong()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ulonglong.md)
+    storage types
+  - Signed bit-field extraction with sign extension
+
 - Automatic bit-field detection and code generation:
+
   - Parser detects bit-field syntax (`: N`) in struct definitions
   - [`generate_r_bindings()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.md)
     auto-generates accessor code when bit-fields are present
   - Generated code includes usage examples showing `pack()`,
     [`get()`](https://rdrr.io/r/base/get.html), `set()` operations
+
+- Added typedef extraction from C headers:
+
+  - [`tcc_extract_typedefs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_typedefs.md)
+    parses typedef definitions
+  - [`generate_typedef_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_typedef_definition.md)
+    generates R code for typedefs
+  - Dependency-aware ordering via
+    [`sort_typedefs_by_dependency()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/sort_typedefs_by_dependency.md)
+  - Automatic detection and filtering of unresolvable typedefs
+
 - Autogeneration of bindings using tinycc for preprocessing of header
   files
+
+### Improvements
+
+- Centralized C-to-FFI type mappings in
+  [`get_ffi_type_map()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_ffi_type_map.md):
+
+  - 300+ type mappings including cross-platform aliases
+  - Support for glibc, musl, macOS/Darwin, BSD, MSYS2/MinGW types
+  - Clang-specific typedefs and compiler builtins
+
+- Added
+  [`strip_type_qualifiers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/strip_type_qualifiers.md)
+  for handling const/volatile in type resolution
+
+- Added
+  [`get_resolvable_types()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_resolvable_types.md)
+  and
+  [`get_c_type_keywords()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_c_type_keywords.md)
+  helper functions
 
 ## RSimpleFFI 1.0.1
 

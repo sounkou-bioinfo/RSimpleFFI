@@ -36,21 +36,57 @@
 <h2 class="pkg-version" data-toc-text="1.0.1.9000" id="rsimpleffi-1019000-development">RSimpleFFI 1.0.1.9000 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1019000-development"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-0-1-9000">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1-9000"></a></h3>
-<ul><li>Added bit-field helper functions for manual bit manipulation:
+<ul><li>
+<p>Added <code>pack</code> parameter to <code><a href="../reference/ffi_struct.html">ffi_struct()</a></code> for controlling struct alignment:</p>
+<ul><li>
+<code>pack = 1</code> for byte-packed structs (no padding)</li>
+<li>
+<code>pack = 2</code>, <code>4</code>, <code>8</code>, or <code>16</code> for specific alignment boundaries</li>
+<li>
+<code>pack = NULL</code> (default) uses natural alignment</li>
+<li>Matches GCC/Clang <code>#pragma pack(n)</code> and MSVC packing behavior</li>
+</ul></li>
+<li><p>Added <code><a href="../reference/ffi_packed_offset.html">ffi_packed_offset()</a></code> and <code><a href="../reference/ffi_packed_size.html">ffi_packed_size()</a></code> for computing packed struct layouts</p></li>
+<li>
+<p>Added bit-field helper functions for manual bit manipulation:</p>
 <ul><li>
 <code><a href="../reference/ffi_pack_bits.html">ffi_pack_bits()</a></code> / <code><a href="../reference/ffi_unpack_bits.html">ffi_unpack_bits()</a></code> - pack/unpack multiple bit-fields</li>
 <li>
 <code><a href="../reference/ffi_extract_bit_field.html">ffi_extract_bit_field()</a></code> / <code><a href="../reference/ffi_set_bit_field.html">ffi_set_bit_field()</a></code> - single field operations</li>
 <li>
 <code><a href="../reference/ffi_create_bitfield_accessors.html">ffi_create_bitfield_accessors()</a></code> - generate accessor functions for bit-field structs</li>
+<li>64-bit bit-field support with <code><a href="../reference/ffi_longlong.html">ffi_longlong()</a></code> / <code><a href="../reference/ffi_ulonglong.html">ffi_ulonglong()</a></code> storage types</li>
+<li>Signed bit-field extraction with sign extension</li>
 </ul></li>
-<li>Automatic bit-field detection and code generation:
+<li>
+<p>Automatic bit-field detection and code generation:</p>
 <ul><li>Parser detects bit-field syntax (<code>: N</code>) in struct definitions</li>
 <li>
 <code><a href="../reference/generate_r_bindings.html">generate_r_bindings()</a></code> auto-generates accessor code when bit-fields are present</li>
 <li>Generated code includes usage examples showing <code>pack()</code>, <code><a href="https://rdrr.io/r/base/get.html" class="external-link">get()</a></code>, <code>set()</code> operations</li>
 </ul></li>
-<li>Autogeneration of bindings using tinycc for preprocessing of header files</li>
+<li>
+<p>Added typedef extraction from C headers:</p>
+<ul><li>
+<code><a href="../reference/tcc_extract_typedefs.html">tcc_extract_typedefs()</a></code> parses typedef definitions</li>
+<li>
+<code><a href="../reference/generate_typedef_definition.html">generate_typedef_definition()</a></code> generates R code for typedefs</li>
+<li>Dependency-aware ordering via <code><a href="../reference/sort_typedefs_by_dependency.html">sort_typedefs_by_dependency()</a></code>
+</li>
+<li>Automatic detection and filtering of unresolvable typedefs</li>
+</ul></li>
+<li><p>Autogeneration of bindings using tinycc for preprocessing of header files</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-1-0-1-9000">Improvements<a class="anchor" aria-label="anchor" href="#improvements-1-0-1-9000"></a></h3>
+<ul><li>
+<p>Centralized C-to-FFI type mappings in <code><a href="../reference/get_ffi_type_map.html">get_ffi_type_map()</a></code>:</p>
+<ul><li>300+ type mappings including cross-platform aliases</li>
+<li>Support for glibc, musl, macOS/Darwin, BSD, MSYS2/MinGW types</li>
+<li>Clang-specific typedefs and compiler builtins</li>
+</ul></li>
+<li><p>Added <code><a href="../reference/strip_type_qualifiers.html">strip_type_qualifiers()</a></code> for handling const/volatile in type resolution</p></li>
+<li><p>Added <code><a href="../reference/get_resolvable_types.html">get_resolvable_types()</a></code> and <code><a href="../reference/get_c_type_keywords.html">get_c_type_keywords()</a></code> helper functions</p></li>
 </ul></div>
 </div>
     <div class="section level2">
