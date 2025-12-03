@@ -912,6 +912,7 @@ This project is licensed under the GPL-3 License.
   [`dll_symbol()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
   [`dll_compile_and_load()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
   [`dll_load_system()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
+  [`dll_load_r()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
   : Load a shared library/DLL
 - [`ffi_all_offsets()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_all_offsets.md)
   : Get all field offsets for a struct

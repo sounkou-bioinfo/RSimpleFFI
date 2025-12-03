@@ -58,7 +58,9 @@ Uses the same compiler configuration that R was built with.</p>
 <span>  compilation_directory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"dll_compile_"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">dll_load_system</span><span class="op">(</span><span class="va">lib_name</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">dll_load_system</span><span class="op">(</span><span class="va">lib_name</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">dll_load_r</span><span class="op">(</span>verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -127,6 +129,7 @@ Uses the same compiler configuration that R was built with.</p>
 <p>dyn.unload result invisibly</p>
 <p>Symbol information including address as external pointer</p>
 <p>Library handle that can be used with dll_* functions</p>
+<p>Library handle or NULL if not found</p>
 <p>Library handle or NULL if not found</p>
     </div>
 

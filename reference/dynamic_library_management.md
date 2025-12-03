@@ -23,6 +23,8 @@ dll_compile_and_load(
 )
 
 dll_load_system(lib_name, verbose = FALSE)
+
+dll_load_r(verbose = FALSE)
 ```
 
 ## Arguments
@@ -92,5 +94,7 @@ dyn.unload result invisibly
 Symbol information including address as external pointer
 
 Library handle that can be used with dll\_\* functions
+
+Library handle or NULL if not found
 
 Library handle or NULL if not found
