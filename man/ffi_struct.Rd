@@ -20,22 +20,17 @@ Creates an FFI structure type from named field types. By default, libffi
 uses natural alignment (each field aligned to its size). Use the \code{pack}
 parameter to specify tighter packing similar to \verb{#pragma pack(n)} in C.
 }
-\section{Packing and libffi}{
+\section{Packing}{
 
-The \code{pack} parameter affects how \code{ffi_offsetof()}, \code{ffi_sizeof()},
-\code{ffi_get_field()}, and \code{ffi_set_field()} calculate field offsets and struct size.
-This is useful when working with memory buffers that use packed C structs.
-
-\strong{Important}: libffi internally always uses natural alignment when passing
-structs by value in function calls. Packed structs work correctly when:
-\itemize{
-\item Reading/writing to memory buffers (ffi_alloc, ffi_get_field, ffi_set_field)
-\item Passing struct pointers to C functions (the C code handles the packed layout)
-\item Computing offsets for manual memory manipulation
+The \code{pack} parameter affects \code{ffi_offsetof()}, \code{ffi_sizeof()},
+\code{ffi_get_field()}, and \code{ffi_set_field()}.
 }
 
-However, passing a packed struct \strong{by value} to ffi_call may not work correctly
-because libffi will use natural alignment for the call.
+\section{Packed Structs By Value}{
+
+Packed structs cannot be passed by value - GCC compiles functions taking
+\verb{__attribute__((packed))} structs to expect arguments on the stack, but
+libffi passes via registers. Use pointers instead.
 }
 
 \examples{

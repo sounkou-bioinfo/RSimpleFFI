@@ -4,6 +4,19 @@
 #
 ######################################
 
+# Helper to get the appropriate ffi_type ref for CIF preparation
+# For packed structs, returns the byval type; otherwise returns the regular ref
+get_cif_type_ref <- function(type) {
+  if (S7::S7_inherits(type, StructType) && !is.null(type@pack) && type@pack > 0L) {
+    # Packed struct - use byval type for correct by-value passing
+    byval_ref <- .Call("R_get_struct_byval_type", type@ref)
+    if (!is.null(byval_ref) && !identical(byval_ref, NULL)) {
+      return(byval_ref)
+    }
+  }
+  type@ref
+}
+
 #' @name ffi_cif
 #' @title Prepare FFI call interface
 #' Prepare FFI call interface
@@ -25,13 +38,15 @@ ffi_cif <- function(return_type, ...) {
     stop("All argument types must be FFIType objects")
   }
 
+  # Get refs, using byval type for packed structs
+  return_ref <- get_cif_type_ref(return_type)
   arg_refs <- if (length(arg_types) > 0) {
-    lapply(arg_types, function(x) x@ref)
+    lapply(arg_types, get_cif_type_ref)
   } else {
     list()
   }
 
-  cif_ref <- .Call("R_prep_ffi_cif", return_type@ref, arg_refs)
+  cif_ref <- .Call("R_prep_ffi_cif", return_ref, arg_refs)
 
   CIF(
     return_type = return_type,
@@ -90,14 +105,16 @@ ffi_cif_var <- function(return_type, nfixedargs, ...) {
     stop("nfixedargs cannot exceed total number of argument types")
   }
 
+  # Get refs, using byval type for packed structs
+  return_ref <- get_cif_type_ref(return_type)
   arg_refs <- if (length(arg_types) > 0) {
-    lapply(arg_types, function(x) x@ref)
+    lapply(arg_types, get_cif_type_ref)
   } else {
     list()
   }
 
   cif_ref <- .Call(
-    "R_prep_ffi_cif_var", return_type@ref, arg_refs,
+    "R_prep_ffi_cif_var", return_ref, arg_refs,
     as.integer(nfixedargs)
   )
 

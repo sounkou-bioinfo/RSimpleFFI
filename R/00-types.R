@@ -576,20 +576,14 @@ ffi_wchar_t <- function() create_builtin_type("wchar_t")
 #' @param pack Integer specifying packing alignment (1, 2, 4, 8, or 16), or NULL
 #'   for default/natural alignment. When pack=1, fields are byte-aligned (no padding).
 #'
-#' @section Packing and libffi:
-#' The `pack` parameter affects how `ffi_offsetof()`, `ffi_sizeof()`,
-#' `ffi_get_field()`, and `ffi_set_field()` calculate field offsets and struct size.
-#' This is useful when working with memory buffers that use packed C structs.
+#' @section Packing:
+#' The `pack` parameter affects `ffi_offsetof()`, `ffi_sizeof()`,
+#' `ffi_get_field()`, and `ffi_set_field()`.
 #'
-#' **Important**: libffi internally always uses natural alignment when passing
-
-#' structs by value in function calls. Packed structs work correctly when:
-#' - Reading/writing to memory buffers (ffi_alloc, ffi_get_field, ffi_set_field)
-#' - Passing struct pointers to C functions (the C code handles the packed layout)
-#' - Computing offsets for manual memory manipulation
-#'
-#' However, passing a packed struct **by value** to ffi_call may not work correctly
-#' because libffi will use natural alignment for the call.
+#' @section Packed Structs By Value:
+#' Packed structs cannot be passed by value - GCC compiles functions taking
+#' `__attribute__((packed))` structs to expect arguments on the stack, but
+#' libffi passes via registers. Use pointers instead.
 #'
 #' @return StructType object
 #' @keywords Types

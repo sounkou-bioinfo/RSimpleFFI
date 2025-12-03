@@ -36,6 +36,8 @@ SEXP R_get_all_field_offsets(SEXP struct_type);
 SEXP R_get_packed_field_offset(SEXP struct_type, SEXP field_index, SEXP pack);
 SEXP R_get_all_packed_field_offsets(SEXP struct_type, SEXP pack);
 SEXP R_get_packed_struct_size(SEXP struct_type, SEXP pack);
+SEXP R_get_libffi_struct_offsets(SEXP struct_type);
+SEXP R_get_struct_byval_type(SEXP struct_type);
 
 SEXP R_alloc_buffer(SEXP r_size);
 SEXP R_alloc_typed_buffer(SEXP r_type, SEXP r_n);
@@ -167,6 +169,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_get_packed_field_offset",      (DL_FUNC) &R_get_packed_field_offset,      3},
     {"R_get_all_packed_field_offsets", (DL_FUNC) &R_get_all_packed_field_offsets, 2},
     {"R_get_packed_struct_size",       (DL_FUNC) &R_get_packed_struct_size,       2},
+    {"R_get_libffi_struct_offsets",    (DL_FUNC) &R_get_libffi_struct_offsets,    1},
+    {"R_get_struct_byval_type",        (DL_FUNC) &R_get_struct_byval_type,        1},
     {"R_pointer_to_string",       (DL_FUNC) &R_pointer_to_string,       1},
     {"R_make_typed_pointer",      (DL_FUNC) &R_make_typed_pointer,      2},
     {"R_get_pointer_type",        (DL_FUNC) &R_get_pointer_type,        1},

@@ -300,22 +300,83 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types, SEXP r_pack) {
         Rf_error("Failed to compute struct layout");
     }
     
-    // Apply pack to alignment and size
-    // This affects how this struct is placed when used as a field in another struct
+    // For packed structs, create a byval type with byte-level elements
+    // This ensures libffi marshals the correct bytes when passing by value
+    ffi_type* byval_type = NULL;
+    
     if (pack > 0) {
-        // Set reduced alignment
+        // Calculate packed size
+        size_t packed_size = calculate_packed_struct_size(struct_type, pack);
+        
+        // Create byte-level ffi_type for by-value passing
+        // This has N char elements so libffi computes offsets 0,1,2,...,N-1
+        ffi_type** byte_elements = (ffi_type**)calloc(packed_size + 1, sizeof(ffi_type*));
+        if (!byte_elements) {
+            free(field_types);
+            free(struct_type);
+            Rf_error("Memory allocation failed for byval type");
+        }
+        
+        for (size_t i = 0; i < packed_size; i++) {
+            byte_elements[i] = &ffi_type_uint8;
+        }
+        byte_elements[packed_size] = NULL;
+        
+        byval_type = (ffi_type*)malloc(sizeof(ffi_type));
+        if (!byval_type) {
+            free(byte_elements);
+            free(field_types);
+            free(struct_type);
+            Rf_error("Memory allocation failed for byval type");
+        }
+        
+        byval_type->size = 0;
+        byval_type->alignment = 0;
+        byval_type->type = FFI_TYPE_STRUCT;
+        byval_type->elements = byte_elements;
+        
+        // Prep the byval type
+        ffi_cif byval_cif;
+        status = ffi_prep_cif(&byval_cif, FFI_DEFAULT_ABI, 0, byval_type, NULL);
+        if (status != FFI_OK) {
+            free(byte_elements);
+            free(byval_type);
+            free(field_types);
+            free(struct_type);
+            Rf_error("Failed to prepare byval type");
+        }
+        
+        // Apply pack to main struct alignment and size
         if (struct_type->alignment > (unsigned short)pack) {
             struct_type->alignment = (unsigned short)pack;
         }
-        // Also set packed size so nested structs work correctly
-        struct_type->size = calculate_packed_struct_size(struct_type, pack);
+        struct_type->size = packed_size;
     }
     
-   SEXP extPtr = R_MakeExternalPtr(struct_type, R_NilValue, R_NilValue);
+    // Store byval_type in the external pointer's tag (or NULL if not packed)
+    SEXP byval_extPtr = R_NilValue;
+    if (byval_type) {
+        byval_extPtr = PROTECT(R_MakeExternalPtr(byval_type, R_NilValue, R_NilValue));
+        R_RegisterCFinalizerEx(byval_extPtr, struct_type_finalizer, TRUE);
+    }
+    
+    SEXP extPtr = R_MakeExternalPtr(struct_type, byval_extPtr, R_NilValue);
     PROTECT(extPtr);
     R_RegisterCFinalizerEx(extPtr, struct_type_finalizer, TRUE);
-    UNPROTECT(1);
+    
+    if (byval_type) {
+        UNPROTECT(2);  // extPtr and byval_extPtr
+    } else {
+        UNPROTECT(1);  // just extPtr
+    }
     return extPtr;
+}
+
+// Get the byval type for a packed struct (for passing by value)
+// Returns the byval type external pointer, or R_NilValue if not packed
+SEXP R_get_struct_byval_type(SEXP r_struct_type) {
+    // The byval type is stored in the tag of the external pointer
+    return R_ExternalPtrTag(r_struct_type);
 }
 
 
@@ -1375,6 +1436,37 @@ SEXP R_get_packed_struct_size(SEXP r_struct_type, SEXP r_pack) {
     
     size_t size = calculate_packed_struct_size(struct_type, pack);
     return ScalarInteger((int)size);
+}
+
+// R interface to get libffi's internal struct offsets (for debugging)
+SEXP R_get_libffi_struct_offsets(SEXP r_struct_type) {
+    ffi_type* struct_type = (ffi_type*)R_ExternalPtrAddr(r_struct_type);
+    
+    if (!struct_type || struct_type->type != FFI_TYPE_STRUCT) {
+        Rf_error("Invalid structure type");
+    }
+    
+    // Count fields
+    int num_fields = 0;
+    while (struct_type->elements[num_fields]) num_fields++;
+    
+    // Allocate array for offsets
+    size_t* raw_offsets = (size_t*)R_alloc(num_fields, sizeof(size_t));
+    
+    // Call libffi's offset calculation
+    ffi_status status = ffi_get_struct_offsets(FFI_DEFAULT_ABI, struct_type, raw_offsets);
+    if (status != FFI_OK) {
+        Rf_error("ffi_get_struct_offsets failed with status %d", status);
+    }
+    
+    SEXP result = PROTECT(allocVector(INTSXP, num_fields));
+    int* result_offsets = INTEGER(result);
+    for (int i = 0; i < num_fields; i++) {
+        result_offsets[i] = (int)raw_offsets[i];
+    }
+    
+    UNPROTECT(1);
+    return result;
 }
 
 // Get structure field value
