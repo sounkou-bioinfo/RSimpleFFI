@@ -281,38 +281,17 @@ ffi_all_offsets(Natural)  # a=0, b=8
 ffi_all_offsets(Packed)   # a=0, b=4
 ```
 
-#### Packed Struct Limitation: By-Value Passing
+#### Packed Struct Limitation
 
-**Important**: Packed structs cannot be passed **by value** through libffi. This is a
-fundamental ABI limitation, not a bug.
+Packed structs cannot be passed by value to C functions (libffi limitation). Use pointers instead.
 
-When GCC/Clang compile a C function that accepts a packed struct by value, they generate
-code expecting the argument on the **stack**. For non-packed structs, the x86-64 ABI
-passes small structs via **registers**. libffi implements standard ABI conventions
-and has no way to know a function was compiled with `__attribute__((packed))`.
- 
+```{r, error=TRUE}
+PackedPoint <- ffi_struct(x = ffi_uint8(), y = ffi_int32(), pack = 1L)
+tryCatch(
+  ffi_cif(PackedPoint, ffi_int()),
+  error = function(e) message(e$message)
+)
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│ At compile time: GCC sees __attribute__((packed))                   │
-│                  → generates code expecting data on STACK           │
-│                                                                     │
-│ At runtime:      libffi sees "struct with N bytes"                  │
-│                  → passes data via REGISTERS (standard ABI)         │
-│                                                                     │
-│ Result:          Function reads from wrong location → garbage data  │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-**Packed structs work correctly when:**
-
-- Passing struct **pointers** to C functions (always works)
-- Reading/writing memory buffers (`ffi_alloc`, `ffi_get_field`, `ffi_set_field`)
-- Computing offsets and sizes
-
-**Workarounds for by-value:**
-
-- Change C API to accept pointers: `void func(PackedStruct* p)`
-- Create a thin C wrapper that accepts a pointer and calls the by-value function
 
 ### Enumerations
 
@@ -1116,9 +1095,9 @@ ffi_extract_signed_bit_field(packed, 0L, 4L)
 ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 ```
 
-### Unions & Struct Passing
+### Structs & Unions By Value
 
-Union and struct passing by value may be unreliable across platforms due to ABI differences. Prefer passing by pointer. The `pack` parameter for `ffi_struct()` correctly computes sizes and offsets for field access via `ffi_get_field()`/`ffi_set_field()`.
+Struct/union passing by value may be unreliable across platforms. Packed structs cannot be passed by value (libffi limitation). Prefer pointers.
 
 ## License
 

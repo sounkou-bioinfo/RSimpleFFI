@@ -5,13 +5,17 @@
 ######################################
 
 # Helper to get the appropriate ffi_type ref for CIF preparation
-# For packed structs, returns the byval type; otherwise returns the regular ref
+# For structs/unions with packed layout changes, by-value passing is not supported
+# (libffi depends on field offsets for calling conventions which don't match packed layout)
 get_cif_type_ref <- function(type) {
-  if (S7::S7_inherits(type, StructType) && !is.null(type@pack) && type@pack > 0L) {
-    # Packed struct - use byval type for correct by-value passing
-    byval_ref <- .Call("R_get_struct_byval_type", type@ref)
-    if (!is.null(byval_ref) && !identical(byval_ref, NULL)) {
-      return(byval_ref)
+  # Check for packed structs/unions with layout changes - these can't be passed by value
+  if (S7::S7_inherits(type, StructType) || S7::S7_inherits(type, UnionType)) {
+    if (isTRUE(type@has_packed_change)) {
+      stop(sprintf(
+        "Packed %s '%s' cannot be passed by value to a C function ",
+        if (S7::S7_inherits(type, StructType)) "struct" else "union",
+        type@name %||% "(anonymous)"
+      ), "(libffi limitation). Use a pointer instead.", call. = FALSE)
     }
   }
   type@ref

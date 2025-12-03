@@ -49,6 +49,9 @@ FFIType <- S7::new_class(
 #' @param fields Character vector of field names
 #' @param field_types List of FFIType objects for each field
 #' @param pack Integer packing alignment (NULL for default/natural alignment)
+#' @param has_packed_change Logical indicating if packing changes field offsets
+#'   from natural alignment. When TRUE, the struct cannot be passed by value
+#'   to C functions (only pointers work) because libffi doesn't support packed structs.
 #' @export
 StructType <- S7::new_class(
   "StructType",
@@ -57,7 +60,8 @@ StructType <- S7::new_class(
   properties = list(
     fields = S7::class_character,
     field_types = S7::class_list,
-    pack = S7::class_any # NULL or integer
+    pack = S7::class_any, # NULL or integer
+    has_packed_change = S7::class_logical
   ),
   validator = function(self) {
     if (length(self@fields) != length(self@field_types)) {
@@ -146,6 +150,9 @@ ffi_array_type <- function(element_type, length) {
 #' @param fields Character vector of field names
 #' @param field_types List of FFIType objects for each field
 #' @param pack Integer packing alignment (NULL for default/natural alignment)
+#' @param has_packed_change Logical indicating if packing changes alignment
+#'   from natural. When TRUE, the union cannot be passed by value
+#'   to C functions (only pointers work) because libffi doesn't support packed unions.
 #' @export
 UnionType <- S7::new_class(
   "UnionType",
@@ -154,7 +161,8 @@ UnionType <- S7::new_class(
   properties = list(
     fields = S7::class_character,
     field_types = S7::class_list,
-    pack = S7::class_any # NULL or integer
+    pack = S7::class_any, # NULL or integer
+    has_packed_change = S7::class_logical
   ),
   validator = function(self) {
     if (length(self@fields) != length(self@field_types)) {
@@ -601,6 +609,10 @@ ffi_wchar_t <- function() create_builtin_type("wchar_t")
 #' # Check sizes
 #' ffi_sizeof(Point) # Natural size
 #' ffi_sizeof(PackedData) # Packed size (smaller)
+#'
+#' # Note: Packed structs cannot be passed by value to C functions.
+#' # Use pointers instead:
+#' # ffi_function("some_func", ffi_void(), ffi_pointer())
 #' @export
 ffi_struct <- function(..., pack = NULL) {
   fields <- list(...)
@@ -635,13 +647,36 @@ ffi_struct <- function(..., pack = NULL) {
   struct_ref <- .Call("R_create_struct_ffi_type", field_refs, pack)
   struct_size <- .Call("R_get_ffi_type_size", struct_ref)
 
+  # Determine if packing actually changes the layout
+
+  # This happens when pack < natural alignment of any field
+  has_packed_change <- FALSE
+  if (!is.null(pack)) {
+    # Check if any field has alignment > pack
+    for (field in fields) {
+      field_align <- .Call("R_get_ffi_type_alignment", field@ref)
+      if (field_align > pack) {
+        has_packed_change <- TRUE
+        break
+      }
+      # Also check nested structs/unions
+      if (S7::S7_inherits(field, StructType) || S7::S7_inherits(field, UnionType)) {
+        if (isTRUE(field@has_packed_change)) {
+          has_packed_change <- TRUE
+          break
+        }
+      }
+    }
+  }
+
   StructType(
     name = "struct",
     size = struct_size,
     ref = struct_ref,
     fields = field_names,
     field_types = unname(fields),
-    pack = pack
+    pack = pack,
+    has_packed_change = has_packed_change
   )
 }
 
@@ -667,6 +702,9 @@ ffi_struct <- function(..., pack = NULL) {
 #'
 #' # Packed union in a struct - offset of next field is affected
 #' S <- ffi_struct(u = PackedU, after = ffi_char())
+#'
+#' # Note: Packed unions cannot be passed by value to C functions.
+#' # Use pointers instead.
 #' @export
 ffi_union <- function(..., pack = NULL) {
   fields <- list(...)
@@ -701,13 +739,34 @@ ffi_union <- function(..., pack = NULL) {
   union_ref <- .Call("R_create_union_ffi_type", field_refs, pack)
   union_size <- .Call("R_get_ffi_type_size", union_ref)
 
+  # Determine if packing actually changes the layout
+  # For unions, this happens when pack < natural alignment of any field
+  has_packed_change <- FALSE
+  if (!is.null(pack)) {
+    for (field in fields) {
+      field_align <- .Call("R_get_ffi_type_alignment", field@ref)
+      if (field_align > pack) {
+        has_packed_change <- TRUE
+        break
+      }
+      # Also check nested structs/unions
+      if (S7::S7_inherits(field, StructType) || S7::S7_inherits(field, UnionType)) {
+        if (isTRUE(field@has_packed_change)) {
+          has_packed_change <- TRUE
+          break
+        }
+      }
+    }
+  }
+
   UnionType(
     name = "union",
     size = union_size,
     ref = union_ref,
     fields = field_names,
     field_types = unname(fields),
-    pack = pack
+    pack = pack,
+    has_packed_change = has_packed_change
   )
 }
 

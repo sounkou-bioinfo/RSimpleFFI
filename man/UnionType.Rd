@@ -10,7 +10,8 @@ UnionType(
   ref = NULL,
   fields = character(0),
   field_types = list(),
-  pack = NULL
+  pack = NULL,
+  has_packed_change = logical(0)
 )
 }
 \arguments{
@@ -25,6 +26,10 @@ UnionType(
 \item{field_types}{List of FFIType objects for each field}
 
 \item{pack}{Integer packing alignment (NULL for default/natural alignment)}
+
+\item{has_packed_change}{Logical indicating if packing changes alignment
+from natural. When TRUE, the union cannot be passed by value
+to C functions (only pointers work) because libffi doesn't support packed unions.}
 }
 \description{
 FFI Union Type

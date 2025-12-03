@@ -47,5 +47,9 @@ PackedData <- ffi_struct(
 # Check sizes
 ffi_sizeof(Point) # Natural size
 ffi_sizeof(PackedData) # Packed size (smaller)
+
+# Note: Packed structs cannot be passed by value to C functions.
+# Use pointers instead:
+# ffi_function("some_func", ffi_void(), ffi_pointer(PackedData))
 }
 \keyword{Types}

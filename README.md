@@ -332,39 +332,19 @@ ffi_all_offsets(Packed)   # a=0, b=4
 #> 0 4
 ```
 
-#### Packed Struct Limitation: By-Value Passing
+#### Packed Struct Limitation
 
-**Important**: Packed structs cannot be passed **by value** through
-libffi. This is a fundamental ABI limitation, not a bug.
+Packed structs cannot be passed by value to C functions (libffi
+limitation). Use pointers instead.
 
-When GCC/Clang compile a C function that accepts a packed struct by
-value, they generate code expecting the argument on the **stack**. For
-non-packed structs, the x86-64 ABI passes small structs via
-**registers**. libffi implements standard ABI conventions and has no way
-to know a function was compiled with `__attribute__((packed))`.
-
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │ At compile time: GCC sees __attribute__((packed))                   │
-    │                  → generates code expecting data on STACK           │
-    │                                                                     │
-    │ At runtime:      libffi sees "struct with N bytes"                  │
-    │                  → passes data via REGISTERS (standard ABI)         │
-    │                                                                     │
-    │ Result:          Function reads from wrong location → garbage data  │
-    └─────────────────────────────────────────────────────────────────────┘
-
-**Packed structs work correctly when:**
-
-- Passing struct **pointers** to C functions (always works)
-- Reading/writing memory buffers (`ffi_alloc`, `ffi_get_field`,
-  `ffi_set_field`)
-- Computing offsets and sizes
-
-**Workarounds for by-value:**
-
-- Change C API to accept pointers: `void func(PackedStruct* p)`
-- Create a thin C wrapper that accepts a pointer and calls the by-value
-  function
+``` r
+PackedPoint <- ffi_struct(x = ffi_uint8(), y = ffi_int32(), pack = 1L)
+tryCatch(
+  ffi_cif(PackedPoint, ffi_int()),
+  error = function(e) message(e$message)
+)
+#> Packed struct 'struct' cannot be passed by value to a C function (libffi limitation). Use a pointer instead.
+```
 
 ### Enumerations
 
@@ -683,10 +663,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 156273257
+#> [1] 1147862677
 rand_value <- rand_func()
 rand_value
-#> [1] 2072265712
+#> [1] 380550509
 dll_unload(libc_path)
 ```
 
@@ -708,7 +688,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x64ddd569f080>
+#> <pointer: 0x5993a44127d0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -799,8 +779,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     12.7µs   28.1µs    36645.    78.2KB       0 
-#> 2 ffi_call     90.6µs   95.1µs     9910.    78.7KB     100.
+#> 1 native_r     13.1µs   28.7µs    35587.    78.2KB        0
+#> 2 ffi_call     92.3µs   97.1µs     9901.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -882,7 +862,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x64dddc32da10>
+#> <pointer: 0x5993ab133910>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -914,8 +894,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.43ms   2.53ms      377.    78.2KB     19.9
-#> 2 c_ffi      100.38µs 115.53µs     8433.    78.7KB      0
+#> 1 r            2.43ms   2.53ms      381.    78.2KB     20.0
+#> 2 c_ffi       105.8µs 114.14µs     8098.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -997,7 +977,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764793375
+#> [1] 1764794762
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1038,7 +1018,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 21:22:54.675298\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 21:46:02.490975\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1095,8 +1075,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file189211753dc67.h
-#> # Generated on: 2025-12-03 21:22:54.69697
+#> # Auto-generated R bindings for file1e132558bea12.h
+#> # Generated on: 2025-12-03 21:46:02.514786
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -1106,7 +1086,7 @@ cat(substr(libc_code, 1, 600))
 #> #  - char*: use ffi_string(), automatically converts to/from R character
 #> #  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()
 #> #  - Struct fields: access with ffi_get_field() and ffi_set_field()
-#> #  - Union fields: same as structs,
+#> #  - Union fields: same as structs
 
 # Source the bindings
 tmpfile <- tempfile(fileext = ".R")
@@ -1328,12 +1308,10 @@ ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 #> [1] -3
 ```
 
-### Unions & Struct Passing
+### Structs & Unions By Value
 
-Union and struct passing by value may be unreliable across platforms due
-to ABI differences. Prefer passing by pointer. The `pack` parameter for
-`ffi_struct()` correctly computes sizes and offsets for field access via
-`ffi_get_field()`/`ffi_set_field()`.
+Struct/union passing by value may be unreliable across platforms. Packed
+structs cannot be passed by value (libffi limitation). Prefer pointers.
 
 ## License
 

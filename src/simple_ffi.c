@@ -5,7 +5,6 @@
  *
  * Author: Sounkou Mahamane Toure
  * Licensed under GPL-3
- * Changelog:
  */
 
 #include <R.h>
@@ -235,6 +234,15 @@ SEXP R_get_ffi_type_size(SEXP r_type) {
         Rf_error("Invalid FFI type pointer");
     }
     return ScalarInteger((int)type->size);
+}
+
+// Get FFI type alignment
+SEXP R_get_ffi_type_alignment(SEXP r_type) {
+    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(r_type);
+    if (!type) {
+        Rf_error("Invalid FFI type pointer");
+    }
+    return ScalarInteger((int)type->alignment);
 }
 
 

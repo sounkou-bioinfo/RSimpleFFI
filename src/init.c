@@ -8,6 +8,7 @@
 /* Declare external functions */
 SEXP R_get_builtin_ffi_type(SEXP name);
 SEXP R_get_ffi_type_size(SEXP type_ptr);
+SEXP R_get_ffi_type_alignment(SEXP type_ptr);
 SEXP R_create_struct_ffi_type(SEXP field_refs, SEXP pack);
 SEXP R_create_union_ffi_type(SEXP field_refs, SEXP pack);
 SEXP R_create_array_ffi_type(SEXP element_type, SEXP length);
@@ -143,6 +144,7 @@ SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width);
 static const R_CallMethodDef CallEntries[] = {
     {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
     {"R_get_ffi_type_size",       (DL_FUNC) &R_get_ffi_type_size,       1},
+    {"R_get_ffi_type_alignment",  (DL_FUNC) &R_get_ffi_type_alignment,  1},
     {"R_create_struct_ffi_type",  (DL_FUNC) &R_create_struct_ffi_type,  2},
     {"R_create_union_ffi_type",   (DL_FUNC) &R_create_union_ffi_type,   2},
     {"R_create_array_ffi_type",   (DL_FUNC) &R_create_array_ffi_type,   2},
