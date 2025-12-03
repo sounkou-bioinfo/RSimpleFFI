@@ -21,6 +21,6 @@ Extract a single bit-field from a 64-bit packed value
 }
 \examples{
 packed <- ffi_pack_bits64(c(1L, 5L, 12L), c(1L, 3L, 4L))
-ffi_extract_bits64(packed, 1L, 3L)  # 5 (mode field)
+ffi_extract_bits64(packed, 1L, 3L) # 5 (mode field)
 
 }

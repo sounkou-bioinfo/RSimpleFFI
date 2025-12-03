@@ -1027,7 +1027,7 @@ sort_typedefs_by_dependency <- function(typedefs) {
 
   # Kahn's algorithm for topological sort
   # Count incoming edges (how many typedefs depend on each)
-  in_degree <- setNames(rep(0L, n), typedef_names)
+  in_degree <- stats::setNames(rep(0L, n), typedef_names)
   for (alias_name in typedef_names) {
     for (dep in deps[[alias_name]]) {
       in_degree[[dep]] <- in_degree[[dep]] + 1L
@@ -1037,7 +1037,7 @@ sort_typedefs_by_dependency <- function(typedefs) {
   # Start with nodes that have no dependencies pointing to them
   # BUT we want base types first, so we want types with no deps first
   result <- character(0)
-  processed <- setNames(rep(FALSE, n), typedef_names)
+  processed <- stats::setNames(rep(FALSE, n), typedef_names)
 
   # Simple DFS-based topological sort
   visit <- function(name) {

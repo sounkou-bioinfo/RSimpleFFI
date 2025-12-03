@@ -789,7 +789,7 @@ ffi_enum <- function(..., underlying_type = ffi_int()) {
   }
 
   # Convert list to named integer vector
-  values <- setNames(as.integer(unlist(values)), names(values))
+  values <- stats::setNames(as.integer(unlist(values)), names(values))
 
   if (!S7::S7_inherits(underlying_type, FFIType)) {
     stop("underlying_type must be an FFIType object")

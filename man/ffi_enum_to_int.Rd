@@ -20,6 +20,6 @@ Look up the integer value for a named enum constant.
 \examples{
 \dontrun{
 Color <- ffi_enum(RED = 0L, GREEN = 1L, BLUE = 2L)
-ffi_enum_to_int(Color, "GREEN")  # 1L
+ffi_enum_to_int(Color, "GREEN") # 1L
 }
 }

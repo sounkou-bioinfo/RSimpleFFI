@@ -20,6 +20,6 @@ bit widths.
 }
 \examples{
 packed <- ffi_pack_bits64(c(1L, 5L, 12L), c(1L, 3L, 4L))
-ffi_unpack_bits64(packed, c(1L, 3L, 4L))  # c(1, 5, 12)
+ffi_unpack_bits64(packed, c(1L, 3L, 4L)) # c(1, 5, 12)
 
 }

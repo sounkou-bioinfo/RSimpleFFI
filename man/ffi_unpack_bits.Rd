@@ -25,7 +25,7 @@ Each value is extracted by shifting and masking according to its width.
 \examples{
 # Unpack a value with three bit-fields
 values <- ffi_unpack_bits(0x65L, c(1L, 3L, 4L))
-values  # [1]  1  5 12
+values # [1]  1  5 12
 
 # Round-trip test
 packed <- ffi_pack_bits(c(1L, 5L, 12L), c(1L, 3L, 4L))

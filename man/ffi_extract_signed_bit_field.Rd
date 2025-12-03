@@ -23,10 +23,10 @@ This is the 32-bit version using pure R code.
 \examples{
 # A 4-bit value of 13 (0xD) represents -3 in signed 4-bit
 packed <- ffi_pack_bits(c(13L), c(4L))
-ffi_extract_signed_bit_field(packed, 0L, 4L)  # -3
+ffi_extract_signed_bit_field(packed, 0L, 4L) # -3
 
 # 3-bit value of 7 represents -1 in signed 3-bit
 packed2 <- ffi_pack_bits(c(7L), c(3L))
-ffi_extract_signed_bit_field(packed2, 0L, 3L)  # -1
+ffi_extract_signed_bit_field(packed2, 0L, 3L) # -1
 
 }

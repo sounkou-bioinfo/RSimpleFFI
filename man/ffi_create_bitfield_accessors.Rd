@@ -42,10 +42,10 @@ flags_accessors$unpack(packed)
 # $priority: 12
 
 # Get a single field
-flags_accessors$get(packed, "mode")  # 5
+flags_accessors$get(packed, "mode") # 5
 
 # Set a single field
 new_packed <- flags_accessors$set(packed, "mode", 7L)
-flags_accessors$get(new_packed, "mode")  # 7
+flags_accessors$get(new_packed, "mode") # 7
 
 }

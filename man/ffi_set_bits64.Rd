@@ -23,7 +23,7 @@ Set a single bit-field in a 64-bit packed value
 }
 \examples{
 packed <- ffi_pack_bits64(c(1L, 5L, 12L), c(1L, 3L, 4L))
-new_packed <- ffi_set_bits64(packed, 7L, 1L, 3L)  # Set mode to 7
-ffi_extract_bits64(new_packed, 1L, 3L)  # 7
+new_packed <- ffi_set_bits64(packed, 7L, 1L, 3L) # Set mode to 7
+ffi_extract_bits64(new_packed, 1L, 3L) # 7
 
 }

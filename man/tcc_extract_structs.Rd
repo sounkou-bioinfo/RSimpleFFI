@@ -10,7 +10,9 @@ tcc_extract_structs(preprocessed_lines)
 \item{preprocessed_lines}{Character vector from tcc_preprocess()}
 }
 \value{
-List of struct definitions (name -> list of fields)
+List of struct definitions (name -> list of fields).
+Each struct may have a "packed" attribute set to TRUE if \strong{attribute}((packed))
+or #pragma pack was detected.
 }
 \description{
 Extract struct definitions from preprocessed C code
