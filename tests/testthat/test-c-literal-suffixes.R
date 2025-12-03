@@ -1,4 +1,6 @@
 test_that("C literal suffixes are properly stripped", {
+  skip_if_not(tcc_available(), "TCC not available")
+  
   # Create test header with various C literal suffixes
   test_header <- tempfile(fileext = ".h")
   cat("
