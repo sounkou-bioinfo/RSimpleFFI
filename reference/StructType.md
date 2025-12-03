@@ -11,7 +11,8 @@ StructType(
   ref = NULL,
   fields = character(0),
   field_types = list(),
-  pack = NULL
+  pack = NULL,
+  has_packed_change = logical(0)
 )
 ```
 
@@ -40,3 +41,10 @@ StructType(
 - pack:
 
   Integer packing alignment (NULL for default/natural alignment)
+
+- has_packed_change:
+
+  Logical indicating if packing changes field offsets from natural
+  alignment. When TRUE, the struct cannot be passed by value to C
+  functions (only pointers work) because libffi doesn't support packed
+  structs.

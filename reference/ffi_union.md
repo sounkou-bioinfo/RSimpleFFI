@@ -37,4 +37,7 @@ PackedU <- ffi_union(c = ffi_char(), i = ffi_int(), pack = 1)
 
 # Packed union in a struct - offset of next field is affected
 S <- ffi_struct(u = PackedU, after = ffi_char())
+
+# Note: Packed unions cannot be passed by value to C functions.
+# Use pointers instead.
 ```

@@ -45,7 +45,8 @@
 <span>  ref <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fields <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  field_types <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  pack <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  pack <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  has_packed_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,6 +76,12 @@
 
 <dt id="arg-pack">pack<a class="anchor" aria-label="anchor" href="#arg-pack"></a></dt>
 <dd><p>Integer packing alignment (NULL for default/natural alignment)</p></dd>
+
+
+<dt id="arg-has-packed-change">has_packed_change<a class="anchor" aria-label="anchor" href="#arg-has-packed-change"></a></dt>
+<dd><p>Logical indicating if packing changes field offsets
+from natural alignment. When TRUE, the struct cannot be passed by value
+to C functions (only pointers work) because libffi doesn't support packed structs.</p></dd>
 
 </dl></div>
 

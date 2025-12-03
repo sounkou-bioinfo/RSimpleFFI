@@ -98,6 +98,10 @@ libffi passes via registers. Use pointers instead.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 8</span>
 <span class="r-in"><span><span class="fu"><a href="ffi_sizeof.html">ffi_sizeof</a></span><span class="op">(</span><span class="va">PackedData</span><span class="op">)</span> <span class="co"># Packed size (smaller)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Note: Packed structs cannot be passed by value to C functions.</span></span></span>
+<span class="r-in"><span><span class="co"># Use pointers instead:</span></span></span>
+<span class="r-in"><span><span class="co"># ffi_function("some_func", ffi_void(), ffi_pointer(PackedData))</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

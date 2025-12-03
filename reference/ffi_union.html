@@ -75,6 +75,9 @@ Default NULL uses natural alignment.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Packed union in a struct - offset of next field is affected</span></span></span>
 <span class="r-in"><span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="ffi_struct.html">ffi_struct</a></span><span class="op">(</span>u <span class="op">=</span> <span class="va">PackedU</span>, after <span class="op">=</span> <span class="fu"><a href="ffi_char.html">ffi_char</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Note: Packed unions cannot be passed by value to C functions.</span></span></span>
+<span class="r-in"><span><span class="co"># Use pointers instead.</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
