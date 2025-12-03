@@ -7,6 +7,11 @@
   - `ffi_extract_bit_field()` / `ffi_set_bit_field()` - single field operations
   - `ffi_create_bitfield_accessors()` - generate accessor functions for bit-field structs
 
+* Automatic bit-field detection and code generation:
+  - Parser detects bit-field syntax (`: N`) in struct definitions
+  - `generate_r_bindings()` auto-generates accessor code when bit-fields are present
+  - Generated code includes usage examples showing `pack()`, `get()`, `set()` operations
+
 * Autogeneration of bindings using tinycc for preprocessing of header files
 
 
