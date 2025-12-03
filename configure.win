@@ -53,14 +53,18 @@ if [ -d "$TINYCC_SRC" ]; then
     # Build just the tcc executable to avoid linking the full libtcc DLL which
     # can fail under some Rtools/linker combinations. This still produces the
     # command-line compiler used for preprocessing headers.
-    "$MAKE" tcc$(EXESUF) || { echo "Failed to build tcc executable" >&2; exit 1; }
+    "$MAKE" tcc || "$MAKE" tcc.exe || { echo "Failed to build tcc executable" >&2; exit 1; }
 
     # Ensure destination bin exists and copy tcc executable there
     mkdir -p "$TINYCC_DEST/bin"
-    if [ -f "tcc$(EXESUF)" ]; then
-        cp -f "tcc$(EXESUF)" "$TINYCC_DEST/bin/"
-    elif [ -f "./tcc$(EXESUF)" ]; then
-        cp -f "./tcc$(EXESUF)" "$TINYCC_DEST/bin/"
+    if [ -f "tcc.exe" ]; then
+        cp -f "tcc.exe" "$TINYCC_DEST/bin/"
+    elif [ -f "tcc" ]; then
+        cp -f "tcc" "$TINYCC_DEST/bin/"
+    elif [ -f "./tcc.exe" ]; then
+        cp -f "./tcc.exe" "$TINYCC_DEST/bin/"
+    elif [ -f "./tcc" ]; then
+        cp -f "./tcc" "$TINYCC_DEST/bin/"
     else
         echo "tcc executable not found after build" >&2
         exit 1
