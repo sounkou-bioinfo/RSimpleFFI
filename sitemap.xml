@@ -15,6 +15,7 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/StructType.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/UnionType.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/alloc.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/can_resolve_typedef.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/create_builtin_type.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_ffi_symbol.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_info.html</loc></url>
@@ -66,6 +67,8 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits64.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_packed_offset.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_packed_size.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_print_struct.html</loc></url>
@@ -106,6 +109,7 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_init.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_typedef_definition.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_union_definition.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_pointer_type.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/index.html</loc></url>
@@ -114,12 +118,15 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/make_typed_pointer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/pointer_to_string.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/pointer_to_string_safe.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/sort_typedefs_by_dependency.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/strip_type_qualifiers.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_available.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_binary_path.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_defines.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_enums.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_functions.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_structs.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_typedefs.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_unions.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_parse_header.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_preprocess.html</loc></url>

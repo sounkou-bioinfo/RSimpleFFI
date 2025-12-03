@@ -207,6 +207,8 @@
   : Generate R bindings from parsed header
 - [`generate_struct_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.md)
   : Generate R struct definition from parsed struct
+- [`generate_typedef_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_typedef_definition.md)
+  : Generate R typedef alias from parsed typedef
 - [`generate_union_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_union_definition.md)
   : Generate R union definition from parsed union
 - [`get_pointer_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_pointer_type.md)
@@ -233,6 +235,8 @@
   : Extract function declarations from preprocessed C code
 - [`tcc_extract_structs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_structs.md)
   : Extract struct definitions from preprocessed C code
+- [`tcc_extract_typedefs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_typedefs.md)
+  : Extract simple typedef aliases from preprocessed C code
 - [`tcc_extract_unions()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_unions.md)
   : Extract union definitions from preprocessed C code
 - [`tcc_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_parse_header.md)
