@@ -99,6 +99,8 @@
   : long long FFI type
 - [`ffi_offsetof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.md)
   : Get byte offset of a field in a structure
+- [`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md)
+  : Parse C header file and create structured result
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
   : pointer FFI type
 - [`ffi_raw()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_raw.md)
@@ -145,6 +147,12 @@
   : void FFI type
 - [`ffi_wchar_t()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_wchar_t.md)
   : Wide char FFI type
+- [`generate_function_wrapper()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_function_wrapper.md)
+  : Generate R function wrapper from parsed function
+- [`generate_r_bindings()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.md)
+  : Generate R bindings from parsed header
+- [`generate_struct_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.md)
+  : Generate R struct definition from parsed struct
 - [`get_pointer_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_pointer_type.md)
   : Get pointer type tag
 - [`is_null_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/is_null_pointer.md)
