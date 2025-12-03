@@ -1,0 +1,56 @@
+# h/t to @jimhester and @yihui for this parse block:
+# https://github.com/yihui/knitr/blob/dc5ead7bcfc0ebd2789fe99c527c7d91afb3de4a/Makefile#L1-L4
+# Note the portability change as suggested in the manual:
+# https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Writing-portable-packages
+PKGNAME = `sed -n "s/Package: *\([^ ]*\)/\1/p" DESCRIPTION`
+PKGVERS = `sed -n "s/Version: *\([^ ]*\)/\1/p" DESCRIPTION`
+
+
+all: check
+
+
+
+rd:
+	R -e 'roxygen2::roxygenize()'
+build: install_deps
+	R CMD build .
+
+check: build
+	R CMD check --no-manual $(PKGNAME)_$(PKGVERS).tar.gz
+
+install_deps:
+	R \
+	-e 'if (!requireNamespace("remotes")) install.packages("remotes")' \
+	-e 'remotes::install_deps(dependencies = TRUE)'
+
+install: build
+	R CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
+
+clean:
+	@rm -rf $(PKGNAME)_$(PKGVERS).tar.gz $(PKGNAME).Rcheck
+
+# Development targets
+dev-install:
+	R CMD INSTALL --preclean .
+
+dev-test:
+	R -e 'library(RSimpleFFI); cat("TCC available:", tcc_available(), "\n")'
+
+dev-preprocess-test:
+	@echo "# Test header" > /tmp/test.h
+	@echo "#define MAX 100" >> /tmp/test.h
+	@echo "struct Point { int x; int y; };" >> /tmp/test.h
+	@echo "int add(int a, int b);" >> /tmp/test.h
+	@R -e 'library(RSimpleFFI); result <- tcc_preprocess("/tmp/test.h"); cat(result, sep="\n")'
+
+dev-parse-test:
+	@echo "# Test header" > /tmp/test.h
+	@echo "#define MAX 100" >> /tmp/test.h
+	@echo "struct Point { int x; int y; };" >> /tmp/test.h
+	@echo "int add(int a, int b);" >> /tmp/test.h
+	@R -e 'library(RSimpleFFI); defines <- tcc_extract_defines("/tmp/test.h"); print(defines)'
+
+dev-all-tests: dev-install dev-test dev-preprocess-test dev-parse-test
+	@echo "All development tests completed!"
+
+.PHONY: all rd build check install_deps install clean dev-install dev-test dev-preprocess-test dev-parse-test dev-all-tests

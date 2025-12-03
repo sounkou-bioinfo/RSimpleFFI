@@ -5,6 +5,7 @@
 *.dylib
 inst/libffi
 src/libffi/build
+inst/tinycc
 # R specific
 .Rhistory
 .RData
