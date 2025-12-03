@@ -1,5 +1,48 @@
 # Header Parsing and Code Generation (Functional Style)
 
+#' Generate bit-field accessor code
+#' @param struct_name Name of the struct
+#' @param bitfield_specs Character vector of "'name : width'" strings
+#' @return Character string with accessor code
+#' @keywords internal
+generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
+  # Parse field specs: 'enabled : 1' -> list(name='enabled', width=1)
+  fields <- list()
+  for (spec in bitfield_specs) {
+    # Remove quotes and split by :
+    clean_spec <- gsub("'", "", spec)
+    parts <- strsplit(clean_spec, ":")[[1]]
+    if (length(parts) == 2) {
+      field_name <- trimws(parts[1])
+      field_width <- as.integer(trimws(parts[2]))
+      fields[[field_name]] <- field_width
+    }
+  }
+  
+  if (length(fields) == 0) {
+    return(sprintf("# %s - bit-field struct (see ?ffi_create_bitfield_accessors)", struct_name))
+  }
+  
+  # Generate code
+  field_list <- paste(sprintf("  %s = %dL", names(fields), unlist(fields)), collapse = ",\n")
+  
+  code <- sprintf(
+    "# Bit-field accessor for %s\n# C struct has bit-fields: %s\n%s <- ffi_create_bitfield_accessors(\n  list(\n%s\n  )\n)\n# Usage:\n#  packed <- %s$pack(list(%s))\n#  %s$get(packed, \"%s\")\n#  packed <- %s$set(packed, \"%s\", new_value)",
+    struct_name,
+    paste(names(fields), collapse = ", "),
+    struct_name,
+    field_list,
+    struct_name,
+    paste(sprintf("%s = 0L", names(fields)[1:min(2, length(fields))]), collapse = ", "),
+    struct_name,
+    names(fields)[1],
+    struct_name,
+    names(fields)[1]
+  )
+  
+  code
+}
+
 #' Parse C header file and create structured result
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
@@ -51,7 +94,9 @@ generate_struct_definition <- function(struct_name, struct_def) {
   
   # Check for bit-field warning
   bitfield_warning <- attr(struct_def, "bitfield_warning")
-  if (!is.null(bitfield_warning) && bitfield_warning$has_bitfields) {
+  has_bitfields <- !is.null(bitfield_warning) && bitfield_warning$has_bitfields
+  
+  if (has_bitfields) {
     warning(
       sprintf(
         "Struct '%s' contains bit-fields which are not supported by libffi.\n  Fields: %s\n  See README section 'Bit-fields and Struct Packing' for workarounds.",
@@ -60,6 +105,9 @@ generate_struct_definition <- function(struct_name, struct_def) {
       ),
       call. = FALSE
     )
+    
+    # Generate bit-field accessor code instead of struct
+    return(generate_bitfield_accessor_code(struct_name, bitfield_warning$fields))
   }
   
   # Map C types to FFI types
