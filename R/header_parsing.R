@@ -160,6 +160,28 @@ generate_struct_definition <- function(struct_name, struct_def) {
   paste(code, collapse = "\n")
 }
 
+#' Escape R name with backticks if needed
+#' @param name Variable name to escape
+#' @return Escaped name if needed, original otherwise
+escape_r_name <- function(name) {
+  # R reserved words that must be escaped
+  reserved_words <- c(
+    "if", "else", "repeat", "while", "function", "for", "in", "next", "break",
+    "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_",
+    "NA_complex_", "NA_character_"
+  )
+  
+  # Check if name is a reserved word or invalid R identifier
+  # Single underscore or names starting with underscore need backticks
+  if (name %in% reserved_words ||
+      name == "_" ||
+      !grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) ||
+      grepl("^_", name)) {
+    return(paste0("`", name, "`"))
+  }
+  name
+}
+
 #' Generate R function wrapper from parsed function
 #' @param func_def Function definition (row from functions data.frame)
 #' @return Character vector with R code
@@ -244,6 +266,8 @@ generate_function_wrapper <- function(func_def) {
       param_name <- gsub("\\[.*?\\]", "", param_name)  # Remove []
       param_name <- trimws(param_name)
       if (param_name != "" && !grepl("^[0-9]", param_name)) {
+        # Escape invalid R names (underscore, reserved words, etc.)
+        param_name <- escape_r_name(param_name)
         param_names <- c(param_names, param_name)
       } else {
         # Generate a name for unnamed parameters
@@ -300,26 +324,6 @@ generate_function_wrapper <- function(func_def) {
   )
   
   paste(code, collapse = "\n")
-}
-
-#' Escape R name with backticks if needed
-#' @param name Variable name to escape
-#' @return Escaped name if needed, original otherwise
-escape_r_name <- function(name) {
-  # R reserved words that must be escaped
-  reserved_words <- c(
-    "if", "else", "repeat", "while", "function", "for", "in", "next", "break",
-    "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_",
-    "NA_complex_", "NA_character_"
-  )
-  
-  # Check if name is a reserved word or invalid R identifier
-  if (name %in% reserved_words ||
-      !grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) ||
-      grepl("^_", name)) {
-    return(paste0("`", name, "`"))
-  }
-  name
 }
 
 #' Generate R bindings from parsed header
