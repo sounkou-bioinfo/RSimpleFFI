@@ -49,29 +49,61 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
   readLines(tmp_out)
 }
 
-#' Extract #define macros from C header file
-#' @param header_file Path to C header file
+#' Extract #define macros from C header file or preprocessed lines
+#' @param header_file Path to C header file (optional if preprocessed_lines provided)
+#' @param preprocessed_lines Character vector from tcc_preprocess() (optional)
 #' @return Named list of macro definitions
 #' @export
-tcc_extract_defines <- function(header_file) {
-  if (!file.exists(header_file)) {
-    stop("Header file not found: ", header_file)
-  }
-  lines <- readLines(header_file)
-  # Extract simple #define NAME value
-  # Skip function-like macros: #define FOO(x) ...
+tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
   defines <- list()
-  for (line in lines) {
-    # Match: #define NAME value
-    if (grepl("^\\s*#define\\s+", line) && !grepl("\\(", line)) {
-      # Remove #define prefix
-      content <- sub("^\\s*#define\\s+", "", line)
-      # Split on whitespace
-      parts <- strsplit(trimws(content), "\\s+")[[1]]
-      if (length(parts) >= 1) {
-        name <- parts[1]
-        value <- if (length(parts) > 1) paste(parts[-1], collapse = " ") else ""
-        defines[[name]] <- value
+  
+  # If preprocessed lines provided, extract from preprocessing markers
+  if (!is.null(preprocessed_lines)) {
+    # TCC preprocessor doesn't preserve #define in output, so we need to parse the original file
+    # Extract file paths from line markers like: # 1 "/path/to/file.h"
+    file_markers <- preprocessed_lines[grepl("^#\\s+\\d+\\s+\"", preprocessed_lines)]
+    file_pattern <- '^#\\s+\\d+\\s+"([^"]+)"'
+    
+    files_to_scan <- unique(unlist(lapply(file_markers, function(marker) {
+      m <- regexec(file_pattern, marker, perl = TRUE)
+      parts <- regmatches(marker, m)[[1]]
+      if (length(parts) >= 2) parts[2] else NULL
+    })))
+    
+    files_to_scan <- Filter(function(f) !is.null(f) && file.exists(f), files_to_scan)
+    
+    # Read and extract defines from all included files
+    for (f in files_to_scan) {
+      lines <- tryCatch(readLines(f, warn = FALSE), error = function(e) character())
+      for (line in lines) {
+        if (grepl("^\\s*#define\\s+", line) && !grepl("\\(", line)) {
+          content <- sub("^\\s*#define\\s+", "", line)
+          parts <- strsplit(trimws(content), "\\s+")[[1]]
+          if (length(parts) >= 1) {
+            name <- parts[1]
+            value <- if (length(parts) > 1) paste(parts[-1], collapse = " ") else ""
+            defines[[name]] <- value
+          }
+        }
+      }
+    }
+  }
+  
+  # Also extract from main header file if provided
+  if (!is.null(header_file)) {
+    if (!file.exists(header_file)) {
+      stop("Header file not found: ", header_file)
+    }
+    lines <- readLines(header_file)
+    for (line in lines) {
+      if (grepl("^\\s*#define\\s+", line) && !grepl("\\(", line)) {
+        content <- sub("^\\s*#define\\s+", "", line)
+        parts <- strsplit(trimws(content), "\\s+")[[1]]
+        if (length(parts) >= 1) {
+          name <- parts[1]
+          value <- if (length(parts) > 1) paste(parts[-1], collapse = " ") else ""
+          defines[[name]] <- value
+        }
       }
     }
   }
@@ -189,57 +221,82 @@ tcc_extract_structs <- function(preprocessed_lines) {
   code <- gsub("/\\*.*?\\*/", " ", code)
   code <- gsub("//.*?($|;)", ";", code)
   
-  # Match struct definitions: struct Name { ... };
-  pattern <- "struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{([^}]*)\\}\\s*;"
+  result <- list()
   
-  matches <- gregexpr(pattern, code, perl = TRUE)
-  match_data <- regmatches(code, matches)[[1]]
+  # Pattern 1: struct Name { ... };
+  pattern1 <- "struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{([^}]*)\\}\\s*;"
+  matches1 <- gregexpr(pattern1, code, perl = TRUE)
+  match_data1 <- regmatches(code, matches1)[[1]]
   
-  if (length(match_data) == 0) {
-    return(list())
+  # Pattern 2: typedef struct { ... } TypeName;
+  pattern2 <- "typedef\\s+struct\\s*\\{([^}]*)\\}\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;"
+  matches2 <- gregexpr(pattern2, code, perl = TRUE)
+  match_data2 <- regmatches(code, matches2)[[1]]
+  
+  # Helper function to parse struct fields
+  parse_fields <- function(body) {
+    field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;"
+    field_matches <- gregexpr(field_pattern, body, perl = TRUE)
+    field_data <- regmatches(body, field_matches)[[1]]
+    
+    fields <- lapply(field_data, function(field) {
+      fm <- regexec(field_pattern, field, perl = TRUE)
+      fparts <- regmatches(field, fm)[[1]]
+      if (length(fparts) >= 3) {
+        list(
+          type = trimws(fparts[2]),
+          name = trimws(fparts[3])
+        )
+      } else {
+        NULL
+      }
+    })
+    
+    Filter(Negate(is.null), fields)
   }
   
-  structs <- lapply(match_data, function(struct_def) {
-    # Extract name and body
-    m <- regexec(pattern, struct_def, perl = TRUE)
-    parts <- regmatches(struct_def, m)[[1]]
+  # Process pattern 1: struct Name { ... };
+  if (length(match_data1) > 0) {
+    structs1 <- lapply(match_data1, function(struct_def) {
+      m <- regexec(pattern1, struct_def, perl = TRUE)
+      parts <- regmatches(struct_def, m)[[1]]
+      
+      if (length(parts) >= 3) {
+        name <- trimws(parts[2])
+        body <- trimws(parts[3])
+        fields <- parse_fields(body)
+        list(name = name, fields = fields)
+      } else {
+        NULL
+      }
+    })
     
-    if (length(parts) >= 3) {
-      name <- trimws(parts[2])
-      body <- trimws(parts[3])
-      
-      # Parse fields: type name;
-      field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*;"
-      field_matches <- gregexpr(field_pattern, body, perl = TRUE)
-      field_data <- regmatches(body, field_matches)[[1]]
-      
-      fields <- lapply(field_data, function(field) {
-        fm <- regexec(field_pattern, field, perl = TRUE)
-        fparts <- regmatches(field, fm)[[1]]
-        if (length(fparts) >= 3) {
-          list(
-            type = trimws(fparts[2]),
-            name = trimws(fparts[3])
-          )
-        } else {
-          NULL
-        }
-      })
-      
-      fields <- Filter(Negate(is.null), fields)
-      
-      list(name = name, fields = fields)
-    } else {
-      NULL
+    structs1 <- Filter(Negate(is.null), structs1)
+    for (s in structs1) {
+      result[[s$name]] <- s$fields
     }
-  })
+  }
   
-  structs <- Filter(Negate(is.null), structs)
-  
-  # Convert to named list
-  result <- list()
-  for (s in structs) {
-    result[[s$name]] <- s$fields
+  # Process pattern 2: typedef struct { ... } TypeName;
+  if (length(match_data2) > 0) {
+    structs2 <- lapply(match_data2, function(struct_def) {
+      m <- regexec(pattern2, struct_def, perl = TRUE)
+      parts <- regmatches(struct_def, m)[[1]]
+      
+      if (length(parts) >= 3) {
+        body <- trimws(parts[2])
+        name <- trimws(parts[3])
+        fields <- parse_fields(body)
+        list(name = name, fields = fields)
+      } else {
+        NULL
+      }
+    })
+    
+    structs2 <- Filter(Negate(is.null), structs2)
+    for (s in structs2) {
+      result[[s$name]] <- s$fields
+    }
   }
   
   result
@@ -258,6 +315,6 @@ tcc_parse_header <- function(header_file, includes = NULL) {
   list(
     functions = tcc_extract_functions(preprocessed),
     structs = tcc_extract_structs(preprocessed),
-    defines = tcc_extract_defines(header_file)
+    defines = tcc_extract_defines(header_file = header_file, preprocessed_lines = preprocessed)
   )
 }

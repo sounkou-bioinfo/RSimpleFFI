@@ -2,16 +2,18 @@
 % Please edit documentation in R/tcc_wrapper.R
 \name{tcc_extract_defines}
 \alias{tcc_extract_defines}
-\title{Extract #define macros from C header file}
+\title{Extract #define macros from C header file or preprocessed lines}
 \usage{
-tcc_extract_defines(header_file)
+tcc_extract_defines(header_file = NULL, preprocessed_lines = NULL)
 }
 \arguments{
-\item{header_file}{Path to C header file}
+\item{header_file}{Path to C header file (optional if preprocessed_lines provided)}
+
+\item{preprocessed_lines}{Character vector from tcc_preprocess() (optional)}
 }
 \value{
 Named list of macro definitions
 }
 \description{
-Extract #define macros from C header file
+Extract #define macros from C header file or preprocessed lines
 }
