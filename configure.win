@@ -73,6 +73,8 @@ if [ -d "$TINYCC_SRC" ]; then
     fi
 
     echo "tinycc tcc executable built and installed to $TINYCC_DEST/bin"
+    # print the content of 
+    ls -lad  $TINYCC_DEST/bin/*
 else
     echo "Error: tinycc source directory $TINYCC_SRC does not exist."
     exit 1

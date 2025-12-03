@@ -240,6 +240,74 @@ ffi_all_offsets(Mixed)
 ffi_field_info(Mixed, "b")
 ```
 
+### Enumerations
+
+Enums map named constants to integer values, useful for flags, status codes, or options:
+
+```{r}
+# Define an enum type
+Color <- ffi_enum(RED = 0L, GREEN = 1L, BLUE = 2L)
+
+# Allocate enum value
+color_ptr <- ffi_alloc(Color)
+
+# Convert between names and integers
+ffi_enum_to_int(Color, "GREEN")
+ffi_int_to_enum(Color, 1L)
+
+# Use enums in structs
+Pixel <- ffi_struct(
+  color = Color,
+  intensity = ffi_uint8()
+)
+
+pixel <- ffi_alloc(Pixel)
+ffi_set_field(pixel, "color", ffi_enum_to_int(Color, "RED"), Pixel)
+ffi_set_field(pixel, "intensity", 255L, Pixel)
+
+color_val <- ffi_get_field(pixel, "color", Pixel)
+ffi_int_to_enum(Color, color_val)
+```
+
+### Unions
+
+Unions allow multiple fields to share the same memory location, useful for variant types or memory-efficient data structures:
+
+```{r}
+# Define a union (all fields share the same memory)
+Value <- ffi_union(
+  as_int = ffi_int(),
+  as_float = ffi_float(),
+  as_bytes = ffi_array_type(ffi_uint8(), 4L)
+)
+
+# Allocate union
+val <- ffi_alloc(Value)
+
+# Write as integer
+ffi_set_field(val, "as_int", 0x41424344L, Value)
+
+# Read back as integer
+ffi_get_field(val, "as_int", Value)
+
+# Read the same memory as float (reinterprets the bits)
+ffi_get_field(val, "as_float", Value)
+
+# Tagged union example (union + tag field)
+TaggedValue <- ffi_struct(
+  tag = ffi_int(),  # 0=int, 1=float
+  data = Value
+)
+
+tagged <- ffi_alloc(TaggedValue)
+ffi_set_field(tagged, "tag", 1L, TaggedValue)
+
+# Access nested union
+data_ptr <- ffi_get_field(tagged, "data", TaggedValue)
+ffi_set_field(data_ptr, "as_float", 3.14, Value)
+ffi_get_field(data_ptr, "as_float", Value)
+```
+
 
 ## Function Calling
 
@@ -862,7 +930,7 @@ ffi_print_struct(pt, Point)
 
 ## Limitations and issues
 
-Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types, unions or special packing for alignment for Structs. This is ABI level access to C Routines in dynamic libraries, so care must be taken to alignment issues.
+Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types or special packing for alignment for Structs. This is ABI level access to C Routines in dynamic libraries, so care must be taken to alignment issues.
 
 ## License
 
