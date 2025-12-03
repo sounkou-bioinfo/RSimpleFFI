@@ -418,6 +418,33 @@ parse_fields_with_nested <- function(body) {
   field_matches <- gregexpr(field_pattern, body, perl = TRUE)
   field_data <- regmatches(body, field_matches)[[1]]
   
+  # Check for bit-fields before processing
+  bitfield_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*:\\s*([0-9]+)\\s*;"
+  if (grepl(bitfield_pattern, body, perl = TRUE)) {
+    bitfield_matches <- gregexpr(bitfield_pattern, body, perl = TRUE)
+    bitfield_data <- regmatches(body, bitfield_matches)[[1]]
+    
+    if (length(bitfield_data) > 0) {
+      # Extract bit-field information for warning message
+      bitfield_info <- character()
+      for (bf in bitfield_data) {
+        bf_match <- regexec(bitfield_pattern, bf, perl = TRUE)
+        bf_parts <- regmatches(bf, bf_match)[[1]]
+        if (length(bf_parts) >= 4) {
+          field_name <- trimws(bf_parts[3])
+          bit_width <- trimws(bf_parts[4])
+          bitfield_info <- c(bitfield_info, sprintf("'%s : %s'", field_name, bit_width))
+        }
+      }
+      
+      # Attach bit-field warning as attribute
+      attr(fields, "bitfield_warning") <- list(
+        has_bitfields = TRUE,
+        fields = bitfield_info
+      )
+    }
+  }
+  
   for (field in field_data) {
     fm <- regexec(field_pattern, field, perl = TRUE)
     fparts <- regmatches(field, fm)[[1]]

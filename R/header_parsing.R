@@ -49,6 +49,19 @@ generate_struct_definition <- function(struct_name, struct_def) {
     return(NULL)
   }
   
+  # Check for bit-field warning
+  bitfield_warning <- attr(struct_def, "bitfield_warning")
+  if (!is.null(bitfield_warning) && bitfield_warning$has_bitfields) {
+    warning(
+      sprintf(
+        "Struct '%s' contains bit-fields which are not supported by libffi.\n  Fields: %s\n  See BITFIELDS_STRATEGY.md for workarounds.",
+        struct_name,
+        paste(bitfield_warning$fields, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  
   # Map C types to FFI types
   type_map <- c(
     "int" = "ffi_int()",
