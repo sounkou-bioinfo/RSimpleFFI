@@ -222,11 +222,56 @@ tcc_extract_functions <- function(preprocessed_lines) {
 
 #' Extract struct definitions from preprocessed C code
 #' @param preprocessed_lines Character vector from tcc_preprocess()
-#' @return List of struct definitions (name -> list of fields)
+#' @return List of struct definitions (name -> list of fields).
+#'   Each struct may have a "packed" attribute set to TRUE if __attribute__((packed))
+#'   or #pragma pack was detected.
 #' @export
 tcc_extract_structs <- function(preprocessed_lines) {
-  # Remove line markers
-  code_lines <- preprocessed_lines[!grepl("^#", preprocessed_lines)]
+  # Track #pragma pack state
+  pack_stack <- c()
+  current_pack <- 0L # 0 means natural alignment
+
+  # Process lines to track pragma pack state
+  code_lines <- character()
+  for (line in preprocessed_lines) {
+    if (grepl("^#", line) && !grepl("^#pragma", line)) {
+      next # Skip line markers but keep pragmas
+    }
+
+    # Check for #pragma pack directives
+    if (grepl("#pragma\\s+pack\\s*\\(", line)) {
+      if (grepl("push", line)) {
+        # #pragma pack(push, N) or #pragma pack(push)
+        pack_stack <- c(pack_stack, current_pack)
+        num_match <- regmatches(line, regexpr("[0-9]+", line))
+        if (length(num_match) > 0 && nchar(num_match) > 0) {
+          current_pack <- as.integer(num_match)
+        }
+      } else if (grepl("pop", line)) {
+        # #pragma pack(pop)
+        if (length(pack_stack) > 0) {
+          current_pack <- pack_stack[length(pack_stack)]
+          pack_stack <- pack_stack[-length(pack_stack)]
+        } else {
+          current_pack <- 0L
+        }
+      } else {
+        # #pragma pack(N) or #pragma pack()
+        num_match <- regmatches(line, regexpr("[0-9]+", line))
+        if (length(num_match) > 0 && nchar(num_match) > 0) {
+          current_pack <- as.integer(num_match)
+        } else {
+          current_pack <- 0L # #pragma pack() resets to default
+        }
+      }
+      next # Don't include pragma in code
+    }
+
+    # Mark lines with current pack state
+    attr(line, "pack") <- current_pack
+    code_lines <- c(code_lines, line)
+  }
+
   code <- paste(code_lines, collapse = " ")
 
   # Remove comments
@@ -234,6 +279,16 @@ tcc_extract_structs <- function(preprocessed_lines) {
   code <- gsub("//.*?($|;)", ";", code)
 
   result <- list()
+
+  # Helper to check if a struct definition is packed
+  is_packed_struct <- function(prefix_text, suffix_text) {
+    # Check for __attribute__((packed)) before or after struct
+    has_attr_packed <- grepl("__attribute__\\s*\\(\\s*\\(\\s*packed\\s*\\)\\s*\\)", prefix_text) ||
+      grepl("__attribute__\\s*\\(\\s*\\(\\s*packed\\s*\\)\\s*\\)", suffix_text)
+    # Check for __packed keyword (some compilers)
+    has_packed_keyword <- grepl("__packed", prefix_text)
+    has_attr_packed || has_packed_keyword
+  }
 
   # Helper to extract balanced braces content
   extract_balanced_braces <- function(text, start_pos) {
@@ -258,29 +313,42 @@ tcc_extract_structs <- function(preprocessed_lines) {
     NULL
   }
 
-  # Find typedef struct { ... } Name; patterns
-  typedef_pattern <- "typedef\\s+struct\\s*\\{"
+  # Find typedef struct { ... } Name; patterns (may have __attribute__((packed)))
+  # Patterns: typedef struct __attribute__((packed)) { ... } Name;
+  #           typedef struct { ... } __attribute__((packed)) Name;
+  typedef_pattern <- "typedef\\s+struct\\s*(__attribute__\\s*\\(\\s*\\([^)]*\\)\\s*\\)\\s*)?\\{"
   typedef_matches <- gregexpr(typedef_pattern, code, perl = TRUE)[[1]]
 
   if (typedef_matches[1] != -1) {
     for (match_start in typedef_matches) {
+      # Get text before the struct for packed detection
+      prefix_start <- max(1, match_start - 100)
+      prefix_text <- substring(code, prefix_start, match_start + 80)
+
       # Find the opening brace
       brace_pos <- regexpr("\\{", substring(code, match_start))[[1]] + match_start - 1
 
       # Extract balanced content
       balanced <- extract_balanced_braces(code, brace_pos)
       if (!is.null(balanced)) {
-        # Find the type name after closing brace
+        # Find the type name after closing brace (may have __attribute__ before name)
         remainder <- substring(code, balanced$end_pos + 1)
-        name_match <- regexpr("^\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;", remainder, perl = TRUE)
+        # Match: optional __attribute__((packed)) then name then ;
+        name_match <- regexpr("^\\s*(__attribute__\\s*\\(\\s*\\([^)]*\\)\\s*\\)\\s*)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*;", remainder, perl = TRUE)
 
         if (name_match != -1) {
           name_text <- regmatches(remainder, name_match)[[1]]
-          name <- trimws(gsub(";", "", name_text))
+          # Extract just the name (last identifier before ;)
+          name <- sub(".*?([a-zA-Z_][a-zA-Z0-9_]*)\\s*;\\s*$", "\\1", name_text)
 
           body <- balanced$content
           fields <- parse_fields_with_nested(body)
           if (length(fields) > 0) {
+            # Check if packed
+            suffix_text <- substring(remainder, 1, nchar(name_text))
+            if (is_packed_struct(prefix_text, suffix_text)) {
+              attr(fields, "packed") <- TRUE
+            }
             result[[name]] <- fields
           }
         }
@@ -288,8 +356,10 @@ tcc_extract_structs <- function(preprocessed_lines) {
     }
   }
 
-  # Find struct Name { ... }; patterns
-  struct_pattern <- "struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{"
+  # Find struct Name { ... }; patterns (may have __attribute__((packed)))
+  # Patterns: struct __attribute__((packed)) Name { ... };
+  #           struct Name __attribute__((packed)) { ... };
+  struct_pattern <- "struct\\s+(__attribute__\\s*\\(\\s*\\([^)]*\\)\\s*\\)\\s*)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*(__attribute__\\s*\\(\\s*\\([^)]*\\)\\s*\\)\\s*)?\\{"
   struct_matches <- gregexpr(struct_pattern, code, perl = TRUE)[[1]]
 
   if (struct_matches[1] != -1) {
@@ -297,10 +367,13 @@ tcc_extract_structs <- function(preprocessed_lines) {
       match_start <- struct_matches[i]
       match_len <- attr(struct_matches, "match.length")[i]
 
-      # Extract struct name
-      name_text <- substring(code, match_start, match_start + match_len - 1)
-      name_match <- regexpr("struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)", name_text, perl = TRUE)
-      name_capture <- regmatches(name_text, name_match)[[1]]
+      # Extract the full match for packed detection
+      full_match <- substring(code, match_start, match_start + match_len - 1)
+
+      # Extract struct name (skip attributes)
+      clean_match <- gsub("__attribute__\\s*\\(\\s*\\([^)]*\\)\\s*\\)", "", full_match)
+      name_match <- regexpr("struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)", clean_match, perl = TRUE)
+      name_capture <- regmatches(clean_match, name_match)[[1]]
       name <- sub("struct\\s+", "", name_capture)
 
       # Find opening brace
@@ -315,6 +388,10 @@ tcc_extract_structs <- function(preprocessed_lines) {
           body <- balanced$content
           fields <- parse_fields_with_nested(body)
           if (length(fields) > 0) {
+            # Check if packed
+            if (is_packed_struct(full_match, "")) {
+              attr(fields, "packed") <- TRUE
+            }
             result[[name]] <- fields
           }
         }

@@ -495,6 +495,19 @@ generate_struct_definition <- function(struct_name, struct_def) {
     return(NULL)
   }
 
+  # Check for packed attribute
+  is_packed <- isTRUE(attr(struct_def, "packed"))
+
+  if (is_packed) {
+    warning(
+      sprintf(
+        "Struct '%s' is packed (__attribute__((packed)) or #pragma pack).\n  Packed structs cannot be passed by value to C functions (libffi limitation).\n  Use pointers instead. Generated code includes pack=1.",
+        struct_name
+      ),
+      call. = FALSE
+    )
+  }
+
   # Check for bit-field warning
   bitfield_warning <- attr(struct_def, "bitfield_warning")
   has_bitfields <- !is.null(bitfield_warning) && bitfield_warning$has_bitfields
@@ -582,26 +595,40 @@ generate_struct_definition <- function(struct_name, struct_def) {
     }
   }
 
-  # Add commas to all fields except the last one
+  # Add commas to all fields except the last one (or all if we're adding pack)
   # Need to insert comma BEFORE any comment (# ...)
   if (length(field_defs) > 0) {
-    for (i in seq_along(field_defs)[-length(field_defs)]) {
-      if (grepl("#", field_defs[i])) {
-        # Has a comment - insert comma before the comment
-        field_defs[i] <- sub("  #", ",  #", field_defs[i])
-      } else {
-        # No comment - just append comma
-        field_defs[i] <- paste0(field_defs[i], ",")
+    last_field_idx <- if (is_packed) length(field_defs) else length(field_defs)
+    for (i in seq_along(field_defs)) {
+      needs_comma <- (i < length(field_defs)) || is_packed
+      if (needs_comma) {
+        if (grepl("#", field_defs[i])) {
+          # Has a comment - insert comma before the comment
+          field_defs[i] <- sub("  #", ",  #", field_defs[i])
+        } else {
+          # No comment - just append comma
+          field_defs[i] <- paste0(field_defs[i], ",")
+        }
       }
     }
   }
 
   # Generate struct code
-  code <- c(
-    sprintf("%s <- ffi_struct(", struct_name),
-    paste(field_defs, collapse = "\n"),
-    ")"
-  )
+  if (is_packed) {
+    code <- c(
+      sprintf("# WARNING: Packed struct - cannot be passed by value, use pointers"),
+      sprintf("%s <- ffi_struct(", struct_name),
+      paste(field_defs, collapse = "\n"),
+      "  pack = 1L",
+      ")"
+    )
+  } else {
+    code <- c(
+      sprintf("%s <- ffi_struct(", struct_name),
+      paste(field_defs, collapse = "\n"),
+      ")"
+    )
+  }
 
   paste(code, collapse = "\n")
 }
