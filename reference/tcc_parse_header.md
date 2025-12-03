@@ -20,4 +20,4 @@ tcc_parse_header(header_file, includes = NULL)
 
 ## Value
 
-List with components: functions, structs, defines
+List with components: functions, structs, unions, enums, defines

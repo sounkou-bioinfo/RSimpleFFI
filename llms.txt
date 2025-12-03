@@ -1334,6 +1334,8 @@ This project is licensed under the GPL-3 License.
   : void FFI type
 - [`ffi_wchar_t()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_wchar_t.md)
   : Wide char FFI type
+- [`generate_enum_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_enum_definition.md)
+  : Generate R enum definition from parsed enum
 - [`generate_function_wrapper()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_function_wrapper.md)
   : Generate R function wrapper from parsed function
 - [`generate_package_from_headers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_from_headers.md)
@@ -1344,6 +1346,8 @@ This project is licensed under the GPL-3 License.
   : Generate R bindings from parsed header
 - [`generate_struct_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.md)
   : Generate R struct definition from parsed struct
+- [`generate_union_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_union_definition.md)
+  : Generate R union definition from parsed union
 - [`get_pointer_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_pointer_type.md)
   : Get pointer type tag
 - [`is_null_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/is_null_pointer.md)
@@ -1362,10 +1366,14 @@ This project is licensed under the GPL-3 License.
   : Get path to embedded TCC binary
 - [`tcc_extract_defines()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_defines.md)
   : Extract \#define macros from C header file or preprocessed lines
+- [`tcc_extract_enums()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_enums.md)
+  : Extract enum definitions from preprocessed C code
 - [`tcc_extract_functions()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_functions.md)
   : Extract function declarations from preprocessed C code
 - [`tcc_extract_structs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_structs.md)
   : Extract struct definitions from preprocessed C code
+- [`tcc_extract_unions()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_unions.md)
+  : Extract union definitions from preprocessed C code
 - [`tcc_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_parse_header.md)
   : Parse C header file and extract all declarations
 - [`tcc_preprocess()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_preprocess.md)

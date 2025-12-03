@@ -20,4 +20,5 @@ ffi_parse_header(header_file, includes = NULL)
 
 ## Value
 
-List with parsed components (file, defines, structs, functions)
+List with parsed components (file, defines, structs, unions, enums,
+functions)
