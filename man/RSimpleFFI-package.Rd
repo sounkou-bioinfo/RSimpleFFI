@@ -23,6 +23,7 @@ Useful links:
 Other contributors:
 \itemize{
   \item Anthony Green, Red Hat, Inc and others (libffi authors and COPYRIGHT holders) [contributor]
+  \item Fabrice Bellard and tinycc Authors (Tiny C Compiler (TCC) authors and COPYRIGHT holders) [contributor]
 }
 
 }

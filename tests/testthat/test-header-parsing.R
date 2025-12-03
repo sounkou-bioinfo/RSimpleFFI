@@ -108,8 +108,8 @@ test_that("generate_function_wrapper creates valid R code", {
   code <- generate_function_wrapper(func_def)
   
   expect_type(code, "character")
-  expect_match(code, "r_add <- function\\(a, b, lib = NULL\\)")
-  expect_match(code, "#' Wrapper for add")
+  expect_match(code, "r_add <- function\\(a, b\\)")
+  expect_match(code, "#' Wrapper for C function")
   expect_match(code, "#' @export")
 })
 

@@ -102,7 +102,9 @@ generate_struct_definition <- function(struct_name, struct_def) {
           ffi_type <- sprintf("ffi_array_type(%s, %dL)", ffi_type, dim)
         }
         
-        field_defs <- c(field_defs, sprintf("  %s = %s", base_name, ffi_type))
+        # Escape field name if needed
+        escaped_field_name <- escape_r_name(base_name)
+        field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
       }
     } else {
       # Regular field (no array)
@@ -116,7 +118,9 @@ generate_struct_definition <- function(struct_name, struct_def) {
         ffi_type <- paste0("ffi_pointer()  # ", field_type)
       }
       
-      field_defs <- c(field_defs, sprintf("  %s = %s", field_name, ffi_type))
+      # Escape field name if needed
+      escaped_field_name <- escape_r_name(field_name)
+      field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
     }
   }
   
@@ -139,10 +143,67 @@ generate_function_wrapper <- function(func_def) {
   return_type <- func_def$return_type
   params <- func_def$params
   
+  # Map C type to FFI type call
+  type_map <- c(
+    "int" = "ffi_int()",
+    "double" = "ffi_double()",
+    "float" = "ffi_float()",
+    "char" = "ffi_char()",
+    "void" = "ffi_void()",
+    "short" = "ffi_short()",
+    "long" = "ffi_long()",
+    "unsigned int" = "ffi_uint()",
+    "unsigned char" = "ffi_uchar()",
+    "unsigned short" = "ffi_ushort()",
+    "unsigned long" = "ffi_ulong()",
+    "int8_t" = "ffi_int8()",
+    "int16_t" = "ffi_int16()",
+    "int32_t" = "ffi_int32()",
+    "int64_t" = "ffi_int64()",
+    "uint8_t" = "ffi_uint8()",
+    "uint16_t" = "ffi_uint16()",
+    "uint32_t" = "ffi_uint32()",
+    "uint64_t" = "ffi_uint64()",
+    "size_t" = "ffi_size_t()",
+    "bool" = "ffi_bool()",
+    "_Bool" = "ffi_bool()",
+    "char*" = "ffi_string()",
+    "const char*" = "ffi_string()"
+  )
+  
+  # Function to map a C type to FFI type (handles both "type name" and "type")
+  map_type_from_string <- function(type_string) {
+    type_string <- trimws(type_string)
+    
+    # Check for pointer types (treat as ffi_pointer())
+    if (grepl("\\*", type_string) && !grepl("char\\s*\\*", type_string)) {
+      return("ffi_pointer()")
+    }
+    # Check exact match in type_map
+    if (type_string %in% names(type_map)) {
+      return(type_map[[type_string]])
+    }
+    # Default to pointer for unknown types (likely structs)
+    return("ffi_pointer()")
+  }
+  
+  # Function to extract type from "type varname" parameter
+  extract_type <- function(param_decl) {
+    param_decl <- trimws(param_decl)
+    tokens <- strsplit(param_decl, "\\s+")[[1]]
+    if (length(tokens) < 2) {
+      return(param_decl)  # No variable name, just type
+    }
+    # Type is all tokens except the last (which is the variable name)
+    type_part <- paste(tokens[-length(tokens)], collapse = " ")
+    return(trimws(type_part))
+  }
+  
   # Parse parameters
   param_parts <- strsplit(params, ",")[[1]]
   param_names <- character()
-  param_types <- character()
+  param_types_c <- character()
+  param_types_ffi <- character()
   
   for (part in param_parts) {
     part <- trimws(part)
@@ -164,36 +225,66 @@ generate_function_wrapper <- function(func_def) {
       }
       
       # Type is everything except last token
-      param_type <- paste(tokens[-length(tokens)], collapse = " ")
-      param_types <- c(param_types, param_type)
+      param_type_c <- extract_type(part)
+      param_types_c <- c(param_types_c, param_type_c)
+      param_types_ffi <- c(param_types_ffi, map_type_from_string(param_type_c))
     }
   }
+  
+  # Map return type (it's just a type, no variable name)
+  return_ffi <- map_type_from_string(return_type)
   
   # Generate R function
   r_func_name <- paste0("r_", func_name)
   
-  if (length(param_names) == 0) {
-    signature <- paste0(r_func_name, " <- function(lib = NULL)")
-    params_r <- "  # No parameters"
+  # Build ffi_function call
+  if (length(param_types_ffi) == 0) {
+    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s)', func_name, return_ffi)
+    signature <- paste0(r_func_name, " <- function()")
+    call_line <- "  .fn()"
   } else {
+    ffi_params <- paste(param_types_ffi, collapse = ", ")
+    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s, %s)', func_name, return_ffi, ffi_params)
     signature <- paste0(r_func_name, " <- function(", 
                         paste(param_names, collapse = ", "), 
-                        ", lib = NULL)")
-    params_r <- paste0("  # Parameters: ", paste(param_types, param_names, sep = " ", collapse = ", "))
+                        ")")
+    call_line <- sprintf("  .fn(%s)", paste(param_names, collapse = ", "))
+  }
+  
+  # Add parameter documentation with C types
+  param_docs <- character()
+  if (length(param_names) > 0) {
+    for (i in seq_along(param_names)) {
+      param_docs <- c(param_docs, 
+                      sprintf("#' @param %s %s", param_names[i], param_types_c[i]))
+    }
   }
   
   code <- c(
-    sprintf("#' Wrapper for %s", func_name),
+    sprintf("#' Wrapper for C function: %s %s(%s)", return_type, func_name, params),
+    "#'",
+    param_docs,
+    sprintf("#' @return %s", return_type),
     sprintf("#' @export"),
     signature,
     "{",
-    params_r,
-    "  # TODO: Implement FFI call",
-    sprintf('  stop("Not yet implemented: %s")', func_name),
+    ffi_call,
+    call_line,
     "}"
   )
   
   paste(code, collapse = "\n")
+}
+
+#' Escape R name with backticks if needed
+#' @param name Variable name to escape
+#' @return Escaped name if needed, original otherwise
+escape_r_name <- function(name) {
+  # Check if name is valid R identifier
+  if (!grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) || grepl("^_", name)) {
+    return(paste0("`", name, "`"))
+  }
+  name
 }
 
 #' Generate R bindings from parsed header
@@ -208,10 +299,19 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
   code_sections$header <- c(
     sprintf("# Auto-generated R bindings for %s", basename(parsed_header$file)),
     sprintf("# Generated on: %s", Sys.time()),
+    "#",
+    "# NOTE: These functions expect symbols to be available in the current process.",
+    "# For external libraries, load them first with dll_load() or use dll_ffi_symbol().",
+    "#",
+    "# Type handling:",
+    "#  - Primitives (int, double, etc.): passed by value, auto-converted",
+    "#  - char*: use ffi_string(), automatically converts to/from R character",
+    "#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()",
+    "#  - Struct fields: access with ffi_get_field() and ffi_set_field()",
     ""
   )
   
-  # Defines as R constants
+  # Defines as R constants (escape invalid names with backticks)
   if (length(parsed_header$defines) > 0) {
     code_sections$defines <- c(
       "# Constants from #define",
@@ -220,16 +320,21 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
     for (name in names(parsed_header$defines)) {
       value <- parsed_header$defines[[name]]
       if (value != "") {
+        escaped_name <- escape_r_name(name)
+        # Quote value if it's not a number or already quoted
+        if (!grepl("^[0-9.+-]+[LlUu]*$", value) && !grepl("^['\"]", value)) {
+          value <- paste0('"', value, '"')
+        }
         code_sections$defines <- c(
           code_sections$defines,
-          sprintf("%s <- %s", name, value)
+          sprintf("%s <- %s", escaped_name, value)
         )
       }
     }
     code_sections$defines <- c(code_sections$defines, "")
   }
   
-  # Struct definitions
+  # Struct definitions (escape invalid names with backticks)
   if (length(parsed_header$structs) > 0) {
     code_sections$structs <- c(
       "# Struct definitions",
@@ -237,7 +342,8 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
     )
     for (struct_name in names(parsed_header$structs)) {
       struct_def <- parsed_header$structs[[struct_name]]
-      struct_code <- generate_struct_definition(struct_name, struct_def)
+      escaped_name <- escape_r_name(struct_name)
+      struct_code <- generate_struct_definition(escaped_name, struct_def)
       if (!is.null(struct_code)) {
         code_sections$structs <- c(
           code_sections$structs,
@@ -273,11 +379,14 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
   # Combine all sections
   all_code <- unlist(code_sections)
   
+  # Combine into single string for easier use
+  code_string <- paste(all_code, collapse = "\n")
+  
   # Write to file if requested
   if (!is.null(output_file)) {
     writeLines(all_code, output_file)
     message("Generated R bindings written to: ", output_file)
   }
   
-  all_code
+  code_string
 }

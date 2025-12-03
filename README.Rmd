@@ -21,7 +21,7 @@ A Simple Foreign Function Interface (FFI) for R using libffi.
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and is vendored in this package for unix systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes.
+RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and is vendored in this package for unix systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes. As an experimental feature, the package includes automatic R binding generation from C header files using the [TinyCC](https://github.com/TinyCC/tinycc) compiler, allowing you to parse C headers and automatically generate R wrapper functions for easy package development. Note that this is a wrapper of the `tinycc` compiler cli and not the in memory compilation facilities.
 
 ## Installation
 
@@ -724,9 +724,145 @@ abs_result <- rf_eval(abs_call, R_GlobalEnv)
 rf_INTEGER_ELT(abs_result, 0L)
 ```
 
+## Header Parsing and Code Generation
+
+RSimpleFFI can parse C header files using [TinyCC](https://github.com/TinyCC/tinycc) and automatically generate R bindings, making it easy to create R packages that wrap C libraries.
+
+### Parse Headers
+
+```{r}
+# Parse a C header file using TinyCC preprocessor
+header_file <- system.file("extdata", "simple_types.h", package = "RSimpleFFI")
+parsed <- ffi_parse_header(header_file)
+
+# Inspect what was found
+names(parsed$defines)
+names(parsed$structs)
+parsed$functions$name
+```
+
+### Generate R Bindings
+
+```{r}
+# Generate complete R code
+code <- generate_r_bindings(parsed)
+
+# Preview first part of generated code
+substr(code, 1, 500)
+
+# The generated code includes:
+# - Constants from #define
+# - ffi_struct() definitions for structs
+# - Wrapper functions with roxygen2 documentation
+```
+
+### Source Generated Code
+
+```{r}
+# Write to temp file and source it
+tmpfile <- tempfile(fileext = ".R")
+writeLines(code, tmpfile)
+
+# Source the generated bindings
+source(tmpfile)
+
+# Now we can use the generated constants and structs
+MAX_BUFFER
+MIN_SIZE
+
+# The Point struct is now available
+Point
+
+# Clean up
+unlink(tmpfile)
+```
+
+### Generate Bindings for System Libraries
+
+Let's create bindings for real C library functions:
+
+```{r}
+# Create a simple header with libc function signatures
+libc_header <- tempfile(fileext = ".h")
+writeLines(c(
+  "// String functions", 
+  "unsigned long strlen(const char* s);",
+  "int strcmp(const char* s1, const char* s2);",
+  "",
+  "// Math functions",
+  "int abs(int n);"
+), libc_header)
+
+# Parse and generate bindings
+libc_parsed <- ffi_parse_header(libc_header)
+libc_code <- generate_r_bindings(libc_parsed)
+
+# Preview generated code
+cat(substr(libc_code, 1, 600))
+
+# Source the bindings
+tmpfile <- tempfile(fileext = ".R")
+writeLines(libc_code, tmpfile)
+source(tmpfile)
+
+# Load libc
+libc_path <- dll_load_system("libc.so.6")
+
+# Use generated wrapper functions!
+r_strlen("Hello, World!")
+
+r_strcmp("apple", "banana")
+
+r_strcmp("test", "test")
+
+r_abs(-42L)
+
+dll_unload(libc_path)
+unlink(c(tmpfile, libc_header))
+```
+
+### Create R Packages
+
+```{r}
+# Generate complete package scaffolding
+tmpdir <- tempfile()
+dir.create(tmpdir)
+
+generate_package_from_headers(
+  header_files = header_file,
+  package_name = "MyRPackage",
+  library_name = "mylib",
+  output_dir = tmpdir,
+  use_system_lib = TRUE
+)
+
+# Check what was created
+list.files(tmpdir)
+```
+
+### Helper Functions
+
+```{r}
+# Convert struct to/from R lists
+Point <- ffi_struct(x = ffi_int(), y = ffi_int())
+
+pt <- ffi_struct_from_list(Point, list(x = 10L, y = 20L))
+values <- ffi_struct_to_list(pt, Point)
+values
+
+# Create arrays of structs
+points <- ffi_struct_array_from_list(Point, list(
+  list(x = 0L, y = 0L),
+  list(x = 10L, y = 20L)
+))
+
+# Pretty print structs
+ffi_print_struct(pt, Point)
+```
+
 ## Limitations and issues
 
-Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types, unions or special packing for alignment for Structs. No facility to generate interfaces from C header files (see [RGCCTranslationUnit](https://github.com/omegahat/RGCCTranslationUnit)). This is ABI level access to C Routines in dynamic libraries, so care must be taken to alignment issues.
+Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types, unions or special packing for alignment for Structs. This is ABI level access to C Routines in dynamic libraries, so care must be taken to alignment issues.
 
 ## License
 
@@ -735,6 +871,10 @@ This project is licensed under the GPL-3 License.
 # References
 
 - [Rffi](https://github.com/omegahat/Rffi)
+
+- [libffi](https://github.com/libffi/libffi) - Portable foreign function interface library
+
+- [TinyCC](https://github.com/TinyCC/tinycc) - Tiny C Compiler used for header parsing
 
 - [libffi Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
 
