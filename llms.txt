@@ -1036,4 +1036,20 @@ This project is licensed under the GPL-3 License.
   : Convert pointer to string safely
 - [`pointer_to_string_safe()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/pointer_to_string_safe.md)
   : Convert pointer to string safely
+- [`tcc_available()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_available.md)
+  : Check if TCC is available
+- [`tcc_binary_path()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_binary_path.md)
+  : Get path to embedded TCC binary
+- [`tcc_extract_defines()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_defines.md)
+  : Extract \#define macros from C header file
+- [`tcc_extract_functions()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_functions.md)
+  : Extract function declarations from preprocessed C code
+- [`tcc_extract_structs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_structs.md)
+  : Extract struct definitions from preprocessed C code
+- [`tcc_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_parse_header.md)
+  : Parse C header file and extract all declarations
+- [`tcc_preprocess()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_preprocess.md)
+  : Preprocess C header file using embedded TCC
+- [`tcc_run()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_run.md)
+  : Compile and run C code using embedded TCC
 
