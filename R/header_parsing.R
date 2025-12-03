@@ -356,19 +356,37 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       value <- parsed_header$defines[[name]]
       if (value != "") {
         escaped_name <- escape_r_name(name)
-        # Strip C literal suffixes (LL, ULL, L, U, etc.) from numeric values
-        # R doesn't recognize these and they cause parse errors
-        if (grepl("^[0-9.+-]+[LlUu]+$", value)) {
+        
+        # Strip C literal suffixes that R doesn't understand
+        # Be careful with hex values to not strip valid hex digits (F can be hex or float suffix)
+        # Handle hex values: 0x123ULL, 0xabcLL, etc. - strip U and L suffixes only
+        if (grepl("^0[xX][0-9a-fA-F]+[UuLl]+$", value)) {
+          # Strip only the trailing U and L characters (but not F which could be hex)
+          value <- sub("[UuLl]+$", "", value)
+        }
+        # Handle decimal integers: 123LL, 456ULL, etc.
+        else if (grepl("^[0-9]+[LlUu]+$", value)) {
           value <- sub("[LlUu]+$", "", value)
-          # If it's a large integer, add L suffix for R (but only one L)
-          if (grepl("^[0-9]+$", value) && !grepl("\\.", value)) {
+          # Add single L for R integer (if not too large)
+          if (as.numeric(value) <= 2147483647) {
             value <- paste0(value, "L")
           }
+          # Otherwise leave as numeric (will be double)
         }
+        # Handle floats: 3.14f, 1.0F (but NOT hex like 0xF)
+        else if (grepl("^[0-9.+-]+[Ff]$", value) && !grepl("^0[xX]", value)) {
+          value <- sub("[Ff]$", "", value)
+        }
+        # Handle exponential notation: 1.0e10f
+        else if (grepl("^[0-9.+-]+[eE][+-]?[0-9]+[LlUuFf]*$", value)) {
+          value <- sub("[LlUuFf]+$", "", value)
+        }
+        
         # Quote value if it's not a number or already quoted
-        if (!grepl("^[0-9.+-]+L?$", value) && !grepl("^['\"]", value)) {
+        if (!grepl("^(0[xX][0-9a-fA-F]+|[0-9.+-]+([eE][+-]?[0-9]+)?L?)$", value) && !grepl("^['\"]", value)) {
           value <- paste0('"', value, '"')
         }
+        
         code_sections$defines <- c(
           code_sections$defines,
           sprintf("%s <- %s", escaped_name, value)
