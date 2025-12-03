@@ -37,3 +37,6 @@ src/symbols.rds
 # reamdme output
 README.html
 docs
+# tinycc
+src/tinycc
+inst/tinycc
