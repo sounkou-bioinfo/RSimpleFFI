@@ -89,6 +89,8 @@ size_t_type <- ffi_size_t()
 ssize_t_type <- ffi_ssize_t()
 long_type <- ffi_long()
 ulong_type <- ffi_ulong()
+longlong_type <- ffi_longlong()
+ulonglong_type <- ffi_ulonglong()
 
 longdouble_type <- ffi_longdouble()
 bool_type <- ffi_bool()
@@ -607,10 +609,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1784434733
+#> [1] 1300720476
 rand_value <- rand_func()
 rand_value
-#> [1] 648763151
+#> [1] 1314466124
 dll_unload(libc_path)
 ```
 
@@ -632,7 +634,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x574f804eacf0>
+#> <pointer: 0x63433def1be0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -723,8 +725,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     14.1µs   36.9µs    24023.    78.2KB        0
-#> 2 ffi_call    139.6µs  160.8µs     5742.    78.7KB        0
+#> 1 native_r     12.8µs   28.7µs    34969.    78.2KB        0
+#> 2 ffi_call    101.3µs  118.7µs     8321.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -806,7 +808,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x574f84f7e850>
+#> <pointer: 0x634341935790>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -838,8 +840,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            3.61ms   3.94ms      255.    78.2KB     13.4
-#> 2 c_ffi       179.1µs  207.5µs     4495.    78.7KB      0
+#> 1 r            2.47ms   2.85ms      366.    78.2KB     19.3
+#> 2 c_ffi       98.68µs 127.44µs     7389.    78.7KB    389.
 
 dll_unload(lib_path)
 ```
@@ -923,7 +925,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764771406
+#> [1] 1764776977
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -964,7 +966,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:16:45.875274\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 16:49:36.897327\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1021,8 +1023,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for filed55676a1940c2.h
-#> # Generated on: 2025-12-03 18:16:45.914382
+#> # Auto-generated R bindings for file3d118b3fe9c8da.h
+#> # Generated on: 2025-12-03 16:49:36.915844
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -1032,7 +1034,7 @@ cat(substr(libc_code, 1, 600))
 #> #  - char*: use ffi_string(), automatically converts to/from R character
 #> #  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()
 #> #  - Struct fields: access with ffi_get_field() and ffi_set_field()
-#> #  - Union fields: same as structs
+#> #  - Union fields: same as struct
 
 # Source the bindings
 tmpfile <- tempfile(fileext = ".R")
@@ -1083,12 +1085,12 @@ generate_package_from_headers(
 #> ========================================
 #> 
 #> Generated files:
-#>   - /tmp/RtmpdKDFAn/filed55677a20257a/zzz.R 
-#>   - /tmp/RtmpdKDFAn/filed55677a20257a/simple_types_bindings.R 
-#>   - /tmp/RtmpdKDFAn/filed55677a20257a/helpers.R 
+#>   - /tmp/RtmpKtV792/file3d118b72fb22ae/zzz.R 
+#>   - /tmp/RtmpKtV792/file3d118b72fb22ae/simple_types_bindings.R 
+#>   - /tmp/RtmpKtV792/file3d118b72fb22ae/helpers.R 
 #> 
 #> Next steps:
-#> 1. Review generated R files in /tmp/RtmpdKDFAn/filed55677a20257a 
+#> 1. Review generated R files in /tmp/RtmpKtV792/file3d118b72fb22ae 
 #> 2. Add DESCRIPTION file with dependencies: RSimpleFFI
 #> 3. Generate NAMESPACE with: devtools::document()
 #> 4. Build package: R CMD build
@@ -1231,6 +1233,50 @@ Helper functions:
 [`ffi_extract_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_bit_field.md),
 [`ffi_set_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_bit_field.md),
 [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md).
+
+### 64-bit Bitfields
+
+For bitfields exceeding 32 bits or requiring full 64-bit range, use the
+64-bit variants:
+
+``` r
+# Pack fields totaling more than 32 bits
+packed64 <- ffi_pack_bits64(c(1L, 0x7FFFFFFFL), c(1L, 31L))
+packed64
+#> [1] 4294967295
+
+# Extract fields
+ffi_unpack_bits64(packed64, c(1L, 31L))
+#> [1]          1 2147483647
+
+# Single field extraction
+ffi_extract_bits64(packed64, 0L, 1L)   # First field
+#> [1] 1
+ffi_extract_bits64(packed64, 1L, 31L)  # Second field
+#> [1] 2147483647
+```
+
+### Signed Bitfields
+
+For signed integer fields (common in hardware registers), use signed
+extraction:
+
+``` r
+# Pack value 13 (0xD) which represents -3 in signed 4-bit
+packed <- ffi_pack_bits(c(13L), c(4L))
+
+# Unsigned extraction returns 13
+ffi_extract_bit_field(packed, 0L, 4L)
+#> [1] 13
+
+# Signed extraction returns -3 (sign-extended)
+ffi_extract_signed_bit_field(packed, 0L, 4L)
+#> [1] -3
+
+# 64-bit signed extraction also available
+ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
+#> [1] -3
+```
 
 ### Struct Packing & Unions
 
