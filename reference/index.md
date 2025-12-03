@@ -35,6 +35,8 @@
   [`dll_load_system()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
   [`dll_load_r()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.md)
   : Load a shared library/DLL
+- [`escape_r_name()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/escape_r_name.md)
+  : Escape R name with backticks if needed
 - [`ffi_all_offsets()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_all_offsets.md)
   : Get all field offsets for a struct
 - [`ffi_alloc_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_alloc_buffer.md)
@@ -89,6 +91,8 @@
   : Int64 FFI type
 - [`ffi_int8()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int8.md)
   : Int8 FFI type
+- [`ffi_is_null()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_is_null.md)
+  : Check if external pointer is NULL
 - [`ffi_loaded_libs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_loaded_libs.md)
   : Get information about loaded native libraries
 - [`ffi_long()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_long.md)
@@ -97,12 +101,16 @@
   : longdouble FFI type
 - [`ffi_longlong()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_longlong.md)
   : long long FFI type
+- [`ffi_null_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_null_pointer.md)
+  : Create a NULL pointer
 - [`ffi_offsetof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.md)
   : Get byte offset of a field in a structure
 - [`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md)
   : Parse C header file and create structured result
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
   : pointer FFI type
+- [`ffi_print_struct()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_print_struct.md)
+  : Pretty print struct contents
 - [`ffi_raw()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_raw.md)
   : Char FFI type
 - [`ffi_read_global()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_read_global.md)
@@ -121,6 +129,12 @@
   : String FFI type
 - [`ffi_struct()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct.md)
   : Create FFI structure type
+- [`ffi_struct_array_from_list()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct_array_from_list.md)
+  : Allocate array of structs from R list
+- [`ffi_struct_from_list()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct_from_list.md)
+  : Create and initialize a struct from R list
+- [`ffi_struct_to_list()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct_to_list.md)
+  : Convert struct to R list
 - [`ffi_symbol()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_symbol.md)
   : Get native symbol reference
 - [`ffi_symbol_from_address()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_symbol_from_address.md)
@@ -149,6 +163,10 @@
   : Wide char FFI type
 - [`generate_function_wrapper()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_function_wrapper.md)
   : Generate R function wrapper from parsed function
+- [`generate_package_from_headers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_from_headers.md)
+  : Generate complete package from header files
+- [`generate_package_init()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_init.md)
+  : Generate .onLoad/.onUnload for package
 - [`generate_r_bindings()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.md)
   : Generate R bindings from parsed header
 - [`generate_struct_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.md)

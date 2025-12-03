@@ -19,6 +19,7 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_is_loaded.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_list_loaded.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dynamic_library_management.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/escape_r_name.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_all_offsets.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_alloc_buffer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_array_type.html</loc></url>
@@ -46,13 +47,16 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int32.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int64.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int8.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_is_null.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_loaded_libs.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_long.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_longdouble.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_longlong.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_null_pointer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_print_struct.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_raw.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_read_global.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.html</loc></url>
@@ -62,6 +66,9 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ssize_t.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_string.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct_array_from_list.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct_from_list.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct_to_list.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_symbol.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_symbol_from_address.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uchar.html</loc></url>
@@ -76,6 +83,8 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_wchar_t.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_function_wrapper.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_from_headers.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_init.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_pointer_type.html</loc></url>
