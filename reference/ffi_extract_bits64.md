@@ -30,6 +30,6 @@ Extracted value as double (for 64-bit range)
 
 ``` r
 packed <- ffi_pack_bits64(c(1L, 5L, 12L), c(1L, 3L, 4L))
-ffi_extract_bits64(packed, 1L, 3L)  # 5 (mode field)
+ffi_extract_bits64(packed, 1L, 3L) # 5 (mode field)
 #> [1] 5
 ```

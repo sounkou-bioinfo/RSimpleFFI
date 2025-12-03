@@ -73,11 +73,11 @@ and width, returning the modified packed value.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Set 3-bit mode field at bit offset 1 to value 7</span></span></span>
-<span class="r-in"><span><span class="fu">ffi_set_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">7L</span>, <span class="fl">1L</span>, <span class="fl">3L</span><span class="op">)</span>  <span class="co"># 0x6F</span></span></span>
+<span class="r-in"><span><span class="fu">ffi_set_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">7L</span>, <span class="fl">1L</span>, <span class="fl">3L</span><span class="op">)</span> <span class="co"># 0x6F</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 111</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Set 1-bit enabled field at bit offset 0 to 0</span></span></span>
-<span class="r-in"><span><span class="fu">ffi_set_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">1L</span><span class="op">)</span>  <span class="co"># 0x64</span></span></span>
+<span class="r-in"><span><span class="fu">ffi_set_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">1L</span><span class="op">)</span> <span class="co"># 0x64</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 100</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

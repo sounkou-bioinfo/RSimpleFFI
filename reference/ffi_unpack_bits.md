@@ -34,7 +34,7 @@ according to its width.
 ``` r
 # Unpack a value with three bit-fields
 values <- ffi_unpack_bits(0x65L, c(1L, 3L, 4L))
-values  # [1]  1  5 12
+values # [1]  1  5 12
 #> [1] 1 2 6
 
 # Round-trip test

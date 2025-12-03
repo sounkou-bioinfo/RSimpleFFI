@@ -35,10 +35,10 @@ Modified packed integer value
 
 ``` r
 # Set 3-bit mode field at bit offset 1 to value 7
-ffi_set_bit_field(0x65L, 7L, 1L, 3L)  # 0x6F
+ffi_set_bit_field(0x65L, 7L, 1L, 3L) # 0x6F
 #> [1] 111
 
 # Set 1-bit enabled field at bit offset 0 to 0
-ffi_set_bit_field(0x65L, 0L, 0L, 1L)  # 0x64
+ffi_set_bit_field(0x65L, 0L, 0L, 1L) # 0x64
 #> [1] 100
 ```

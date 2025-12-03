@@ -16,4 +16,6 @@ tcc_extract_structs(preprocessed_lines)
 
 ## Value
 
-List of struct definitions (name -\> list of fields)
+List of struct definitions (name -\> list of fields). Each struct may
+have a "packed" attribute set to TRUE if **attribute**((packed)) or
+\#pragma pack was detected.

@@ -38,6 +38,5 @@ integers are only 32-bit).
 packed <- ffi_pack_bits64(c(1L, 5L, 12L), c(1L, 3L, 4L))
 
 # Works with values > 32 bits total
-large_packed <- ffi_pack_bits64(c(1L, 0xFFFFFFFFL), c(1L, 32L))
-#> Warning: NAs introduced by coercion to integer range
+large_packed <- ffi_pack_bits64(c(1, 0x7FFFFFFF), c(1L, 31L))
 ```

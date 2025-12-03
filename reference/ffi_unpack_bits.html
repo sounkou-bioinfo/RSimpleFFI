@@ -71,7 +71,7 @@ Each value is extracted by shifting and masking according to its width.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Unpack a value with three bit-fields</span></span></span>
 <span class="r-in"><span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu">ffi_unpack_bits</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">3L</span>, <span class="fl">4L</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">values</span>  <span class="co"># [1]  1  5 12</span></span></span>
+<span class="r-in"><span><span class="va">values</span> <span class="co"># [1]  1  5 12</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1 2 6</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Round-trip test</span></span></span>

@@ -69,11 +69,11 @@ bit offset and width.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Extract 3-bit mode field at bit offset 1 from value 0x65</span></span></span>
-<span class="r-in"><span><span class="fu">ffi_extract_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">1L</span>, <span class="fl">3L</span><span class="op">)</span>  <span class="co"># 5</span></span></span>
+<span class="r-in"><span><span class="fu">ffi_extract_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">1L</span>, <span class="fl">3L</span><span class="op">)</span> <span class="co"># 5</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Extract 4-bit priority field at bit offset 4</span></span></span>
-<span class="r-in"><span><span class="fu">ffi_extract_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">4L</span>, <span class="fl">4L</span><span class="op">)</span>  <span class="co"># 6</span></span></span>
+<span class="r-in"><span><span class="fu">ffi_extract_bit_field</span><span class="op">(</span><span class="fl">0x65L</span>, <span class="fl">4L</span>, <span class="fl">4L</span><span class="op">)</span> <span class="co"># 6</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -31,10 +31,10 @@ Extracted integer value
 
 ``` r
 # Extract 3-bit mode field at bit offset 1 from value 0x65
-ffi_extract_bit_field(0x65L, 1L, 3L)  # 5
+ffi_extract_bit_field(0x65L, 1L, 3L) # 5
 #> [1] 2
 
 # Extract 4-bit priority field at bit offset 4
-ffi_extract_bit_field(0x65L, 4L, 4L)  # 6
+ffi_extract_bit_field(0x65L, 4L, 4L) # 6
 #> [1] 6
 ```

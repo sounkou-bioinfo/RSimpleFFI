@@ -66,7 +66,7 @@
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">packed</span> <span class="op">&lt;-</span> <span class="fu"><a href="ffi_pack_bits64.html">ffi_pack_bits64</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">5L</span>, <span class="fl">12L</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">3L</span>, <span class="fl">4L</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">ffi_extract_bits64</span><span class="op">(</span><span class="va">packed</span>, <span class="fl">1L</span>, <span class="fl">3L</span><span class="op">)</span>  <span class="co"># 5 (mode field)</span></span></span>
+<span class="r-in"><span><span class="fu">ffi_extract_bits64</span><span class="op">(</span><span class="va">packed</span>, <span class="fl">1L</span>, <span class="fl">3L</span><span class="op">)</span> <span class="co"># 5 (mode field)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

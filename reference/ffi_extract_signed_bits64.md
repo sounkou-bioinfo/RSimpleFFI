@@ -31,7 +31,7 @@ Extracted signed value as double
 
 ``` r
 # Pack a negative value in 4-bit signed field (-3 = 0xD in 4 bits)
-packed <- ffi_pack_bits64(c(13L), c(4L))  # 0xD = -3 as signed 4-bit
-ffi_extract_signed_bits64(packed, 0L, 4L)  # -3
+packed <- ffi_pack_bits64(c(13L), c(4L)) # 0xD = -3 as signed 4-bit
+ffi_extract_signed_bits64(packed, 0L, 4L) # -3
 #> [1] -3
 ```
