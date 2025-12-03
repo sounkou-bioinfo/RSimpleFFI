@@ -1,5 +1,37 @@
 # Changelog
 
+## RSimpleFFI 1.0.1.9000 (Development)
+
+### New Features
+
+- Added bit-field helper functions for manual bit manipulation:
+  - [`ffi_pack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits.md)
+    /
+    [`ffi_unpack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_unpack_bits.md) -
+    pack/unpack multiple bit-fields
+  - [`ffi_extract_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_bit_field.md)
+    /
+    [`ffi_set_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_bit_field.md) -
+    single field operations
+  - [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md) -
+    generate accessor functions for bit-field structs
+
+### Documentation
+
+- Added comprehensive `BITFIELDS_STRATEGY.md` documenting libffi’s lack
+  of bit-field support and workaround strategies
+
+- Enhanced README limitations section with detailed bit-field guidance
+  and warnings
+
+- Added `inst/examples/bitfield_workarounds.R` demonstrating practical
+  bit-field handling patterns
+
+### Bug Fixes / Improvements
+
+- Header parser now detects bit-fields in structs and issues clear
+  warnings during code generation
+
 ## RSimpleFFI 1.0.1
 
 ### New Features

@@ -33,6 +33,30 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.1.9000" id="rsimpleffi-1019000-development">RSimpleFFI 1.0.1.9000 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1019000-development"></a></h2>
+<div class="section level3">
+<h3 id="new-features-1-0-1-9000">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1-9000"></a></h3>
+<ul><li>Added bit-field helper functions for manual bit manipulation:
+<ul><li>
+<code><a href="../reference/ffi_pack_bits.html">ffi_pack_bits()</a></code> / <code><a href="../reference/ffi_unpack_bits.html">ffi_unpack_bits()</a></code> - pack/unpack multiple bit-fields</li>
+<li>
+<code><a href="../reference/ffi_extract_bit_field.html">ffi_extract_bit_field()</a></code> / <code><a href="../reference/ffi_set_bit_field.html">ffi_set_bit_field()</a></code> - single field operations</li>
+<li>
+<code><a href="../reference/ffi_create_bitfield_accessors.html">ffi_create_bitfield_accessors()</a></code> - generate accessor functions for bit-field structs</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-1-0-1-9000">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-0-1-9000"></a></h3>
+<ul><li><p>Added comprehensive <code>BITFIELDS_STRATEGY.md</code> documenting libffi’s lack of bit-field support and workaround strategies</p></li>
+<li><p>Enhanced README limitations section with detailed bit-field guidance and warnings</p></li>
+<li><p>Added <code>inst/examples/bitfield_workarounds.R</code> demonstrating practical bit-field handling patterns</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes--improvements-1-0-1-9000">Bug Fixes / Improvements<a class="anchor" aria-label="anchor" href="#bug-fixes--improvements-1-0-1-9000"></a></h3>
+<ul><li>Header parser now detects bit-fields in structs and issues clear warnings during code generation</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.1" id="rsimpleffi-101">RSimpleFFI 1.0.1<a class="anchor" aria-label="anchor" href="#rsimpleffi-101"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-0-1">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1"></a></h3>
