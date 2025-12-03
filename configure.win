@@ -72,9 +72,19 @@ if [ -d "$TINYCC_SRC" ]; then
         exit 1
     fi
 
-    echo "tinycc tcc executable built and installed to $TINYCC_DEST/bin"
-    # print the content of 
-    ls -lad  $TINYCC_DEST/bin/*
+    # Copy TCC's include files (required for preprocessing on Windows)
+    echo "Installing TCC include files..."
+    cp -f include/*.h "$TINYCC_DEST/include/" 2>/dev/null || true
+    cp -f tcclib.h "$TINYCC_DEST/include/" 2>/dev/null || true
+    mkdir -p "$TINYCC_DEST/include/winapi"
+    cp -rf win32/include/* "$TINYCC_DEST/include/" 2>/dev/null || true
+    
+    # Copy TCC's library files (required for linking on Windows)
+    echo "Installing TCC library files..."
+    cp -f win32/lib/*.def "$TINYCC_DEST/lib/" 2>/dev/null || true
+    
+    echo "TinyCC tcc executable and support files installed to $TINYCC_DEST"
+    ls -la "$TINYCC_DEST/bin/" "$TINYCC_DEST/include/" "$TINYCC_DEST/lib/" 2>/dev/null || true
 else
     echo "Error: tinycc source directory $TINYCC_SRC does not exist."
     exit 1

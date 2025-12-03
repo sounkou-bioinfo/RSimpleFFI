@@ -4,15 +4,19 @@
 tcc_binary_path <- function() {
     if(.Platform$OS.type == "windows") {
         tcc_path <- system.file("tinycc", "bin", "tcc.exe", package = "RSimpleFFI")
-        tcc_path <- normalizePath(tcc_path)
         message("TCC path (Windows): ", tcc_path)
+        if (nzchar(tcc_path) && file.exists(tcc_path)) {
+            tcc_path <- normalizePath(tcc_path)
+        }
     } else {
         tcc_path <- system.file("tinycc", "bin", "tcc", package = "RSimpleFFI")
-        tcc_path <- normalizePath(tcc_path)
         message("TCC path (Unix): ", tcc_path)
+        if (nzchar(tcc_path) && file.exists(tcc_path)) {
+            tcc_path <- normalizePath(tcc_path)
+        }
     }
 
-    if (!file.exists(tcc_path) || tcc_path == "") {
+    if (!nzchar(tcc_path) || !file.exists(tcc_path)) {
         stop("TCC binary not found. Package may not be installed correctly.")
     }
   
