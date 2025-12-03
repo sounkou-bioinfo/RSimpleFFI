@@ -145,6 +145,7 @@ ffi_array_type <- function(element_type, length) {
 #' @param ref External pointer to ffi_type
 #' @param fields Character vector of field names
 #' @param field_types List of FFIType objects for each field
+#' @param pack Integer packing alignment (NULL for default/natural alignment)
 #' @export
 UnionType <- S7::new_class(
   "UnionType",
@@ -152,7 +153,8 @@ UnionType <- S7::new_class(
   parent = FFIType,
   properties = list(
     fields = S7::class_character,
-    field_types = S7::class_list
+    field_types = S7::class_list,
+    pack = S7::class_any # NULL or integer
   ),
   validator = function(self) {
     if (length(self@fields) != length(self@field_types)) {
@@ -161,6 +163,8 @@ UnionType <- S7::new_class(
       !all(sapply(self@field_types, function(x) S7::S7_inherits(x, FFIType)))
     ) {
       "All field types must be FFIType objects"
+    } else if (!is.null(self@pack) && (!is.numeric(self@pack) || self@pack < 1 || self@pack > 16)) {
+      "pack must be NULL or an integer between 1 and 16"
     }
   }
 )
@@ -649,11 +653,28 @@ ffi_struct <- function(..., pack = NULL) {
 
 
 #' Create FFI union type
+#'
+#' Creates a union type where all fields share the same memory location.
+#' The union's size is the size of its largest member.
+#'
 #' @param ... Named FFIType objects representing union fields
+#' @param pack Integer packing alignment (1, 2, 4, 8, or 16). When specified,
+#'   the union's alignment is reduced to min(natural_alignment, pack).
+#'   This affects placement when the union is used as a struct member.
+#'   Default NULL uses natural alignment.
 #' @return UnionType object
 #' @keywords Types
+#' @examples
+#' # Normal union
+#' U <- ffi_union(c = ffi_char(), i = ffi_int())
+#'
+#' # Packed union (alignment = 1)
+#' PackedU <- ffi_union(c = ffi_char(), i = ffi_int(), pack = 1)
+#'
+#' # Packed union in a struct - offset of next field is affected
+#' S <- ffi_struct(u = PackedU, after = ffi_char())
 #' @export
-ffi_union <- function(...) {
+ffi_union <- function(..., pack = NULL) {
   fields <- list(...)
 
   if (length(fields) == 0) {
@@ -664,6 +685,17 @@ ffi_union <- function(...) {
     stop("All union fields must be named")
   }
 
+  # Validate pack parameter
+  if (!is.null(pack)) {
+    if (!is.numeric(pack) || length(pack) != 1 || pack < 1 || pack > 16) {
+      stop("pack must be NULL or an integer between 1 and 16")
+    }
+    if (!(pack %in% c(1, 2, 4, 8, 16))) {
+      stop("pack must be a power of 2: 1, 2, 4, 8, or 16")
+    }
+    pack <- as.integer(pack)
+  }
+
   # Validate all fields are FFIType objects
   if (!all(sapply(fields, function(f) S7::S7_inherits(f, FFIType)))) {
     stop("All union fields must be FFIType objects")
@@ -672,7 +704,7 @@ ffi_union <- function(...) {
   field_names <- names(fields)
   field_refs <- lapply(fields, function(f) f@ref)
 
-  union_ref <- .Call("R_create_union_ffi_type", field_refs)
+  union_ref <- .Call("R_create_union_ffi_type", field_refs, pack)
   union_size <- .Call("R_get_ffi_type_size", union_ref)
 
   UnionType(
@@ -680,7 +712,8 @@ ffi_union <- function(...) {
     size = union_size,
     ref = union_ref,
     fields = field_names,
-    field_types = unname(fields)
+    field_types = unname(fields),
+    pack = pack
   )
 }
 

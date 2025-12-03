@@ -8,6 +8,11 @@
   - `pack = NULL` (default) uses natural alignment
   - Matches GCC/Clang `#pragma pack(n)` and MSVC packing behavior
 
+* Added `pack` parameter to `ffi_union()` for controlling union alignment:
+  - Reduces union's alignment requirement (size stays the same)
+  - Affects placement when union is a struct member
+  - Example: packed union in normal struct eliminates trailing padding
+
 * Added `ffi_packed_offset()` and `ffi_packed_size()` for computing packed struct layouts
 
 * Added bit-field helper functions for manual bit manipulation:

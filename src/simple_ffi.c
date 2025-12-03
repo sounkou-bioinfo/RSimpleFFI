@@ -300,10 +300,17 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types) {
 // Create union FFI type
 // Per libffi manual: emulate union using FFI_TYPE_STRUCT with single element
 // that has the size of the largest member and largest alignment
-SEXP R_create_union_ffi_type(SEXP r_field_types) {
+// pack: packing alignment (0 or NULL for natural alignment, 1/2/4/8/16 for packed)
+SEXP R_create_union_ffi_type(SEXP r_field_types, SEXP r_pack) {
     int num_fields = LENGTH(r_field_types);
     if (num_fields == 0) {
         Rf_error("Union must have at least one field");
+    }
+    
+    // Get pack value (0 means natural alignment)
+    int pack = 0;
+    if (r_pack != R_NilValue && LENGTH(r_pack) > 0) {
+        pack = INTEGER(r_pack)[0];
     }
     
     // First pass: find largest size and alignment by forcing layout computation
@@ -328,6 +335,11 @@ SEXP R_create_union_ffi_type(SEXP r_field_types) {
                 max_alignment = field_type->alignment;
             }
         }
+    }
+    
+    // Apply pack to alignment: effective_alignment = min(natural, pack)
+    if (pack > 0 && pack < max_alignment) {
+        max_alignment = (unsigned short)pack;
     }
     
     // Create a single-element struct with the largest member's properties
@@ -364,9 +376,13 @@ SEXP R_create_union_ffi_type(SEXP r_field_types) {
         Rf_error("Failed to compute union layout");
     }
     
-    // Verify the union has the expected size
+    // Verify the union has the expected size and alignment
+    // libffi may have overwritten our alignment, so force it back
     if (union_type->size < max_size) {
         union_type->size = max_size;
+    }
+    if (pack > 0 && union_type->alignment > (unsigned short)pack) {
+        union_type->alignment = (unsigned short)pack;
     }
     
     SEXP extPtr = R_MakeExternalPtr(union_type, R_NilValue, R_NilValue);
