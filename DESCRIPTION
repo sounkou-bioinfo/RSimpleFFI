@@ -5,7 +5,7 @@ Description: Simple Foreign Function Interface for 'R' using 'libffi' and 'S7' c
     Supports calling 'C' functions with type conversion and struct handling.
     Includes standard 'C' types (int8, int16, int32, int64, uint variants), platform
     types (size_t, bool), floating point types, and complex struct types.
-    Experimental header parsing using 'TinyCC' enables automatic generation of 'R' 
+    Experimental header parsing using 'tinycc' enables automatic generation of 'R' 
     bindings from 'C' header files, simplifying package development for 'C' libraries.
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure", 
@@ -13,7 +13,7 @@ Authors@R: c(
     person( given ="Anthony Green, Red Hat, Inc and others" , role = c("ctb"),
     comment = "libffi authors and COPYRIGHT holders"),
     person( given ="Fabrice Bellard and tinycc Authors" , role = c("ctb"),
-    comment = "Tiny C Compiler (TCC) authors and COPYRIGHT holders")
+    comment = "Tinycc Compiler (tinycc) authors and COPYRIGHT holders")
     )
 License: GPL-3
 Depends: R (>= 4.4.0)

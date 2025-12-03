@@ -21,7 +21,7 @@ A Simple Foreign Function Interface (FFI) for R using libffi.
 
 ## Overview
 
-RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and is vendored in this package for unix systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes. As an experimental feature, the package includes automatic R binding generation from C header files using the [TinyCC](https://github.com/TinyCC/tinycc) compiler, allowing you to parse C headers and automatically generate R wrapper functions for easy package development. Note that this is a wrapper of the `tinycc` compiler cli and not the in memory compilation facilities.
+RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It only needs libffi which is available on most systems and is vendored in this package for unix systems. RSimpleFFI is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It builds on the same structure with S7 classes. As an experimental feature, the package includes automatic R binding generation from C header files using the [tinycc](https://github.com/tinycc/tinycc) compiler, allowing you to parse C headers and automatically generate R wrapper functions for easy package development. Note that this is a wrapper of the `tinycc` compiler cli and not the in memory compilation facilities.
 
 ## Installation
 
@@ -726,12 +726,12 @@ rf_INTEGER_ELT(abs_result, 0L)
 
 ## Header Parsing and Code Generation
 
-RSimpleFFI can parse C header files using [TinyCC](https://github.com/TinyCC/tinycc) and automatically generate R bindings, making it easy to create R packages that wrap C libraries.
+RSimpleFFI can parse C header files using [tinycc](https://github.com/tinycc/tinycc) and automatically generate R bindings, making it easy to create R packages that wrap C libraries.
 
 ### Parse Headers
 
 ```{r}
-# Parse a C header file using TinyCC preprocessor
+# Parse a C header file using tinycc preprocessor
 header_file <- system.file("extdata", "simple_types.h", package = "RSimpleFFI")
 parsed <- ffi_parse_header(header_file)
 
@@ -874,7 +874,7 @@ This project is licensed under the GPL-3 License.
 
 - [libffi](https://github.com/libffi/libffi) - Portable foreign function interface library
 
-- [TinyCC](https://github.com/TinyCC/tinycc) - Tiny C Compiler used for header parsing
+- [tinycc](https://github.com/tinycc/tinycc) - Tiny C Compiler used for header parsing
 
 - [libffi Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
 
