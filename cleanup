@@ -1,8 +1,9 @@
 #!/bin/sh
-# cleanup script to remove built libffi files and build artifacts
+# cleanup script to remove built libffi and tinycc files and build artifacts
 set -e
 LIBFFI_DEST="inst/libffi"
 LIBFFI_BUILD="src/libffi/build"
+TINYCC_DEST="inst/tinycc"
 
 if [ -d "$LIBFFI_DEST" ]; then
     rm -rf "$LIBFFI_DEST"
@@ -11,4 +12,8 @@ fi
 if [ -d "$LIBFFI_BUILD" ]; then
     rm -rf "$LIBFFI_BUILD"
     echo "Removed $LIBFFI_BUILD"
+fi
+if [ -d "$TINYCC_DEST" ]; then
+    rm -rf "$TINYCC_DEST"
+    echo "Removed $TINYCC_DEST"
 fi

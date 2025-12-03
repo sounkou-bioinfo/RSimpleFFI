@@ -3,10 +3,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "/usr/lib/R/site-library/Rcpp/include/**",
                 "/usr/share/R/include/**",
                 "${workspaceFolder}/inst/libffi/include/**",
-                 "${workspaceFolder}/src/**",
+                "${workspaceFolder}/inst/tinycc/include/**",
+                "${workspaceFolder}/src/**",
                 "/usr/local/lib/R/site-library/RBCFLib/include/**"
             ],
             "defines": [],
