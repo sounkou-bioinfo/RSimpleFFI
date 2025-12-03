@@ -1158,6 +1158,8 @@ This project is licensed under the GPL-3 License.
   : double FFI type
 - [`ffi_enum()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_enum.md)
   : Create FFI enumeration type
+- [`ffi_enum_to_int()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_enum_to_int.md)
+  : Convert enum name to integer value
 - [`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md)
   : Get field information from a struct type
 - [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
@@ -1182,6 +1184,8 @@ This project is licensed under the GPL-3 License.
   : Int64 FFI type
 - [`ffi_int8()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int8.md)
   : Int8 FFI type
+- [`ffi_int_to_enum()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_int_to_enum.md)
+  : Convert integer value to enum name
 - [`ffi_is_null()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_is_null.md)
   : Check if external pointer is NULL
 - [`ffi_loaded_libs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_loaded_libs.md)
