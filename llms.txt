@@ -609,10 +609,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1300720476
+#> [1] 1530020626
 rand_value <- rand_func()
 rand_value
-#> [1] 1314466124
+#> [1] 661281513
 dll_unload(libc_path)
 ```
 
@@ -634,7 +634,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x63433def1be0>
+#> <pointer: 0x646b26ff7e60>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -725,8 +725,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     12.8µs   28.7µs    34969.    78.2KB        0
-#> 2 ffi_call    101.3µs  118.7µs     8321.    78.7KB        0
+#> 1 native_r       13µs   28.9µs    36738.    78.2KB        0
+#> 2 ffi_call     99.1µs  123.2µs     8170.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -808,7 +808,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x634341935790>
+#> <pointer: 0x646b298953f0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -840,8 +840,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.47ms   2.85ms      366.    78.2KB     19.3
-#> 2 c_ffi       98.68µs 127.44µs     7389.    78.7KB    389.
+#> 1 r             2.6ms   2.91ms      356.    78.2KB     18.8
+#> 2 c_ffi         103µs 106.56µs     8643.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -925,7 +925,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764776977
+#> [1] 1764780887
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -966,7 +966,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 16:49:36.897327\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 17:54:46.86768\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"
 
 # The generated code includes:
 # - Constants from #define
@@ -1023,8 +1023,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file3d118b3fe9c8da.h
-#> # Generated on: 2025-12-03 16:49:36.915844
+#> # Auto-generated R bindings for file3e770cdc7518a.h
+#> # Generated on: 2025-12-03 17:54:46.887514
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -1034,7 +1034,7 @@ cat(substr(libc_code, 1, 600))
 #> #  - char*: use ffi_string(), automatically converts to/from R character
 #> #  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()
 #> #  - Struct fields: access with ffi_get_field() and ffi_set_field()
-#> #  - Union fields: same as struct
+#> #  - Union fields: same as structs
 
 # Source the bindings
 tmpfile <- tempfile(fileext = ".R")
@@ -1085,12 +1085,12 @@ generate_package_from_headers(
 #> ========================================
 #> 
 #> Generated files:
-#>   - /tmp/RtmpKtV792/file3d118b72fb22ae/zzz.R 
-#>   - /tmp/RtmpKtV792/file3d118b72fb22ae/simple_types_bindings.R 
-#>   - /tmp/RtmpKtV792/file3d118b72fb22ae/helpers.R 
+#>   - /tmp/RtmpDA8zD7/file3e770c43b690e6/zzz.R 
+#>   - /tmp/RtmpDA8zD7/file3e770c43b690e6/simple_types_bindings.R 
+#>   - /tmp/RtmpDA8zD7/file3e770c43b690e6/helpers.R 
 #> 
 #> Next steps:
-#> 1. Review generated R files in /tmp/RtmpKtV792/file3d118b72fb22ae 
+#> 1. Review generated R files in /tmp/RtmpDA8zD7/file3e770c43b690e6 
 #> 2. Add DESCRIPTION file with dependencies: RSimpleFFI
 #> 3. Generate NAMESPACE with: devtools::document()
 #> 4. Build package: R CMD build

@@ -111,7 +111,10 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_struct_definition.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_typedef_definition.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_union_definition.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_c_type_keywords.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_ffi_type_map.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_pointer_type.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_resolvable_types.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/index.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/is_null_pointer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/libffi_version.html</loc></url>
