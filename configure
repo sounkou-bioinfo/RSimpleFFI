@@ -22,9 +22,16 @@ if [ -d "$LIBFFI_SRC" ]; then
     cd "$LIBFFI_SRC"
     echo "$PWD"
     echo "Configuring and building libffi ..." >> config.log
-    ./configure --disable-docs --includedir="$LIBFFI_DEST/include" \
-    --libdir="$LIBFFI_DEST/lib"  \
-    --prefix="$LIBFFI_DEST/build"  \
+    
+    # On macOS, disable static library to avoid linking warnings
+    # The R CMD check warns about symbols like _abort in static libraries
+    CONFIGURE_FLAGS="--disable-docs --includedir=$LIBFFI_DEST/include --libdir=$LIBFFI_DEST/lib --prefix=$LIBFFI_DEST/build"
+    if [ "$(uname)" = "Darwin" ]; then
+        CONFIGURE_FLAGS="$CONFIGURE_FLAGS --disable-static --enable-shared"
+        echo "macOS detected: building only shared library" >> config.log
+    fi
+    
+    ./configure $CONFIGURE_FLAGS \
     CFLAGS="-fPIC -Wno-deprecated-declarations" \
         CC="$CC" AR="$AR" RANLIB="$RANLIB"
     mkdir -p "$LIBFFI_DEST/lib"
