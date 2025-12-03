@@ -15,7 +15,8 @@
     single field operations
   - [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md) -
     generate accessor functions for bit-field structs
-- Autogeneration of bindings using tinycc for preprocessing
+- Autogeneration of bindings using tinycc for preprocessing of header
+  files
 
 ## RSimpleFFI 1.0.1
 

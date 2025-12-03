@@ -93,6 +93,7 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_wchar_t.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_bitfield_accessor_code.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_enum_definition.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_function_wrapper.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_from_headers.html</loc></url>

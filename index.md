@@ -607,10 +607,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 864170692
+#> [1] 1684206878
 rand_value <- rand_func()
 rand_value
-#> [1] 523506455
+#> [1] 2067151306
 dll_unload(libc_path)
 ```
 
@@ -632,7 +632,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x591c79471af0>
+#> <pointer: 0x5f82daf053e0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -723,8 +723,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       22µs   50.8µs    19795.    78.2KB        0
-#> 2 ffi_call      214µs  247.4µs     3701.    78.7KB        0
+#> 1 native_r     13.7µs   31.9µs    31434.    78.2KB        0
+#> 2 ffi_call    140.4µs  153.8µs     5628.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -806,7 +806,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x591c7d7c74a0>
+#> <pointer: 0x5f82dea6fda0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -838,8 +838,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            5.12ms    5.7ms      173.    78.2KB     9.13
-#> 2 c_ffi       260.3µs  302.4µs     3011.    78.7KB     0
+#> 1 r            3.36ms   3.87ms      259.    78.2KB     13.6
+#> 2 c_ffi       174.3µs  205.7µs     4107.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -923,7 +923,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764767156
+#> [1] 1764768162
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -946,8 +946,6 @@ bindings, making it easy to create R packages that wrap C libraries.
 # Parse a C header file using tinycc preprocessor
 header_file <- system.file("extdata", "simple_types.h", package = "RSimpleFFI")
 parsed <- ffi_parse_header(header_file)
-#> TCC path (Unix): /usr/local/lib/R/site-library/RSimpleFFI/tinycc/bin/tcc
-#> TCC path (Unix): /usr/local/lib/R/site-library/RSimpleFFI/tinycc/bin/tcc
 
 # Inspect what was found
 names(parsed$defines)
@@ -966,7 +964,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 17:05:56.107602\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 17:22:42.039454\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1019,14 +1017,12 @@ writeLines(c(
 
 # Parse and generate bindings
 libc_parsed <- ffi_parse_header(libc_header)
-#> TCC path (Unix): /usr/local/lib/R/site-library/RSimpleFFI/tinycc/bin/tcc
-#> TCC path (Unix): /usr/local/lib/R/site-library/RSimpleFFI/tinycc/bin/tcc
 libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for filebbe4a4658175c.h
-#> # Generated on: 2025-12-03 17:05:56.15789
+#> # Auto-generated R bindings for filec681766ff7fca.h
+#> # Generated on: 2025-12-03 17:22:42.07019
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -1079,9 +1075,7 @@ generate_package_from_headers(
   use_system_lib = TRUE
 )
 #> Generating package initialization (zzz.R)...
-#> Processing header: /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
-#> TCC path (Unix): /usr/local/lib/R/site-library/RSimpleFFI/tinycc/bin/tcc
-#> TCC path (Unix): /usr/local/lib/R/site-library/RSimpleFFI/tinycc/bin/tcc
+#> Processing header: /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h 
 #> Generating helper functions...
 #> 
 #> ========================================
@@ -1089,12 +1083,12 @@ generate_package_from_headers(
 #> ========================================
 #> 
 #> Generated files:
-#>   - /tmp/RtmpzftiNj/filebbe4a26d98c1d/zzz.R 
-#>   - /tmp/RtmpzftiNj/filebbe4a26d98c1d/simple_types_bindings.R 
-#>   - /tmp/RtmpzftiNj/filebbe4a26d98c1d/helpers.R 
+#>   - /tmp/Rtmpms7TJV/filec68176a398b48/zzz.R 
+#>   - /tmp/Rtmpms7TJV/filec68176a398b48/simple_types_bindings.R 
+#>   - /tmp/Rtmpms7TJV/filec68176a398b48/helpers.R 
 #> 
 #> Next steps:
-#> 1. Review generated R files in /tmp/RtmpzftiNj/filebbe4a26d98c1d 
+#> 1. Review generated R files in /tmp/Rtmpms7TJV/filec68176a398b48 
 #> 2. Add DESCRIPTION file with dependencies: RSimpleFFI
 #> 3. Generate NAMESPACE with: devtools::document()
 #> 4. Build package: R CMD build
@@ -1134,109 +1128,61 @@ ffi_print_struct(pt, Point)
 #>   y (int): 20
 ```
 
-## Limitations and issues
+## Limitations
 
 Current limitations include unnecessary copying, lack of protection,
 potential memory leaks, and type objects are C pointers that are never
 finalized.
 
-### Bit-fields and Struct Packing
+### Bit-fields
 
-**RSimpleFFI does not support bit-fields** in C structures. This is an
-inherent limitation of libffi. As stated in the libffi manual (section
-2.3.2):
-
-> Note that ‘libffi’ has no special support for bit-fields. You must
-> manage these manually.
-
-If you attempt to parse a header file containing structs with
-bit-fields, you will receive a warning pointing to workarounds.
-
-#### Workaround: Manual Bit Manipulation
-
-RSimpleFFI provides helper functions for manual bit-field handling:
+**RSimpleFFI does not support bit-fields.** libffi has no support for
+bit-fields (they’re compiler/platform-specific). Use manual bit
+manipulation instead:
 
 ``` r
-# C struct with bit-fields we want to work with:
-# typedef struct {
-#   unsigned int enabled : 1;
-#   unsigned int mode : 3;
-#   unsigned int priority : 4;
-# } Settings;
-
-# Create accessor functions for the bit-field layout
+# Create accessors for bit-field layout
 settings <- ffi_create_bitfield_accessors(
   list(enabled = 1L, mode = 3L, priority = 4L)
 )
 
-# Pack values into a single integer
+# Pack values
 packed <- settings$pack(list(enabled = 1L, mode = 5L, priority = 10L))
 packed
 #> [1] 171
 
-# Get individual fields
+# Access fields
 settings$get(packed, "mode")
 #> [1] 5
 
-# Set individual fields
-packed <- settings$set(packed, "priority", 15L)
-settings$get(packed, "priority")
-#> [1] 15
-
-# Unpack to list
-settings$unpack(packed)
-#> $enabled
+# Pass to C function as uint32_t
+verify <- ffi_function("test_bitfield_verify", ffi_int(), 
+                       ffi_uint32(), ffi_int(), ffi_int(), ffi_int())
+verify(as.integer(packed), 1L, 5L, 10L)
 #> [1] 1
-#> 
-#> $mode
-#> [1] 5
-#> 
-#> $priority
-#> [1] 15
 
-# Pass packed value to C function expecting uint32_t
-# config_func <- ffi_function("set_config", ffi_void(), ffi_uint32())
-# config_func(packed)
+# Modify in C, read in R
+increment <- ffi_function("test_bitfield_increment_priority", 
+                          ffi_uint32(), ffi_uint32())
+packed <- increment(as.integer(packed))
+settings$get(packed, "priority")  # Now 11
+#> [1] 11
 ```
 
-Available helper functions:
+Helper functions:
+[`ffi_pack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits.md),
+[`ffi_unpack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_unpack_bits.md),
+[`ffi_extract_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_bit_field.md),
+[`ffi_set_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_bit_field.md),
+[`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md).
 
-- `ffi_pack_bits(values, widths)` - Pack multiple values into integer
-- `ffi_unpack_bits(packed, widths)` - Unpack integer into values
-- `ffi_extract_bit_field(packed, offset, width)` - Get single field
-- `ffi_set_bit_field(packed, value, offset, width)` - Set single field  
-- `ffi_create_bitfield_accessors(field_specs)` - Generate
-  pack/unpack/get/set functions
+Parser detects bit-fields and warns with workaround suggestions.
 
-#### Why libffi Doesn’t Support Bit-fields
+### Struct Packing & Unions
 
-Bit-field layout is highly compiler-specific, platform-specific, and
-ABI-specific. Different compilers (GCC, MSVC, Clang) pack bit-fields
-differently, and the same compiler may use different rules on different
-platforms (x86-64 vs ARM) or ABIs (SysV vs Windows). libffi would need
-to replicate every compiler’s bit-field algorithm for every supported
-platform - an intractable maintenance burden.
-
-Instead, libffi requires manual handling. RSimpleFFI’s helper functions
-make this straightforward using R’s built-in bitwise operators.
-
-### Struct Packing
-
-We do not support special packing or alignment attributes
-(`#pragma pack`, `__attribute__((packed))`). Struct layout is computed
-by libffi using the platform’s native ABI rules. This is ABI level
-access to C Routines in dynamic libraries, so care must be taken with
-alignment issues.
-
-For cross-platform compatibility, document your assumptions about struct
-layout and test on each target platform.
-
-### Unions
-
-Union support has limitations on certain ABIs (particularly AMD64). When
-mixing float and integer types, the calling convention may not be
-correctly detected. **Recommendation:** Pass unions by pointer rather
-than by value whenever possible.
+Struct packing attributes (`#pragma pack`, `__attribute__((packed))`)
+not supported. Union support limited on some ABIs - prefer passing by
+pointer.
 
 ## License
 
