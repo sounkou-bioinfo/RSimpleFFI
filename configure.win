@@ -25,7 +25,9 @@ AR=`"${R_HOME}/bin/R" CMD config AR`
 THISDir=$(dirname "$0")
 TINYCC_SRC="${THISDir}/src/tinycc"
 TINYCC_DEST="${THISDir}/inst/tinycc"
-
+MSYSTEM=MINGW64
+MSYS2_PATH_TYPE=inherit
+CHERE_INVOKING=yes
 echo "Unpacking tinycc tarball to ${TINYCC_SRC} ..."
 "${R_HOME}/bin/Rscript" "${THISDir}/tools/vendortinycc.R" unpack
 
