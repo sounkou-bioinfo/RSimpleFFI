@@ -402,7 +402,9 @@ can_resolve_typedef <- function(base_type, known_typedefs, known_structs = chara
   visited <- c(visited, base_type)
 
   # Basic type map (subset for checking)
+  # Includes standard types AND common system-level aliases (glibc internals)
   basic_types <- c(
+    # Standard C types
     "char", "signed char", "unsigned char",
     "short", "short int", "signed short", "signed short int",
     "unsigned short", "unsigned short int",
@@ -415,7 +417,17 @@ can_resolve_typedef <- function(base_type, known_typedefs, known_structs = chara
     "size_t", "ssize_t", "ptrdiff_t",
     "int8_t", "int16_t", "int32_t", "int64_t",
     "uint8_t", "uint16_t", "uint32_t", "uint64_t",
-    "bool", "_Bool"
+    "bool", "_Bool",
+    # Common system-level aliases (glibc, musl, etc.)
+    "__ssize_t", "__size_t", "__ptrdiff_t", "__intptr_t", "__uintptr_t",
+    "__int8_t", "__int16_t", "__int32_t", "__int64_t",
+    "__uint8_t", "__uint16_t", "__uint32_t", "__uint64_t",
+    "__off_t", "__off64_t", "__pid_t", "__uid_t", "__gid_t",
+    "__clock_t", "__time_t", "__suseconds_t",
+    "__dev_t", "__ino_t", "__ino64_t", "__mode_t", "__nlink_t",
+    "__blksize_t", "__blkcnt_t", "__blkcnt64_t",
+    "__fsblkcnt_t", "__fsblkcnt64_t", "__fsfilcnt_t", "__fsfilcnt64_t",
+    "__socklen_t", "__sig_atomic_t"
   )
 
   # Pointer types are always resolvable
@@ -460,8 +472,10 @@ generate_typedef_definition <- function(alias_name, base_type, known_structs = c
   base_type <- strip_type_qualifiers(base_type)
 
 
-  # Type map for basic C types (same as in generate_struct_definition)
+  # Type map for basic C types AND common system-level aliases
+  # This allows direct resolution without typedef chains
   type_map <- c(
+    # Standard C types
     "char" = "ffi_char()",
     "signed char" = "ffi_char()",
     "unsigned char" = "ffi_uchar()",
@@ -504,7 +518,44 @@ generate_typedef_definition <- function(alias_name, base_type, known_structs = c
     "uint32_t" = "ffi_uint32()",
     "uint64_t" = "ffi_uint64()",
     "bool" = "ffi_bool()",
-    "_Bool" = "ffi_bool()"
+    "_Bool" = "ffi_bool()",
+    # System-level aliases (glibc internal types) - platform-appropriate mappings
+    "__ssize_t" = "ffi_ssize_t()",
+    "__size_t" = "ffi_size_t()",
+    "__ptrdiff_t" = "ffi_ssize_t()",
+    "__intptr_t" = "ffi_ssize_t()",
+    "__uintptr_t" = "ffi_size_t()",
+    "__int8_t" = "ffi_int8()",
+    "__int16_t" = "ffi_int16()",
+    "__int32_t" = "ffi_int32()",
+    "__int64_t" = "ffi_int64()",
+    "__uint8_t" = "ffi_uint8()",
+    "__uint16_t" = "ffi_uint16()",
+    "__uint32_t" = "ffi_uint32()",
+    "__uint64_t" = "ffi_uint64()",
+    # POSIX types (typically long or int depending on platform)
+    "__off_t" = "ffi_long()",
+    "__off64_t" = "ffi_int64()",
+    "__pid_t" = "ffi_int()",
+    "__uid_t" = "ffi_uint()",
+    "__gid_t" = "ffi_uint()",
+    "__clock_t" = "ffi_long()",
+    "__time_t" = "ffi_long()",
+    "__suseconds_t" = "ffi_long()",
+    "__dev_t" = "ffi_ulong()",
+    "__ino_t" = "ffi_ulong()",
+    "__ino64_t" = "ffi_uint64()",
+    "__mode_t" = "ffi_uint()",
+    "__nlink_t" = "ffi_ulong()",
+    "__blksize_t" = "ffi_long()",
+    "__blkcnt_t" = "ffi_long()",
+    "__blkcnt64_t" = "ffi_int64()",
+    "__fsblkcnt_t" = "ffi_ulong()",
+    "__fsblkcnt64_t" = "ffi_uint64()",
+    "__fsfilcnt_t" = "ffi_ulong()",
+    "__fsfilcnt64_t" = "ffi_uint64()",
+    "__socklen_t" = "ffi_uint()",
+    "__sig_atomic_t" = "ffi_int()"
   )
 
   escaped_alias <- escape_r_name(alias_name)
