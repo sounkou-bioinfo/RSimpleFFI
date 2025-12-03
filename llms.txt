@@ -1041,7 +1041,7 @@ This project is licensed under the GPL-3 License.
 - [`tcc_binary_path()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_binary_path.md)
   : Get path to embedded TCC binary
 - [`tcc_extract_defines()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_defines.md)
-  : Extract \#define macros from C header file
+  : Extract \#define macros from C header file or preprocessed lines
 - [`tcc_extract_functions()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_functions.md)
   : Extract function declarations from preprocessed C code
 - [`tcc_extract_structs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_structs.md)
