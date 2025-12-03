@@ -943,15 +943,33 @@ escape_r_name <- function(name) {
 
 #' Generate R function wrapper from parsed function
 #' @param func_def Function definition (row from functions data.frame)
+#' @param typedefs Named character vector of typedefs (optional). Used to resolve
+#'   typedef'd types like SEXPTYPE to their underlying FFI types.
 #' @return Character vector with R code
 #' @export
-generate_function_wrapper <- function(func_def) {
+generate_function_wrapper <- function(func_def, typedefs = NULL) {
   func_name <- func_def$name
   return_type <- func_def$return_type
   params <- func_def$params
 
   # Get centralized type map
   type_map <- get_ffi_type_map()
+
+  # Build a typedef resolution map: typedef name -> FFI type string
+  # This resolves types like SEXPTYPE -> ffi_uint() based on parsed typedefs
+  typedef_ffi_map <- list()
+  if (!is.null(typedefs) && length(typedefs) > 0) {
+    for (td_name in names(typedefs)) {
+      base_type <- strip_type_qualifiers(typedefs[[td_name]])
+      # Check if base type is a known FFI type
+      if (base_type %in% names(type_map)) {
+        typedef_ffi_map[[td_name]] <- type_map[[base_type]]
+      } else if (grepl("\\*", base_type)) {
+        typedef_ffi_map[[td_name]] <- "ffi_pointer()"
+      }
+      # Could recursively resolve typedef chains here if needed
+    }
+  }
 
   # Function to map a C type to FFI type (handles both "type name" and "type")
   map_type_from_string <- function(type_string) {
@@ -961,9 +979,13 @@ generate_function_wrapper <- function(func_def) {
     if (grepl("\\*", type_string) && !grepl("char\\s*\\*", type_string)) {
       return("ffi_pointer()")
     }
-    # Check exact match in type_map
+    # Check exact match in type_map (built-in types)
     if (type_string %in% names(type_map)) {
       return(type_map[[type_string]])
+    }
+    # Check if it's a resolved typedef
+    if (type_string %in% names(typedef_ffi_map)) {
+      return(typedef_ffi_map[[type_string]])
     }
     # Default to pointer for unknown types (likely structs)
     return("ffi_pointer()")
@@ -1432,7 +1454,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
     ]
 
     for (i in seq_len(nrow(user_funcs))) {
-      func_code <- generate_function_wrapper(user_funcs[i, ])
+      func_code <- generate_function_wrapper(user_funcs[i, ], typedefs = parsed_header$typedefs)
       code_sections$functions <- c(
         code_sections$functions,
         func_code,

@@ -4,10 +4,13 @@
 \alias{generate_function_wrapper}
 \title{Generate R function wrapper from parsed function}
 \usage{
-generate_function_wrapper(func_def)
+generate_function_wrapper(func_def, typedefs = NULL)
 }
 \arguments{
 \item{func_def}{Function definition (row from functions data.frame)}
+
+\item{typedefs}{Named character vector of typedefs (optional). Used to resolve
+typedef'd types like SEXPTYPE to their underlying FFI types.}
 }
 \value{
 Character vector with R code
