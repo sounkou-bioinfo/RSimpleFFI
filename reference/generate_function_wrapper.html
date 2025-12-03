@@ -39,7 +39,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_function_wrapper</span><span class="op">(</span><span class="va">func_def</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_function_wrapper</span><span class="op">(</span><span class="va">func_def</span>, typedefs <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -48,6 +48,11 @@
 
 <dl><dt id="arg-func-def">func_def<a class="anchor" aria-label="anchor" href="#arg-func-def"></a></dt>
 <dd><p>Function definition (row from functions data.frame)</p></dd>
+
+
+<dt id="arg-typedefs">typedefs<a class="anchor" aria-label="anchor" href="#arg-typedefs"></a></dt>
+<dd><p>Named character vector of typedefs (optional). Used to resolve
+typedef'd types like SEXPTYPE to their underlying FFI types.</p></dd>
 
 </dl></div>
     <div class="section level2">
