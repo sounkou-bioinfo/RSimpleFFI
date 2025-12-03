@@ -86,23 +86,9 @@ test_that("na_check can be set per-call", {
 })
 
 test_that("dll_ffi_symbol respects na_check parameter", {
-    # This test uses libc which is Linux-specific
-    skip_on_os(c("windows", "mac"))
-
-    # Try different libc names depending on the platform
-    libc_names <- c("libc.so.6", "libc.so", "libc.so.1")
-    libc_path <- NULL
+    # The abs() function from libc/msvcrt is always available since R is linked against it
+    # We can use it without explicitly loading any library
     
-    for (name in libc_names) {
-        libc_path <- suppressWarnings(dll_load_system(name))
-        if (!is.null(libc_path)) break
-    }
-    
-    # Skip test if libc cannot be found
-    skip_if(is.null(libc_path), "libc not found on this system")
-    
-    on.exit(dll_unload(libc_path), add = TRUE)
-
     # abs() function: int abs(int)
     int_t <- ffi_int()
 
