@@ -1339,6 +1339,12 @@ This project is licensed under the GPL-3 License.
   : Convert enum name to integer value
 - [`ffi_extract_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_bit_field.md)
   : Extract a single bit-field from a packed value
+- [`ffi_extract_bits64()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_bits64.md)
+  : Extract a single bit-field from a 64-bit packed value
+- [`ffi_extract_signed_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_signed_bit_field.md)
+  : Extract a signed bit-field from a packed value
+- [`ffi_extract_signed_bits64()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_extract_signed_bits64.md)
+  : Extract a signed bit-field from a 64-bit packed value
 - [`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md)
   : Get field information from a struct type
 - [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
@@ -1381,6 +1387,8 @@ This project is licensed under the GPL-3 License.
   : Get byte offset of a field in a structure
 - [`ffi_pack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits.md)
   : Pack bit-fields into an integer
+- [`ffi_pack_bits64()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pack_bits64.md)
+  : Pack bit-fields into a 64-bit value
 - [`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md)
   : Parse C header file and create structured result
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
@@ -1393,6 +1401,8 @@ This project is licensed under the GPL-3 License.
   : Read a global variable from a shared library
 - [`ffi_set_bit_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_bit_field.md)
   : Set a single bit-field in a packed value
+- [`ffi_set_bits64()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_bits64.md)
+  : Set a single bit-field in a 64-bit packed value
 - [`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
   : Set field value in FFI structure
 - [`ffi_short()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_short.md)
@@ -1437,6 +1447,8 @@ This project is licensed under the GPL-3 License.
   : Create FFI union type
 - [`ffi_unpack_bits()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_unpack_bits.md)
   : Unpack bit-fields from an integer
+- [`ffi_unpack_bits64()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_unpack_bits64.md)
+  : Unpack bit-fields from a 64-bit value
 - [`ffi_ushort()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.md)
   : Ushort FFI type
 - [`ffi_void()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.md)
