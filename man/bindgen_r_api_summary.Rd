@@ -10,10 +10,11 @@ bindgen_r_api_summary(include_path = R.home("include"))
 \item{include_path}{Path to R's include directory}
 }
 \value{
-Data frame with header info
+Data frame with header info including name, exists flag, size, and category
 }
 \description{
-Quick summary of what's available in R's C API headers.
+Quick summary of what's available in R's C API headers, including all headers
+in the main include directory and the R_ext subdirectory.
 }
 \examples{
 \dontrun{

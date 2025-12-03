@@ -222,3 +222,144 @@ ffi_int_to_enum <- function(enum_type, value) {
     names(enum_type@values)[matches[1]]
   }
 }
+
+
+#' Validate FFI call prerequisites
+#'
+#' Performs comprehensive validation of FFI call inputs before making the call.
+#' This helps diagnose issues that would otherwise cause crashes.
+#'
+#' @param cif CIF object defining the call interface
+#' @param symbol NativeSymbol object for the function
+#' @param args List of arguments to pass
+#' @param verbose Logical; if TRUE, print diagnostic information
+#'
+#' @return A list with validation results:
+#' \describe{
+#'   \item{valid}{Logical; TRUE if all checks pass}
+#'   \item{errors}{Character vector of error messages (empty if valid)}
+#'   \item{warnings}{Character vector of warning messages}
+#' }
+#'
+#' @details
+#' This function checks:
+#' \itemize{
+#'   \item CIF and symbol pointers are not NULL
+#'   \item Argument count matches CIF specification
+#'   \item No NA values in arguments (unless explicitly allowed)
+#'   \item Pointer arguments are not NULL (when applicable)
+#' }
+#'
+#' Note that even with all checks passing, crashes can still occur if:
+#' \itemize{
+#'   \item The C function signature doesn't match the CIF
+#'   \item Pointer arguments point to invalid memory
+#'   \item Buffer sizes are incorrect
+#'   \item The C function itself has bugs
+#' }
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' cif <- ffi_cif(ffi_int(), ffi_int(), ffi_int())
+#' sym <- ffi_symbol("add_ints")
+#' result <- ffi_validate_call(cif, sym, list(1L, 2L))
+#' if (result$valid) {
+#'   ffi_call(cif, sym, 1L, 2L)
+#' }
+#' }
+ffi_validate_call <- function(cif, symbol, args = list(), verbose = FALSE) {
+  errors <- character()
+  warnings <- character()
+
+  # Check CIF
+  if (!S7::S7_inherits(cif, CIF)) {
+    errors <- c(errors, "cif must be a CIF object")
+  } else {
+    if (ffi_is_null(cif@ref)) {
+      errors <- c(errors, "CIF internal pointer is NULL (object may be corrupted)")
+    }
+  }
+
+  # Check symbol
+  if (!S7::S7_inherits(symbol, NativeSymbol)) {
+    errors <- c(errors, "symbol must be a NativeSymbol object")
+  } else {
+    if (ffi_is_null(symbol@address)) {
+      errors <- c(errors, sprintf(
+        "Symbol '%s' address is NULL (function may not exist or library unloaded)",
+        symbol@name
+      ))
+    }
+  }
+
+  # Check argument count
+  if (length(errors) == 0) {
+    expected_args <- length(cif@arg_types)
+    actual_args <- length(args)
+    if (actual_args != expected_args) {
+      errors <- c(errors, sprintf(
+        "Argument count mismatch: CIF expects %d, got %d",
+        expected_args, actual_args
+      ))
+    }
+  }
+
+  # Check for NA values
+  if (length(errors) == 0 && length(args) > 0) {
+    for (i in seq_along(args)) {
+      arg <- args[[i]]
+      if (is.atomic(arg) && any(is.na(arg))) {
+        warnings <- c(warnings, sprintf(
+          "Argument %d contains NA values",
+          i
+        ))
+      }
+    }
+  }
+
+  # Check pointer arguments for NULL
+  if (length(errors) == 0 && length(args) > 0) {
+    for (i in seq_along(args)) {
+      arg <- args[[i]]
+      arg_type <- cif@arg_types[[i]]
+
+      # Check if argument is expected to be a pointer
+      if (S7::S7_inherits(arg_type, FFIType) &&
+        arg_type@name == "pointer") {
+        if (inherits(arg, "externalptr") && ffi_is_null(arg)) {
+          warnings <- c(warnings, sprintf(
+            "Argument %d is a NULL pointer",
+            i
+          ))
+        }
+      }
+    }
+  }
+
+  result <- list(
+    valid = length(errors) == 0,
+    errors = errors,
+    warnings = warnings
+  )
+
+  if (verbose) {
+    if (result$valid) {
+      message("FFI call validation: PASSED")
+      if (length(result$warnings) > 0) {
+        message("Warnings:")
+        for (w in result$warnings) {
+          message("  - ", w)
+        }
+      }
+    } else {
+      message("FFI call validation: FAILED")
+      message("Errors:")
+      for (e in result$errors) {
+        message("  - ", e)
+      }
+    }
+  }
+
+  result
+}

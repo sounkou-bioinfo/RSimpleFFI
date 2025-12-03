@@ -219,10 +219,34 @@ ffi_symbol_from_address <- function(address, name = "anonymous") {
 #' errors if found. Set to FALSE to skip NA checking for better performance
 #' (at your own risk).
 #'
+#' ## Error Handling Limitations
+#'
+#' **Important:** libffi provides no error handling for the actual C function call.
+#' If the called C function crashes (segmentation fault, illegal instruction,
+#' abort, etc.), R itself will crash. This is a fundamental limitation of FFI
+#' - there is no portable way to catch such errors in C code.
+#'
+#' Before making FFI calls, ensure:
+#' \itemize{
+#'   \item The function pointer is valid (not NULL, points to executable code)
+#'   \item All pointer arguments are valid (use \code{\link{ffi_is_null}} to check)
+#'   \item Array/buffer sizes are correct - buffer overruns cause undefined behavior
+#'   \item The CIF signature exactly matches the C function's signature
+#'   \item Struct layouts match between R types and C (check alignment/padding)
+#' }
+#'
+#' For debugging crashes:
+#' \itemize{
+#'   \item Run R under a debugger: \code{R -d gdb}
+#'   \item Enable core dumps: \code{ulimit -c unlimited}
+#'   \item Use address sanitizers when building the library being called
+#' }
+#'
 #' @param cif CIF object defining the call interface
 #' @param symbol NativeSymbol or character name of function
 #' @param ... Arguments to pass to the function (including `na_check`)
 #' @return The return value from the C function, converted to an R type
+#' @seealso \code{\link{ffi_is_null}} for checking pointer validity
 #' @export
 ffi_call <- S7::new_generic("ffi_call", c("cif", "symbol"))
 

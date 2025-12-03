@@ -722,6 +722,82 @@ generate_union_definition <- function(union_name, union_def) {
   paste(code, collapse = "\n")
 }
 
+#' Generate struct helper functions (allocator, from_list, to_list)
+#'
+#' Creates convenience functions for working with a struct type:
+#' - `new_<struct>()`: Allocate a new struct, optionally initialize from values
+#' - `<struct>_to_list()`: Convert struct pointer to R list
+#'
+#' @param struct_name Name of the struct (should match the ffi_struct variable name)
+#' @param field_names Character vector of field names
+#' @return Character string with R code for helper functions
+#' @export
+generate_struct_helpers <- function(struct_name, field_names) {
+  # Clean name for function prefix (remove backticks if present)
+  clean_name <- gsub("`", "", struct_name)
+
+  # Escape function names if they would start with _ (invalid R identifiers)
+  # new_<name> is fine if name starts with letter, but new___foo needs escaping
+  new_func_name <- paste0("new_", clean_name)
+  to_list_func_name <- paste0(clean_name, "_to_list")
+
+  # If the resulting function name starts with _ or the clean_name starts with _,
+  # we need backticks
+  if (grepl("^_", clean_name)) {
+    new_func_name <- paste0("`", new_func_name, "`")
+    to_list_func_name <- paste0("`", to_list_func_name, "`")
+  }
+
+  # Clean field names for use as R parameter names
+  # Remove array brackets like [2], replace invalid chars with underscore
+  clean_field_names <- gsub("\\[.*\\]", "", field_names) # Remove [n] suffixes
+  clean_field_names <- gsub("[^a-zA-Z0-9_.]", "_", clean_field_names) # Replace invalid chars
+
+  # Escape field names using the existing escape_r_name function
+  # This handles R reserved words (next, if, else, etc.) and names starting with _
+  escaped_field_names <- vapply(clean_field_names, escape_r_name, character(1), USE.NAMES = FALSE)
+
+  # Generate parameter documentation (use clean names without backticks for docs)
+  field_params <- paste(sprintf("#' @param %s Value for %s field (optional)", clean_field_names, field_names), collapse = "\n")
+
+  # Build the args list string mapping clean param names to original field names
+  args_list_items <- sprintf('"%s" = %s', field_names, escaped_field_names)
+
+  code <- c(
+    sprintf("#' Create a new %s struct", clean_name),
+    "#'",
+    "#' Allocates and optionally initializes a new struct.",
+    "#'",
+    field_params,
+    sprintf("#' @return External pointer to allocated %s struct", clean_name),
+    "#' @export",
+    sprintf("%s <- function(%s) {", new_func_name, paste(paste0(escaped_field_names, " = NULL"), collapse = ", ")),
+    sprintf("
+  ptr <- ffi_alloc(%s)
+  args <- list(%s)
+  args <- args[!vapply(args, is.null, logical(1))]
+  if (length(args) > 0) {
+    for (nm in names(args)) {
+      ffi_set_field(ptr, nm, args[[nm]], %s)
+    }
+  }
+  ptr
+}", struct_name, paste(args_list_items, collapse = ", "), struct_name),
+    "",
+    sprintf("#' Convert %s pointer to R list", clean_name),
+    "#'",
+    sprintf("#' @param ptr External pointer to %s struct", clean_name),
+    "#' @return Named list with field values",
+    "#' @export",
+    sprintf("%s <- function(ptr) {", to_list_func_name),
+    sprintf("  ffi_struct_to_list(ptr, %s)", struct_name),
+    "}",
+    ""
+  )
+
+  paste(code, collapse = "\n")
+}
+
 #' Check if a typedef can be fully resolved to a real type
 #'
 #' Recursively follows typedef chains to see if the final base type
@@ -840,11 +916,18 @@ generate_typedef_definition <- function(alias_name, base_type, known_structs = c
 #' @param name Variable name to escape
 #' @return Escaped name if needed, original otherwise
 escape_r_name <- function(name) {
-  # R reserved words that must be escaped
+  # R reserved words and special constants that must be escaped
   reserved_words <- c(
+    # Control flow keywords
     "if", "else", "repeat", "while", "function", "for", "in", "next", "break",
-    "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_",
-    "NA_complex_", "NA_character_"
+    # Logical constants
+    "TRUE", "FALSE",
+    # Special values
+    "NULL", "Inf", "NaN",
+    # NA variants
+    "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_",
+    # Additional R internal names that could conflict
+    "..."
   )
 
   # Check if name is a reserved word or invalid R identifier
@@ -904,12 +987,18 @@ generate_function_wrapper <- function(func_def) {
   param_types_c <- character()
   param_types_ffi <- character()
 
+  # Check if this is a variadic function (has ... in parameters)
+  is_variadic <- any(grepl("^\\s*\\.\\.\\.\\s*$", param_parts))
+
   # Get C type keywords (to detect unnamed parameters)
   c_types <- get_c_type_keywords()
 
   for (part in param_parts) {
     part <- trimws(part)
     if (part == "" || part == "void") next
+
+    # Skip the ... parameter - we'll handle variadic functions specially
+    if (part == "...") next
 
     # Extract parameter name (last word, remove * and [])
     tokens <- strsplit(part, "\\s+")[[1]]
@@ -951,7 +1040,41 @@ generate_function_wrapper <- function(func_def) {
   # Generate R function
   r_func_name <- paste0("r_", func_name)
 
-  # Build ffi_function call
+  # Handle variadic functions specially - generate a comment instead of broken wrapper
+  if (is_variadic) {
+    n_fixed <- length(param_names)
+    code <- c(
+      sprintf("# Variadic function: %s %s(%s)", return_type, func_name, params),
+      sprintf("# This function has variable arguments (...) which require ffi_cif_var()."),
+      sprintf("# Fixed args: %d, then variadic arguments follow.", n_fixed),
+      "#",
+      "# Example usage:",
+      sprintf("# sym <- ffi_symbol(\"%s\")", func_name),
+      if (n_fixed > 0) {
+        c(
+          sprintf("# # With %d fixed arg(s) + variadic args:", n_fixed),
+          sprintf(
+            "# cif <- ffi_cif_var(%s, %dL, %s, <variadic_arg_types...>)",
+            return_ffi, n_fixed, paste(param_types_ffi, collapse = ", ")
+          ),
+          sprintf(
+            "# ffi_call(cif, sym, %s, <variadic_args...>)",
+            paste(param_names, collapse = ", ")
+          )
+        )
+      } else {
+        c(
+          "# # With only variadic args:",
+          sprintf("# cif <- ffi_cif_var(%s, 0L, <variadic_arg_types...>)", return_ffi),
+          "# ffi_call(cif, sym, <variadic_args...>)"
+        )
+      },
+      ""
+    )
+    return(paste(code, collapse = "\n"))
+  }
+
+  # Build ffi_function call for non-variadic functions
   if (length(param_types_ffi) == 0) {
     ffi_call <- sprintf('  .fn <- ffi_function("%s", %s)', func_name, return_ffi)
     signature <- paste0(r_func_name, " <- function()")
@@ -967,13 +1090,13 @@ generate_function_wrapper <- function(func_def) {
     call_line <- sprintf("  .fn(%s)", paste(param_names, collapse = ", "))
   }
 
-  # Add parameter documentation with C types
+  # Add parameter documentation with C types and FFI types
   param_docs <- character()
   if (length(param_names) > 0) {
     for (i in seq_along(param_names)) {
       param_docs <- c(
         param_docs,
-        sprintf("#' @param %s %s", param_names[i], param_types_c[i])
+        sprintf("#' @param %s (%s) %s", param_names[i], param_types_ffi[i], param_types_c[i])
       )
     }
   }
@@ -982,7 +1105,7 @@ generate_function_wrapper <- function(func_def) {
     sprintf("#' Wrapper for C function: %s %s(%s)", return_type, func_name, params),
     "#'",
     param_docs,
-    sprintf("#' @return %s", return_type),
+    sprintf("#' @return (%s) %s", return_ffi, return_type),
     sprintf("#' @export"),
     signature,
     "{",
@@ -1175,6 +1298,9 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
 
         # Quote value if it's not a number or already quoted
         if (!grepl("^(0[xX][0-9a-fA-F]+|[0-9.+-]+([eE][+-]?[0-9]+)?L?)$", value) && !grepl("^['\"]", value)) {
+          # Escape any internal quotes and backslashes before wrapping
+          value <- gsub("\\\\", "\\\\\\\\", value) # Escape backslashes first
+          value <- gsub('"', '\\\\"', value) # Escape double quotes
           value <- paste0('"', value, '"')
         }
 
@@ -1193,6 +1319,10 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       "# Struct definitions",
       ""
     )
+    code_sections$struct_helpers <- c(
+      "# Struct helper functions",
+      ""
+    )
     for (struct_name in names(parsed_header$structs)) {
       struct_def <- parsed_header$structs[[struct_name]]
       escaped_name <- escape_r_name(struct_name)
@@ -1203,6 +1333,15 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
           struct_code,
           ""
         )
+        # Generate helper functions for this struct
+        field_names <- vapply(struct_def, function(f) f$name, character(1))
+        if (length(field_names) > 0) {
+          helper_code <- generate_struct_helpers(escaped_name, field_names)
+          code_sections$struct_helpers <- c(
+            code_sections$struct_helpers,
+            helper_code
+          )
+        }
       }
     }
   }

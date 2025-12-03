@@ -241,30 +241,117 @@ bindgen_r_api <- function(
 
 #' Get summary of R API bindings
 #'
-#' Quick summary of what's available in R's C API headers.
+#' Quick summary of what's available in R's C API headers, including all headers
+#' in the main include directory and the R_ext subdirectory.
 #'
 #' @param include_path Path to R's include directory
-#' @return Data frame with header info
+#' @return Data frame with header info including name, exists flag, size, and category
 #' @export
 #' @examples
 #' \dontrun{
 #' bindgen_r_api_summary()
 #' }
 bindgen_r_api_summary <- function(include_path = R.home("include")) {
-    headers <- c("Rinternals.h", "R.h", "Rmath.h", "Rdefines.h", "Rembedded.h")
+    # Main headers in include/
+    main_headers <- c(
+        "R.h",
+        "Rconfig.h",
+        "Rdefines.h",
+        "Rembedded.h",
+        "Rinterface.h",
+        "Rinternals.h",
+        "Rmath.h",
+        "Rversion.h"
+    )
 
-    info <- lapply(headers, function(h) {
+    # Headers in include/R_ext/
+    ext_headers <- c(
+        "Altrep.h",
+        "Applic.h",
+        "Arith.h",
+        "BLAS.h",
+        "Boolean.h",
+        "Callbacks.h",
+        "Complex.h",
+        "Connections.h",
+        "Constants.h",
+        "Error.h",
+        "eventloop.h",
+        "GetX11Image.h",
+        "GraphicsDevice.h",
+        "GraphicsEngine.h",
+        "Itermacros.h",
+        "Lapack.h",
+        "libextern.h",
+        "Linpack.h",
+        "MathThreads.h",
+        "Memory.h",
+        "Parse.h",
+        "Print.h",
+        "PrtUtil.h",
+        "QuartzDevice.h",
+        "Rallocators.h",
+        "Random.h",
+        "Rdynload.h",
+        "Riconv.h",
+        "RS.h",
+        "RStartup.h",
+        "stats_package.h",
+        "stats_stubs.h",
+        "Utils.h",
+        "Visibility.h"
+    )
+
+    # Also discover any additional headers dynamically
+    main_dir <- include_path
+    ext_dir <- file.path(include_path, "R_ext")
+
+    # Find actual .h files
+    actual_main <- if (dir.exists(main_dir)) {
+        list.files(main_dir, pattern = "\\.h$", full.names = FALSE)
+    } else {
+        character(0)
+    }
+
+    actual_ext <- if (dir.exists(ext_dir)) {
+        list.files(ext_dir, pattern = "\\.h$", full.names = FALSE)
+    } else {
+        character(0)
+    }
+
+    # Merge known and discovered headers
+    all_main <- unique(c(main_headers, actual_main))
+    all_ext <- unique(c(ext_headers, actual_ext))
+
+    # Build info for main headers
+    main_info <- lapply(all_main, function(h) {
         path <- file.path(include_path, h)
-        if (file.exists(path)) {
-            list(
-                header = h,
-                exists = TRUE,
-                size = file.size(path)
-            )
-        } else {
-            list(header = h, exists = FALSE, size = NA)
-        }
+        list(
+            header = h,
+            category = "main",
+            exists = file.exists(path),
+            size = if (file.exists(path)) file.size(path) else NA_integer_
+        )
     })
 
-    do.call(rbind, lapply(info, as.data.frame))
+    # Build info for R_ext headers
+    ext_info <- lapply(all_ext, function(h) {
+        path <- file.path(ext_dir, h)
+        list(
+            header = paste0("R_ext/", h),
+            category = "R_ext",
+            exists = file.exists(path),
+            size = if (file.exists(path)) file.size(path) else NA_integer_
+        )
+    })
+
+    # Combine and convert to data frame
+    all_info <- c(main_info, ext_info)
+    df <- do.call(rbind, lapply(all_info, as.data.frame, stringsAsFactors = FALSE))
+
+    # Sort: main first, then R_ext, each alphabetically
+    df <- df[order(df$category, df$header), ]
+    rownames(df) <- NULL
+
+    df
 }

@@ -1,3 +1,13 @@
+# Helper function to remove C comments (handles multi-line comments)
+# Uses (?s) DOTALL mode so . matches newlines
+remove_c_comments <- function(code) {
+  # Remove multi-line /* */ comments - (?s) makes . match newlines
+  code <- gsub("(?s)/\\*.*?\\*/", " ", code, perl = TRUE)
+  # Remove single-line // comments
+  code <- gsub("//[^\n]*", "", code, perl = TRUE)
+  code
+}
+
 #' Get path to embedded TCC binary
 #' @return Path to tcc executable in installed package
 #' @export
@@ -66,6 +76,28 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
 tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
   defines <- list()
 
+  # Helper to extract defines from file content (as single string with comments removed)
+  extract_defines_from_content <- function(content) {
+    result <- list()
+    # Remove all C comments first (handles multi-line)
+    content <- remove_c_comments(content)
+    # Split into lines
+    lines <- strsplit(content, "\n")[[1]]
+    for (line in lines) {
+      # Match simple #defines (no function-like macros with parentheses)
+      if (grepl("^\\s*#define\\s+", line) && !grepl("\\(", line)) {
+        content_part <- sub("^\\s*#define\\s+", "", line)
+        parts <- strsplit(trimws(content_part), "\\s+")[[1]]
+        if (length(parts) >= 1) {
+          name <- parts[1]
+          value <- if (length(parts) > 1) paste(parts[-1], collapse = " ") else ""
+          result[[name]] <- trimws(value)
+        }
+      }
+    }
+    result
+  }
+
   # If preprocessed lines provided, extract from preprocessing markers
   if (!is.null(preprocessed_lines)) {
     # TCC preprocessor doesn't preserve #define in output, so we need to parse the original file
@@ -81,19 +113,15 @@ tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
 
     files_to_scan <- Filter(function(f) !is.null(f) && file.exists(f), files_to_scan)
 
-    # Read and extract defines from all included files
+    # Read file as single string, remove comments, then extract defines
     for (f in files_to_scan) {
-      lines <- tryCatch(readLines(f, warn = FALSE), error = function(e) character())
-      for (line in lines) {
-        if (grepl("^\\s*#define\\s+", line) && !grepl("\\(", line)) {
-          content <- sub("^\\s*#define\\s+", "", line)
-          parts <- strsplit(trimws(content), "\\s+")[[1]]
-          if (length(parts) >= 1) {
-            name <- parts[1]
-            value <- if (length(parts) > 1) paste(parts[-1], collapse = " ") else ""
-            defines[[name]] <- value
-          }
-        }
+      content <- tryCatch(
+        paste(readLines(f, warn = FALSE), collapse = "\n"),
+        error = function(e) ""
+      )
+      if (nzchar(content)) {
+        file_defines <- extract_defines_from_content(content)
+        defines <- c(defines, file_defines)
       }
     }
   }
@@ -103,18 +131,9 @@ tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
     if (!file.exists(header_file)) {
       stop("Header file not found: ", header_file)
     }
-    lines <- readLines(header_file)
-    for (line in lines) {
-      if (grepl("^\\s*#define\\s+", line) && !grepl("\\(", line)) {
-        content <- sub("^\\s*#define\\s+", "", line)
-        parts <- strsplit(trimws(content), "\\s+")[[1]]
-        if (length(parts) >= 1) {
-          name <- parts[1]
-          value <- if (length(parts) > 1) paste(parts[-1], collapse = " ") else ""
-          defines[[name]] <- value
-        }
-      }
-    }
+    content <- paste(readLines(header_file, warn = FALSE), collapse = "\n")
+    file_defines <- extract_defines_from_content(content)
+    defines <- c(defines, file_defines)
   }
 
   defines
@@ -166,9 +185,8 @@ tcc_extract_functions <- function(preprocessed_lines) {
   # Join into single text for multi-line function matching
   code <- paste(code_lines, collapse = " ")
 
-  # Remove comments
-  code <- gsub("/\\*.*?\\*/", " ", code)
-  code <- gsub("//.*?($|;)", ";", code)
+  # Remove comments (handles multi-line)
+  code <- remove_c_comments(code)
 
   # Match function declarations (not definitions)
   # Pattern: return_type function_name(params);
@@ -274,9 +292,8 @@ tcc_extract_structs <- function(preprocessed_lines) {
 
   code <- paste(code_lines, collapse = " ")
 
-  # Remove comments
-  code <- gsub("/\\*.*?\\*/", " ", code)
-  code <- gsub("//.*?($|;)", ";", code)
+  # Remove comments (handles multi-line)
+  code <- remove_c_comments(code)
 
   result <- list()
 
@@ -567,9 +584,8 @@ tcc_extract_enums <- function(preprocessed_lines) {
   code_lines <- preprocessed_lines[!grepl("^#", preprocessed_lines)]
   code <- paste(code_lines, collapse = " ")
 
-  # Remove comments
-  code <- gsub("/\\*.*?\\*/", " ", code)
-  code <- gsub("//.*?($|;)", ";", code)
+  # Remove comments (handles multi-line)
+  code <- remove_c_comments(code)
 
   result <- list()
 
@@ -682,9 +698,8 @@ tcc_extract_unions <- function(preprocessed_lines) {
   code_lines <- preprocessed_lines[!grepl("^#", preprocessed_lines)]
   code <- paste(code_lines, collapse = " ")
 
-  # Remove comments
-  code <- gsub("/\\*.*?\\*/", " ", code)
-  code <- gsub("//.*?($|;)", ";", code)
+  # Remove comments (handles multi-line)
+  code <- remove_c_comments(code)
 
   result <- list()
 

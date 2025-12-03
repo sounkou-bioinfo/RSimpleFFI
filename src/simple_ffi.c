@@ -1191,15 +1191,43 @@ static SEXP do_ffi_call_internal(void* data) {
     SEXP r_args = args[2];
     int na_check = asLogical(args[3]);
     
+    // Validate external pointer types
+    if (TYPEOF(r_cif) != EXTPTRSXP) {
+        Rf_error("CIF must be an external pointer (got type %d)", TYPEOF(r_cif));
+    }
+    if (TYPEOF(r_func_ptr) != EXTPTRSXP) {
+        Rf_error("Function pointer must be an external pointer (got type %d)", TYPEOF(r_func_ptr));
+    }
+    
     ffi_cif* cif = (ffi_cif*)R_ExternalPtrAddr(r_cif);
     void* func_ptr = R_ExternalPtrAddr(r_func_ptr);
     
-    if (!cif) Rf_error("Invalid CIF pointer");
-    if (!func_ptr) Rf_error("Invalid function pointer");
+    // Validate pointers - these are the checks that can prevent crashes
+    if (!cif) {
+        Rf_error("Invalid CIF pointer (NULL). The CIF object may have been freed or corrupted.");
+    }
+    if (!func_ptr) {
+        Rf_error("Invalid function pointer (NULL). The symbol may not exist or the library may have been unloaded.");
+    }
+    
+    // Validate CIF structure looks reasonable
+    // Note: We can't fully validate the CIF, but we can check some basics
+    if (cif->nargs > 1000) {
+        // Sanity check - no reasonable function has more than 1000 args
+        Rf_error("CIF appears corrupted: nargs=%u is unreasonably large", cif->nargs);
+    }
+    if (cif->rtype == NULL) {
+        Rf_error("CIF appears corrupted: return type is NULL");
+    }
     
     int num_args = LENGTH(r_args);
     if (num_args != (int)cif->nargs) {
         Rf_error("Argument count mismatch: expected %d, got %d", (int)cif->nargs, num_args);
+    }
+    
+    // Validate arg_types array if there are arguments
+    if (num_args > 0 && cif->arg_types == NULL) {
+        Rf_error("CIF appears corrupted: arg_types is NULL but nargs=%d", num_args);
     }
     
     // Check for NA values if requested
@@ -1221,6 +1249,14 @@ static SEXP do_ffi_call_internal(void* data) {
     
     void** arg_values = NULL;
     if (num_args > 0) {
+        // Validate each arg_type pointer before conversion
+        for (int i = 0; i < num_args; i++) {
+            if (cif->arg_types[i] == NULL) {
+                UNPROTECT(1);  // r_args
+                Rf_error("CIF appears corrupted: arg_types[%d] is NULL", i);
+            }
+        }
+        
         // Use R_alloc for automatic cleanup - freed when .Call() returns
         arg_values = (void**)R_alloc(num_args, sizeof(void*));
         

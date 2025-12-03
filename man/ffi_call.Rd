@@ -24,4 +24,32 @@ The method implementations accept an additional \code{na_check} argument (logica
 default TRUE). When TRUE, the function checks for NA values in arguments and
 errors if found. Set to FALSE to skip NA checking for better performance
 (at your own risk).
+\subsection{Error Handling Limitations}{
+
+\strong{Important:} libffi provides no error handling for the actual C function call.
+If the called C function crashes (segmentation fault, illegal instruction,
+abort, etc.), R itself will crash. This is a fundamental limitation of FFI
+\itemize{
+\item there is no portable way to catch such errors in C code.
+}
+
+Before making FFI calls, ensure:
+\itemize{
+\item The function pointer is valid (not NULL, points to executable code)
+\item All pointer arguments are valid (use \code{\link{ffi_is_null}} to check)
+\item Array/buffer sizes are correct - buffer overruns cause undefined behavior
+\item The CIF signature exactly matches the C function's signature
+\item Struct layouts match between R types and C (check alignment/padding)
+}
+
+For debugging crashes:
+\itemize{
+\item Run R under a debugger: \code{R -d gdb}
+\item Enable core dumps: \code{ulimit -c unlimited}
+\item Use address sanitizers when building the library being called
+}
+}
+}
+\seealso{
+\code{\link{ffi_is_null}} for checking pointer validity
 }
