@@ -276,7 +276,7 @@ ffi_field_info(Mixed, "b")
 ### Basic Function Calls
 
 The package comes with some built-in C test functions for testing, they
-are defined in [src/test_functions.c](src/test_functions.c)
+are defined in [src/test\_functions.c](src/test_functions.c)
 
 ``` r
 void_func <- ffi_symbol("test_void_function")
@@ -512,10 +512,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 580119179
+#> [1] 924385580
 rand_value <- rand_func()
 rand_value
-#> [1] 1057736537
+#> [1] 1963623798
 dll_unload(libc_path)
 ```
 
@@ -537,7 +537,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x62686fd0bb00>
+#> <pointer: 0x5a733ae65f90>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -628,8 +628,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   29.1µs    35209.    78.2KB        0
-#> 2 ffi_call     97.4µs  101.7µs     9627.    78.7KB        0
+#> 1 native_r     13.8µs   32.6µs    31768.    78.2KB        0
+#> 2 ffi_call    128.9µs  144.1µs     6397.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -711,7 +711,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x6268715ddfd0>
+#> <pointer: 0x5a7340fe1860>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -743,8 +743,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.39ms    2.5ms      386.    78.2KB     20.3
-#> 2 c_ffi      124.39µs  129.2µs     7194.    78.7KB      0
+#> 1 r            3.21ms   3.76ms      270.    78.2KB     14.2
+#> 2 c_ffi      158.67µs 190.56µs     4918.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -754,7 +754,7 @@ dll_unload(lib_path)
 Since `libR.so` is loaded we can use its exported symbols and functions.
 This allows calling R’s internal C API directly via FFI - the same
 functions that R packages use in their C code. This is for educational
-purposes only! Calling R internals incorrectly can crash R or corrupt
+purposes only\! Calling R internals incorrectly can crash R or corrupt
 memory.
 
 ``` r
@@ -826,7 +826,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764619477
+#> [1] 1764743861
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -854,10 +854,10 @@ This project is licensed under the GPL-3 License.
 
 # References
 
-- [Rffi](https://github.com/omegahat/Rffi)
+  - [Rffi](https://github.com/omegahat/Rffi)
 
-- [libffi
-  Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
+  - [libffi
+    Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
 
-- [CPython’s ctypes
-  module](https://docs.python.org/3/library/ctypes.html)
+  - [CPython’s ctypes
+    module](https://docs.python.org/3/library/ctypes.html)
