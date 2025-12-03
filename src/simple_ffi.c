@@ -297,6 +297,82 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types) {
 }
 
 
+// Create union FFI type
+// Per libffi manual: emulate union using FFI_TYPE_STRUCT with single element
+// that has the size of the largest member and largest alignment
+SEXP R_create_union_ffi_type(SEXP r_field_types) {
+    int num_fields = LENGTH(r_field_types);
+    if (num_fields == 0) {
+        Rf_error("Union must have at least one field");
+    }
+    
+    // First pass: find largest size and alignment by forcing layout computation
+    size_t max_size = 0;
+    unsigned short max_alignment = 0;
+    ffi_abi desired_abi = FFI_DEFAULT_ABI;
+    
+    for (int i = 0; i < num_fields; i++) {
+        SEXP field = VECTOR_ELT(r_field_types, i);
+        ffi_type* field_type = (ffi_type*)R_ExternalPtrAddr(field);
+        if (!field_type) {
+            Rf_error("Invalid field type at index %d", i + 1);
+        }
+        
+        // Use ffi_prep_cif trick to ensure field type is laid out
+        ffi_cif cif;
+        if (ffi_prep_cif(&cif, desired_abi, 0, field_type, NULL) == FFI_OK) {
+            if (field_type->size > max_size) {
+                max_size = field_type->size;
+            }
+            if (field_type->alignment > max_alignment) {
+                max_alignment = field_type->alignment;
+            }
+        }
+    }
+    
+    // Create a single-element struct with the largest member's properties
+    ffi_type** elements = (ffi_type**)calloc(2, sizeof(ffi_type*));
+    if (!elements) {
+        Rf_error("Memory allocation failed");
+    }
+    
+    // Get the first field type as the representative element
+    // (any field could work; we use first for simplicity)
+    SEXP first_field = VECTOR_ELT(r_field_types, 0);
+    ffi_type* first_type = (ffi_type*)R_ExternalPtrAddr(first_field);
+    elements[0] = first_type;
+    elements[1] = NULL;
+    
+    // Create union type as a struct
+    ffi_type* union_type = (ffi_type*)malloc(sizeof(ffi_type));
+    if (!union_type) {
+        free(elements);
+        Rf_error("Memory allocation failed");
+    }
+    
+    union_type->size = max_size;
+    union_type->alignment = max_alignment;
+    union_type->type = FFI_TYPE_STRUCT;
+    union_type->elements = elements;
+    
+    // Force layout computation
+    ffi_cif dummy_cif;
+    ffi_status status = ffi_prep_cif(&dummy_cif, desired_abi, 0, union_type, NULL);
+    if (status != FFI_OK) {
+        free(elements);
+        free(union_type);
+        Rf_error("Failed to compute union layout");
+    }
+    
+    // Verify the union has the expected size
+    if (union_type->size < max_size) {
+        union_type->size = max_size;
+    }
+    
+    SEXP extPtr = R_MakeExternalPtr(union_type, R_NilValue, R_NilValue);
+    return extPtr;
+}
+
 
 /*
 

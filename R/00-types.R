@@ -129,6 +129,73 @@ ffi_array_type <- function(element_type, length) {
 
 #####################################
 #
+# FFIType Union Subclass
+#
+######################################
+
+# Union type extends FFIType
+#' FFI Union Type
+#' @name UnionType
+#' @param name Character name of the type
+#' @param size Integer size in bytes
+#' @param ref External pointer to ffi_type
+#' @param fields Character vector of field names
+#' @param field_types List of FFIType objects for each field
+#' @export
+UnionType <- S7::new_class(
+  "UnionType",
+  package = "RSimpleFFI",
+  parent = FFIType,
+  properties = list(
+    fields = S7::class_character,
+    field_types = S7::class_list
+  ),
+  validator = function(self) {
+    if (length(self@fields) != length(self@field_types)) {
+      "Number of field names must match number of field types"
+    } else if (
+      !all(sapply(self@field_types, function(x) S7::S7_inherits(x, FFIType)))
+    ) {
+      "All field types must be FFIType objects"
+    }
+  }
+)
+
+#####################################
+#
+# FFIType Enum Subclass
+#
+######################################
+
+# Enum type extends FFIType
+#' FFI Enumeration Type
+#' @name EnumType
+#' @param name Character name of the type
+#' @param size Integer size in bytes
+#' @param ref External pointer to ffi_type
+#' @param values Named integer vector of enum values
+#' @param underlying_type FFIType for the underlying integer type
+#' @export
+EnumType <- S7::new_class(
+  "EnumType",
+  package = "RSimpleFFI",
+  parent = FFIType,
+  properties = list(
+    values = S7::class_integer,
+    underlying_type = FFIType
+  ),
+  validator = function(self) {
+    if (is.null(names(self@values)) || any(names(self@values) == "")) {
+      "All enum values must be named"
+    } else if (!S7::S7_inherits(self@underlying_type, FFIType)) {
+      "underlying_type must be an FFIType object"
+    }
+  }
+)
+
+
+#####################################
+#
 # CALL Context class
 #
 ######################################
@@ -524,6 +591,77 @@ ffi_struct <- function(...) {
     ref = struct_ref,
     fields = field_names,
     field_types = unname(fields)
+  )
+}
+
+
+#' Create FFI union type
+#' @param ... Named FFIType objects representing union fields
+#' @return UnionType object
+#' @keywords Types
+#' @export
+ffi_union <- function(...) {
+  fields <- list(...)
+
+  if (length(fields) == 0) {
+    stop("Union must have at least one field")
+  }
+
+  if (is.null(names(fields)) || any(names(fields) == "")) {
+    stop("All union fields must be named")
+  }
+
+  # Validate all fields are FFIType objects
+  if (!all(sapply(fields, function(f) S7::S7_inherits(f, FFIType)))) {
+    stop("All union fields must be FFIType objects")
+  }
+
+  field_names <- names(fields)
+  field_refs <- lapply(fields, function(f) f@ref)
+
+  union_ref <- .Call("R_create_union_ffi_type", field_refs)
+  union_size <- .Call("R_get_ffi_type_size", union_ref)
+
+  UnionType(
+    name = "union",
+    size = union_size,
+    ref = union_ref,
+    fields = field_names,
+    field_types = unname(fields)
+  )
+}
+
+
+#' Create FFI enumeration type
+#' @param ... Named integer values representing enum constants
+#' @param underlying_type FFIType for underlying integer type (default: ffi_int())
+#' @return EnumType object
+#' @keywords Types
+#' @export
+ffi_enum <- function(..., underlying_type = ffi_int()) {
+  values <- list(...)
+
+  if (length(values) == 0) {
+    stop("Enum must have at least one value")
+  }
+
+  if (is.null(names(values)) || any(names(values) == "")) {
+    stop("All enum values must be named")
+  }
+
+  # Convert list to named integer vector
+  values <- setNames(as.integer(unlist(values)), names(values))
+
+  if (!S7::S7_inherits(underlying_type, FFIType)) {
+    stop("underlying_type must be an FFIType object")
+  }
+
+  EnumType(
+    name = "enum",
+    size = underlying_type@size,
+    ref = underlying_type@ref,
+    values = values,
+    underlying_type = underlying_type
   )
 }
 

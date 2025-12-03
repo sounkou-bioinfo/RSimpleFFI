@@ -74,6 +74,18 @@ S7::method(format, StructType) <- function(x, ...) {
 }
 
 #' @export
+S7::method(format, UnionType) <- function(x, ...) {
+  fields_str <- paste(x@fields, collapse = ", ")
+  paste0("UnionType(fields=[", fields_str, "], size=", x@size, ")")
+}
+
+#' @export
+S7::method(format, EnumType) <- function(x, ...) {
+  values_str <- paste(names(x@values), x@values, sep = "=", collapse = ", ")
+  paste0("EnumType(values=[", values_str, "], underlying=", x@underlying_type@name, ")")
+}
+
+#' @export
 S7::method(format, CIF) <- function(x, ...) {
   if (length(x@arg_types) > 0) {
     arg_names <- sapply(x@arg_types, function(t) t@name)
@@ -103,6 +115,26 @@ S7::method(print, StructType) <- function(x, ...) {
   message("Fields:", "\n", sep = "")
   for (i in seq_along(x@fields)) {
     message("  ", x@fields[i], ": ", x@field_types[[i]]@name, "\n", sep = "")
+  }
+  invisible(x)
+}
+
+#' @export
+S7::method(print, UnionType) <- function(x, ...) {
+  message(format(x), "\n", sep = "")
+  message("Fields:", "\n", sep = "")
+  for (i in seq_along(x@fields)) {
+    message("  ", x@fields[i], ": ", x@field_types[[i]]@name, "\n", sep = "")
+  }
+  invisible(x)
+}
+
+#' @export
+S7::method(print, EnumType) <- function(x, ...) {
+  message(format(x), "\n", sep = "")
+  message("Values:", "\n", sep = "")
+  for (i in seq_along(x@values)) {
+    message("  ", names(x@values)[i], " = ", x@values[i], "\n", sep = "")
   }
   invisible(x)
 }

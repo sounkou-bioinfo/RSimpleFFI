@@ -31,6 +31,17 @@ S7::method(ffi_alloc, StructType) <- function(type, n = 1L) {
   }
 }
 
+#' @export
+S7::method(ffi_alloc, UnionType) <- function(type, n = 1L) {
+  if (!S7::S7_inherits(type, UnionType)) {
+    stop("type must be a UnionType object")
+  }
+  if (length(n) != 1 || !is.numeric(n) || n < 1) {
+    stop("n must be a positive integer")
+  }
+  .Call("R_alloc_typed_buffer", type@ref, as.integer(n))
+}
+
 #' Get element from struct array
 #'
 #' Returns a pointer to the i-th struct in a contiguous array of structs.

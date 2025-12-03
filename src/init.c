@@ -9,6 +9,7 @@
 SEXP R_get_builtin_ffi_type(SEXP name);
 SEXP R_get_ffi_type_size(SEXP type_ptr);
 SEXP R_create_struct_ffi_type(SEXP field_refs);
+SEXP R_create_union_ffi_type(SEXP field_refs);
 SEXP R_create_array_ffi_type(SEXP element_type, SEXP length);
 SEXP R_prep_ffi_cif(SEXP return_type, SEXP arg_types);
 SEXP R_prep_ffi_cif_var(SEXP return_type, SEXP arg_types, SEXP nfixedargs);
@@ -111,6 +112,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
     {"R_get_ffi_type_size",       (DL_FUNC) &R_get_ffi_type_size,       1},
     {"R_create_struct_ffi_type",  (DL_FUNC) &R_create_struct_ffi_type,  1},
+    {"R_create_union_ffi_type",   (DL_FUNC) &R_create_union_ffi_type,   1},
     {"R_create_array_ffi_type",   (DL_FUNC) &R_create_array_ffi_type,   2},
     {"R_prep_ffi_cif",            (DL_FUNC) &R_prep_ffi_cif,            2},
     {"R_prep_ffi_cif_var",        (DL_FUNC) &R_prep_ffi_cif_var,        3},
