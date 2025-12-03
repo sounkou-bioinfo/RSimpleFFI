@@ -28,6 +28,377 @@ strip_type_qualifiers <- function(type_str) {
   trimws(type_str)
 }
 
+#' Get the master C-to-FFI type mapping
+#'
+#' Returns a named character vector mapping C type names to FFI type constructor calls.
+#' This is the single source of truth for type mappings used across all code generation
+#' functions (struct, union, typedef, function wrappers).
+#'
+#' Includes:
+#' - Standard C types (char, int, long, etc.)
+#' - Fixed-width types (int8_t, uint32_t, etc.)
+#' - POSIX types (size_t, ssize_t, off_t, pid_t, etc.)
+#' - glibc/musl internal types (__ssize_t, __pid_t, etc.)
+#' - macOS/Darwin types (__darwin_size_t, etc.)
+#' - BSD types (u_int32_t, register_t, etc.)
+#' - Windows/MSYS2/MinGW types (DWORD, HANDLE, __int64, etc.)
+#' - Clang/LLVM builtin types (__SIZE_TYPE__, etc.)
+#'
+#' @return Named character vector: names are C types, values are FFI constructor calls
+#' @keywords internal
+get_ffi_type_map <- function() {
+  c(
+    # ============================================
+    # Standard C types
+    # ============================================
+    "char" = "ffi_char()",
+    "signed char" = "ffi_char()",
+    "unsigned char" = "ffi_uchar()",
+    "short" = "ffi_short()",
+    "short int" = "ffi_short()",
+    "signed short" = "ffi_short()",
+    "signed short int" = "ffi_short()",
+    "unsigned short" = "ffi_ushort()",
+    "unsigned short int" = "ffi_ushort()",
+    "int" = "ffi_int()",
+    "signed" = "ffi_int()",
+    "signed int" = "ffi_int()",
+    "unsigned" = "ffi_uint()",
+    "unsigned int" = "ffi_uint()",
+    "long" = "ffi_long()",
+    "long int" = "ffi_long()",
+    "signed long" = "ffi_long()",
+    "signed long int" = "ffi_long()",
+    "unsigned long" = "ffi_ulong()",
+    "unsigned long int" = "ffi_ulong()",
+    "long long" = "ffi_longlong()",
+    "long long int" = "ffi_longlong()",
+    "signed long long" = "ffi_longlong()",
+    "signed long long int" = "ffi_longlong()",
+    "unsigned long long" = "ffi_ulonglong()",
+    "unsigned long long int" = "ffi_ulonglong()",
+    "float" = "ffi_float()",
+    "double" = "ffi_double()",
+    "long double" = "ffi_longdouble()",
+    "void" = "ffi_void()",
+    "void*" = "ffi_pointer()",
+    "void *" = "ffi_pointer()",
+    "bool" = "ffi_bool()",
+    "_Bool" = "ffi_bool()",
+    "wchar_t" = "ffi_wchar_t()",
+    "char*" = "ffi_string()",
+    "char *" = "ffi_string()",
+    "const char*" = "ffi_string()",
+    "const char *" = "ffi_string()",
+
+    # ============================================
+    # C99/C11 fixed-width integer types
+    # ============================================
+    "int8_t" = "ffi_int8()",
+    "int16_t" = "ffi_int16()",
+    "int32_t" = "ffi_int32()",
+    "int64_t" = "ffi_int64()",
+    "uint8_t" = "ffi_uint8()",
+    "uint16_t" = "ffi_uint16()",
+    "uint32_t" = "ffi_uint32()",
+    "uint64_t" = "ffi_uint64()",
+    "intmax_t" = "ffi_int64()",
+    "uintmax_t" = "ffi_uint64()",
+    "intptr_t" = "ffi_ssize_t()",
+    "uintptr_t" = "ffi_size_t()",
+
+    # ============================================
+    # POSIX types
+    # ============================================
+    "size_t" = "ffi_size_t()",
+    "ssize_t" = "ffi_ssize_t()",
+    "ptrdiff_t" = "ffi_ssize_t()",
+    "off_t" = "ffi_long()",
+    "off64_t" = "ffi_int64()",
+    "pid_t" = "ffi_int()",
+    "uid_t" = "ffi_uint()",
+    "gid_t" = "ffi_uint()",
+    "mode_t" = "ffi_uint()",
+    "dev_t" = "ffi_ulong()",
+    "ino_t" = "ffi_ulong()",
+    "nlink_t" = "ffi_ulong()",
+    "blksize_t" = "ffi_long()",
+    "blkcnt_t" = "ffi_long()",
+    "time_t" = "ffi_long()",
+    "clock_t" = "ffi_long()",
+    "suseconds_t" = "ffi_long()",
+    "socklen_t" = "ffi_uint()",
+    "sig_atomic_t" = "ffi_int()",
+    "fsblkcnt_t" = "ffi_ulong()",
+    "fsfilcnt_t" = "ffi_ulong()",
+
+    # ============================================
+    # glibc/musl internal types (Linux)
+    # ============================================
+    "__ssize_t" = "ffi_ssize_t()",
+    "__size_t" = "ffi_size_t()",
+    "__ptrdiff_t" = "ffi_ssize_t()",
+    "__intptr_t" = "ffi_ssize_t()",
+    "__uintptr_t" = "ffi_size_t()",
+    "__int8_t" = "ffi_int8()",
+    "__int16_t" = "ffi_int16()",
+    "__int32_t" = "ffi_int32()",
+    "__int64_t" = "ffi_int64()",
+    "__uint8_t" = "ffi_uint8()",
+    "__uint16_t" = "ffi_uint16()",
+    "__uint32_t" = "ffi_uint32()",
+    "__uint64_t" = "ffi_uint64()",
+    "__off_t" = "ffi_long()",
+    "__off64_t" = "ffi_int64()",
+    "__pid_t" = "ffi_int()",
+    "__uid_t" = "ffi_uint()",
+    "__gid_t" = "ffi_uint()",
+    "__clock_t" = "ffi_long()",
+    "__time_t" = "ffi_long()",
+    "__suseconds_t" = "ffi_long()",
+    "__dev_t" = "ffi_ulong()",
+    "__ino_t" = "ffi_ulong()",
+    "__ino64_t" = "ffi_uint64()",
+    "__mode_t" = "ffi_uint()",
+    "__nlink_t" = "ffi_ulong()",
+    "__blksize_t" = "ffi_long()",
+    "__blkcnt_t" = "ffi_long()",
+    "__blkcnt64_t" = "ffi_int64()",
+    "__fsblkcnt_t" = "ffi_ulong()",
+    "__fsblkcnt64_t" = "ffi_uint64()",
+    "__fsfilcnt_t" = "ffi_ulong()",
+    "__fsfilcnt64_t" = "ffi_uint64()",
+    "__socklen_t" = "ffi_uint()",
+    "__sig_atomic_t" = "ffi_int()",
+    "__wchar_t" = "ffi_wchar_t()",
+    "__wint_t" = "ffi_int()",
+    "__caddr_t" = "ffi_pointer()",
+    "__quad_t" = "ffi_int64()",
+    "__u_quad_t" = "ffi_uint64()",
+    "__loff_t" = "ffi_int64()",
+    "__syscall_slong_t" = "ffi_long()",
+    "__syscall_ulong_t" = "ffi_ulong()",
+    "__fsword_t" = "ffi_long()",
+    "__kernel_long_t" = "ffi_long()",
+    "__kernel_ulong_t" = "ffi_ulong()",
+
+    # ============================================
+    # macOS/Darwin types
+    # ============================================
+    "__darwin_size_t" = "ffi_size_t()",
+    "__darwin_ssize_t" = "ffi_ssize_t()",
+    "__darwin_ptrdiff_t" = "ffi_ssize_t()",
+    "__darwin_intptr_t" = "ffi_ssize_t()",
+    "__darwin_uintptr_t" = "ffi_size_t()",
+    "__darwin_off_t" = "ffi_int64()",
+    "__darwin_pid_t" = "ffi_int()",
+    "__darwin_uid_t" = "ffi_uint()",
+    "__darwin_gid_t" = "ffi_uint()",
+    "__darwin_time_t" = "ffi_long()",
+    "__darwin_clock_t" = "ffi_ulong()",
+    "__darwin_suseconds_t" = "ffi_int()",
+    "__darwin_dev_t" = "ffi_int()",
+    "__darwin_ino_t" = "ffi_uint64()",
+    "__darwin_ino64_t" = "ffi_uint64()",
+    "__darwin_mode_t" = "ffi_uint16()",
+    "__darwin_socklen_t" = "ffi_uint()",
+    "__darwin_wchar_t" = "ffi_int()",
+    "__darwin_wint_t" = "ffi_int()",
+    "__darwin_blkcnt_t" = "ffi_int64()",
+    "__darwin_blksize_t" = "ffi_int()",
+    "__darwin_uuid_t" = "ffi_pointer()",
+    "__darwin_uuid_string_t" = "ffi_string()",
+    "__darwin_natural_t" = "ffi_uint()",
+    "__darwin_mach_port_t" = "ffi_uint()",
+    "__darwin_mach_port_name_t" = "ffi_uint()",
+    "__darwin_sigset_t" = "ffi_uint()",
+    "__darwin_pthread_t" = "ffi_pointer()",
+    "__darwin_pthread_key_t" = "ffi_ulong()",
+
+    # ============================================
+    # BSD types (FreeBSD, OpenBSD, NetBSD)
+    # ============================================
+    "__int_least8_t" = "ffi_int8()",
+    "__int_least16_t" = "ffi_int16()",
+    "__int_least32_t" = "ffi_int32()",
+    "__int_least64_t" = "ffi_int64()",
+    "__uint_least8_t" = "ffi_uint8()",
+    "__uint_least16_t" = "ffi_uint16()",
+    "__uint_least32_t" = "ffi_uint32()",
+    "__uint_least64_t" = "ffi_uint64()",
+    "__int_fast8_t" = "ffi_int8()",
+    "__int_fast16_t" = "ffi_int()",
+    "__int_fast32_t" = "ffi_int()",
+    "__int_fast64_t" = "ffi_int64()",
+    "__uint_fast8_t" = "ffi_uint8()",
+    "__uint_fast16_t" = "ffi_uint()",
+    "__uint_fast32_t" = "ffi_uint()",
+    "__uint_fast64_t" = "ffi_uint64()",
+    "register_t" = "ffi_ssize_t()",
+    "u_char" = "ffi_uchar()",
+    "u_short" = "ffi_ushort()",
+    "u_int" = "ffi_uint()",
+    "u_long" = "ffi_ulong()",
+    "u_int8_t" = "ffi_uint8()",
+    "u_int16_t" = "ffi_uint16()",
+    "u_int32_t" = "ffi_uint32()",
+    "u_int64_t" = "ffi_uint64()",
+    "quad_t" = "ffi_int64()",
+    "u_quad_t" = "ffi_uint64()",
+    "caddr_t" = "ffi_pointer()",
+    "daddr_t" = "ffi_int()",
+    "segsz_t" = "ffi_int()",
+    "fixpt_t" = "ffi_uint()",
+
+    # ============================================
+    # MSYS2/MinGW/Windows types
+    # ============================================
+    "__int8" = "ffi_int8()",
+    "__int16" = "ffi_int16()",
+    "__int32" = "ffi_int32()",
+    "__int64" = "ffi_int64()",
+    "__mingw_off_t" = "ffi_long()",
+    "__mingw_off64_t" = "ffi_int64()",
+    "_off_t" = "ffi_long()",
+    "_off64_t" = "ffi_int64()",
+    "_dev_t" = "ffi_uint()",
+    "_ino_t" = "ffi_ushort()",
+    "_pid_t" = "ffi_int()",
+    "_time32_t" = "ffi_int32()",
+    "_time64_t" = "ffi_int64()",
+    "__time32_t" = "ffi_int32()",
+    "__time64_t" = "ffi_int64()",
+    # Windows SDK types (uppercase)
+    "BOOL" = "ffi_int()",
+    "BOOLEAN" = "ffi_uchar()",
+    "BYTE" = "ffi_uint8()",
+    "WORD" = "ffi_uint16()",
+    "DWORD" = "ffi_uint32()",
+    "QWORD" = "ffi_uint64()",
+    "INT" = "ffi_int()",
+    "UINT" = "ffi_uint()",
+    "INT8" = "ffi_int8()",
+    "INT16" = "ffi_int16()",
+    "INT32" = "ffi_int32()",
+    "INT64" = "ffi_int64()",
+    "UINT8" = "ffi_uint8()",
+    "UINT16" = "ffi_uint16()",
+    "UINT32" = "ffi_uint32()",
+    "UINT64" = "ffi_uint64()",
+    "CHAR" = "ffi_char()",
+    "WCHAR" = "ffi_wchar_t()",
+    "SHORT" = "ffi_short()",
+    "LONG" = "ffi_long()",
+    "LONGLONG" = "ffi_longlong()",
+    "UCHAR" = "ffi_uchar()",
+    "USHORT" = "ffi_ushort()",
+    "ULONG" = "ffi_ulong()",
+    "ULONGLONG" = "ffi_ulonglong()",
+    "FLOAT" = "ffi_float()",
+    "DOUBLE" = "ffi_double()",
+    "SIZE_T" = "ffi_size_t()",
+    "SSIZE_T" = "ffi_ssize_t()",
+    "INT_PTR" = "ffi_ssize_t()",
+    "UINT_PTR" = "ffi_size_t()",
+    "LONG_PTR" = "ffi_ssize_t()",
+    "ULONG_PTR" = "ffi_size_t()",
+    "DWORD_PTR" = "ffi_size_t()",
+    "HANDLE" = "ffi_pointer()",
+    "HMODULE" = "ffi_pointer()",
+    "HINSTANCE" = "ffi_pointer()",
+    "HWND" = "ffi_pointer()",
+    "HDC" = "ffi_pointer()",
+    "HBITMAP" = "ffi_pointer()",
+    "HBRUSH" = "ffi_pointer()",
+    "HFONT" = "ffi_pointer()",
+    "HICON" = "ffi_pointer()",
+    "HCURSOR" = "ffi_pointer()",
+    "HMENU" = "ffi_pointer()",
+    "HKEY" = "ffi_pointer()",
+    "HRESULT" = "ffi_long()",
+    "PVOID" = "ffi_pointer()",
+    "LPVOID" = "ffi_pointer()",
+    "LPCVOID" = "ffi_pointer()",
+    "LPSTR" = "ffi_string()",
+    "LPCSTR" = "ffi_string()",
+    "LPWSTR" = "ffi_pointer()",
+    "LPCWSTR" = "ffi_pointer()",
+    "LPTSTR" = "ffi_pointer()",
+    "LPCTSTR" = "ffi_pointer()",
+    "BSTR" = "ffi_pointer()",
+    "WPARAM" = "ffi_size_t()",
+    "LPARAM" = "ffi_ssize_t()",
+    "LRESULT" = "ffi_ssize_t()",
+    "ATOM" = "ffi_uint16()",
+    "COLORREF" = "ffi_uint32()",
+
+    # ============================================
+    # Clang/LLVM/GCC builtin type macros
+    # ============================================
+    "__INTPTR_TYPE__" = "ffi_ssize_t()",
+    "__UINTPTR_TYPE__" = "ffi_size_t()",
+    "__SIZE_TYPE__" = "ffi_size_t()",
+    "__PTRDIFF_TYPE__" = "ffi_ssize_t()",
+    "__WCHAR_TYPE__" = "ffi_wchar_t()",
+    "__WINT_TYPE__" = "ffi_int()",
+    "__INT8_TYPE__" = "ffi_int8()",
+    "__INT16_TYPE__" = "ffi_int16()",
+    "__INT32_TYPE__" = "ffi_int32()",
+    "__INT64_TYPE__" = "ffi_int64()",
+    "__UINT8_TYPE__" = "ffi_uint8()",
+    "__UINT16_TYPE__" = "ffi_uint16()",
+    "__UINT32_TYPE__" = "ffi_uint32()",
+    "__UINT64_TYPE__" = "ffi_uint64()",
+    "__INTMAX_TYPE__" = "ffi_int64()",
+    "__UINTMAX_TYPE__" = "ffi_uint64()",
+    "__SIG_ATOMIC_TYPE__" = "ffi_int()"
+  )
+}
+
+#' Get list of resolvable type names
+#'
+#' Returns a character vector of all type names that can be directly resolved
+#' to FFI types, for use in can_resolve_typedef().
+#'
+#' @return Character vector of resolvable type names
+#' @keywords internal
+get_resolvable_types <- function() {
+  names(get_ffi_type_map())
+}
+
+#' Get C type keywords for parameter name detection
+#'
+#' Returns a character vector of C type keywords used to detect when a
+#' function parameter declaration has no variable name (just a type).
+#' This is derived from the master type map plus C keywords.
+#'
+#' @return Character vector of C type keywords
+#' @keywords internal
+get_c_type_keywords <- function() {
+  # Start with all known type names from the master map
+  type_names <- names(get_ffi_type_map())
+
+  # Add C keywords that aren't types but appear in type declarations
+  c_keywords <- c(
+    "signed", "unsigned", "const", "volatile", "restrict",
+    "struct", "union", "enum", "typedef",
+    "static", "extern", "inline", "register",
+    "_Atomic", "__restrict", "__restrict__",
+    "__inline", "__inline__", "__attribute__"
+  )
+
+  # Add common opaque types not in the FFI map
+  opaque_types <- c(
+    "FILE", "DIR", "va_list", "__gnuc_va_list", "__builtin_va_list",
+    "pthread_t", "pthread_mutex_t", "pthread_cond_t", "pthread_key_t",
+    "jmp_buf", "sigjmp_buf", "sig_t", "sighandler_t",
+    "mbstate_t", "locale_t", "fpos_t", "div_t", "ldiv_t", "lldiv_t",
+    "regex_t", "regmatch_t"
+  )
+
+  unique(c(type_names, c_keywords, opaque_types))
+}
+
 #' Generate bit-field accessor code
 #' @param struct_name Name of the struct
 #' @param bitfield_specs Character vector of "'name : width'" strings
@@ -142,40 +513,8 @@ generate_struct_definition <- function(struct_name, struct_def) {
     return(generate_bitfield_accessor_code(struct_name, bitfield_warning$fields))
   }
 
-  # Map C types to FFI types
-  type_map <- c(
-    "int" = "ffi_int()",
-    "long" = "ffi_long()",
-    "short" = "ffi_short()",
-    "char" = "ffi_char()",
-    "float" = "ffi_float()",
-    "double" = "ffi_double()",
-    "void*" = "ffi_pointer()",
-    "void *" = "ffi_pointer()",
-    "size_t" = "ffi_size_t()",
-    "uint8_t" = "ffi_uint8()",
-    "uint16_t" = "ffi_uint16()",
-    "uint32_t" = "ffi_uint32()",
-    "uint64_t" = "ffi_uint64()",
-    "int8_t" = "ffi_int8()",
-    "int16_t" = "ffi_int16()",
-    "int32_t" = "ffi_int32()",
-    "int64_t" = "ffi_int64()",
-    "unsigned char" = "ffi_uint8()",
-    "unsigned short" = "ffi_uint16()",
-    "unsigned int" = "ffi_uint32()",
-    "unsigned long" = "ffi_ulong()",
-    "long long" = "ffi_longlong()",
-    "long long int" = "ffi_longlong()",
-    "signed long long" = "ffi_longlong()",
-    "signed long long int" = "ffi_longlong()",
-    "unsigned long long" = "ffi_ulonglong()",
-    "unsigned long long int" = "ffi_ulonglong()",
-    "ssize_t" = "ffi_ssize_t()",
-    "ptrdiff_t" = "ffi_ssize_t()",
-    "bool" = "ffi_bool()",
-    "_Bool" = "ffi_bool()"
-  )
+  # Get centralized type map
+  type_map <- get_ffi_type_map()
 
   # Generate field definitions
   field_defs <- character()
@@ -311,30 +650,8 @@ generate_union_definition <- function(union_name, union_def) {
     return(NULL)
   }
 
-  # Map C types to FFI types (reuse logic from struct generation)
-  type_map <- c(
-    "int" = "ffi_int()",
-    "long" = "ffi_long()",
-    "short" = "ffi_short()",
-    "char" = "ffi_char()",
-    "float" = "ffi_float()",
-    "double" = "ffi_double()",
-    "void*" = "ffi_pointer()",
-    "void *" = "ffi_pointer()",
-    "size_t" = "ffi_size_t()",
-    "uint8_t" = "ffi_uint8()",
-    "uint16_t" = "ffi_uint16()",
-    "uint32_t" = "ffi_uint32()",
-    "uint64_t" = "ffi_uint64()",
-    "int8_t" = "ffi_int8()",
-    "int16_t" = "ffi_int16()",
-    "int32_t" = "ffi_int32()",
-    "int64_t" = "ffi_int64()",
-    "unsigned char" = "ffi_uint8()",
-    "unsigned short" = "ffi_uint16()",
-    "unsigned int" = "ffi_uint32()",
-    "unsigned long" = "ffi_uint64()"
-  )
+  # Get centralized type map
+  type_map <- get_ffi_type_map()
 
   # Generate field definitions
   field_defs <- character()
@@ -401,42 +718,16 @@ can_resolve_typedef <- function(base_type, known_typedefs, known_structs = chara
   }
   visited <- c(visited, base_type)
 
-  # Basic type map (subset for checking)
-  # Includes standard types AND common system-level aliases (glibc internals)
-  basic_types <- c(
-    # Standard C types
-    "char", "signed char", "unsigned char",
-    "short", "short int", "signed short", "signed short int",
-    "unsigned short", "unsigned short int",
-    "int", "signed", "signed int", "unsigned", "unsigned int",
-    "long", "long int", "signed long", "signed long int",
-    "unsigned long", "unsigned long int",
-    "long long", "long long int", "signed long long", "signed long long int",
-    "unsigned long long", "unsigned long long int",
-    "float", "double", "long double", "void",
-    "size_t", "ssize_t", "ptrdiff_t",
-    "int8_t", "int16_t", "int32_t", "int64_t",
-    "uint8_t", "uint16_t", "uint32_t", "uint64_t",
-    "bool", "_Bool",
-    # Common system-level aliases (glibc, musl, etc.)
-    "__ssize_t", "__size_t", "__ptrdiff_t", "__intptr_t", "__uintptr_t",
-    "__int8_t", "__int16_t", "__int32_t", "__int64_t",
-    "__uint8_t", "__uint16_t", "__uint32_t", "__uint64_t",
-    "__off_t", "__off64_t", "__pid_t", "__uid_t", "__gid_t",
-    "__clock_t", "__time_t", "__suseconds_t",
-    "__dev_t", "__ino_t", "__ino64_t", "__mode_t", "__nlink_t",
-    "__blksize_t", "__blkcnt_t", "__blkcnt64_t",
-    "__fsblkcnt_t", "__fsblkcnt64_t", "__fsfilcnt_t", "__fsfilcnt64_t",
-    "__socklen_t", "__sig_atomic_t"
-  )
+  # Get resolvable types from centralized type map
+  resolvable_types <- get_resolvable_types()
 
   # Pointer types are always resolvable
   if (grepl("\\*", base_type)) {
     return(TRUE)
   }
 
-  # Basic types are resolvable
-  if (base_type %in% basic_types) {
+  # Known types are resolvable (from centralized type map)
+  if (base_type %in% resolvable_types) {
     return(TRUE)
   }
 
@@ -471,92 +762,8 @@ generate_typedef_definition <- function(alias_name, base_type, known_structs = c
   # Strip qualifiers from base type
   base_type <- strip_type_qualifiers(base_type)
 
-
-  # Type map for basic C types AND common system-level aliases
-  # This allows direct resolution without typedef chains
-  type_map <- c(
-    # Standard C types
-    "char" = "ffi_char()",
-    "signed char" = "ffi_char()",
-    "unsigned char" = "ffi_uchar()",
-    "short" = "ffi_short()",
-    "short int" = "ffi_short()",
-    "signed short" = "ffi_short()",
-    "signed short int" = "ffi_short()",
-    "unsigned short" = "ffi_ushort()",
-    "unsigned short int" = "ffi_ushort()",
-    "int" = "ffi_int()",
-    "signed" = "ffi_int()",
-    "signed int" = "ffi_int()",
-    "unsigned" = "ffi_uint()",
-    "unsigned int" = "ffi_uint()",
-    "long" = "ffi_long()",
-    "long int" = "ffi_long()",
-    "signed long" = "ffi_long()",
-    "signed long int" = "ffi_long()",
-    "unsigned long" = "ffi_ulong()",
-    "unsigned long int" = "ffi_ulong()",
-    "long long" = "ffi_longlong()",
-    "long long int" = "ffi_longlong()",
-    "signed long long" = "ffi_longlong()",
-    "signed long long int" = "ffi_longlong()",
-    "unsigned long long" = "ffi_ulonglong()",
-    "unsigned long long int" = "ffi_ulonglong()",
-    "float" = "ffi_float()",
-    "double" = "ffi_double()",
-    "long double" = "ffi_longdouble()",
-    "void" = "ffi_void()",
-    "size_t" = "ffi_size_t()",
-    "ssize_t" = "ffi_ssize_t()",
-    "ptrdiff_t" = "ffi_ssize_t()",
-    "int8_t" = "ffi_int8()",
-    "int16_t" = "ffi_int16()",
-    "int32_t" = "ffi_int32()",
-    "int64_t" = "ffi_int64()",
-    "uint8_t" = "ffi_uint8()",
-    "uint16_t" = "ffi_uint16()",
-    "uint32_t" = "ffi_uint32()",
-    "uint64_t" = "ffi_uint64()",
-    "bool" = "ffi_bool()",
-    "_Bool" = "ffi_bool()",
-    # System-level aliases (glibc internal types) - platform-appropriate mappings
-    "__ssize_t" = "ffi_ssize_t()",
-    "__size_t" = "ffi_size_t()",
-    "__ptrdiff_t" = "ffi_ssize_t()",
-    "__intptr_t" = "ffi_ssize_t()",
-    "__uintptr_t" = "ffi_size_t()",
-    "__int8_t" = "ffi_int8()",
-    "__int16_t" = "ffi_int16()",
-    "__int32_t" = "ffi_int32()",
-    "__int64_t" = "ffi_int64()",
-    "__uint8_t" = "ffi_uint8()",
-    "__uint16_t" = "ffi_uint16()",
-    "__uint32_t" = "ffi_uint32()",
-    "__uint64_t" = "ffi_uint64()",
-    # POSIX types (typically long or int depending on platform)
-    "__off_t" = "ffi_long()",
-    "__off64_t" = "ffi_int64()",
-    "__pid_t" = "ffi_int()",
-    "__uid_t" = "ffi_uint()",
-    "__gid_t" = "ffi_uint()",
-    "__clock_t" = "ffi_long()",
-    "__time_t" = "ffi_long()",
-    "__suseconds_t" = "ffi_long()",
-    "__dev_t" = "ffi_ulong()",
-    "__ino_t" = "ffi_ulong()",
-    "__ino64_t" = "ffi_uint64()",
-    "__mode_t" = "ffi_uint()",
-    "__nlink_t" = "ffi_ulong()",
-    "__blksize_t" = "ffi_long()",
-    "__blkcnt_t" = "ffi_long()",
-    "__blkcnt64_t" = "ffi_int64()",
-    "__fsblkcnt_t" = "ffi_ulong()",
-    "__fsblkcnt64_t" = "ffi_uint64()",
-    "__fsfilcnt_t" = "ffi_ulong()",
-    "__fsfilcnt64_t" = "ffi_uint64()",
-    "__socklen_t" = "ffi_uint()",
-    "__sig_atomic_t" = "ffi_int()"
-  )
+  # Get centralized type map
+  type_map <- get_ffi_type_map()
 
   escaped_alias <- escape_r_name(alias_name)
 
@@ -633,41 +840,8 @@ generate_function_wrapper <- function(func_def) {
   return_type <- func_def$return_type
   params <- func_def$params
 
-  # Map C type to FFI type call
-  type_map <- c(
-    "int" = "ffi_int()",
-    "double" = "ffi_double()",
-    "float" = "ffi_float()",
-    "char" = "ffi_char()",
-    "void" = "ffi_void()",
-    "short" = "ffi_short()",
-    "long" = "ffi_long()",
-    "unsigned int" = "ffi_uint()",
-    "unsigned char" = "ffi_uchar()",
-    "unsigned short" = "ffi_ushort()",
-    "unsigned long" = "ffi_ulong()",
-    "long long" = "ffi_longlong()",
-    "long long int" = "ffi_longlong()",
-    "signed long long" = "ffi_longlong()",
-    "signed long long int" = "ffi_longlong()",
-    "unsigned long long" = "ffi_ulonglong()",
-    "unsigned long long int" = "ffi_ulonglong()",
-    "int8_t" = "ffi_int8()",
-    "int16_t" = "ffi_int16()",
-    "int32_t" = "ffi_int32()",
-    "int64_t" = "ffi_int64()",
-    "uint8_t" = "ffi_uint8()",
-    "uint16_t" = "ffi_uint16()",
-    "uint32_t" = "ffi_uint32()",
-    "uint64_t" = "ffi_uint64()",
-    "size_t" = "ffi_size_t()",
-    "ssize_t" = "ffi_ssize_t()",
-    "ptrdiff_t" = "ffi_ssize_t()",
-    "bool" = "ffi_bool()",
-    "_Bool" = "ffi_bool()",
-    "char*" = "ffi_string()",
-    "const char*" = "ffi_string()"
-  )
+  # Get centralized type map
+  type_map <- get_ffi_type_map()
 
   # Function to map a C type to FFI type (handles both "type name" and "type")
   map_type_from_string <- function(type_string) {
@@ -703,15 +877,8 @@ generate_function_wrapper <- function(func_def) {
   param_types_c <- character()
   param_types_ffi <- character()
 
-  # Common C type keywords (to detect unnamed parameters)
-  c_types <- c(
-    "void", "char", "short", "int", "long", "float", "double",
-    "signed", "unsigned", "const", "volatile", "struct", "union",
-    "enum", "size_t", "ssize_t", "ptrdiff_t", "wchar_t",
-    "int8_t", "int16_t", "int32_t", "int64_t",
-    "uint8_t", "uint16_t", "uint32_t", "uint64_t",
-    "FILE", "_Bool", "bool"
-  )
+  # Get C type keywords (to detect unnamed parameters)
+  c_types <- get_c_type_keywords()
 
   for (part in param_parts) {
     part <- trimws(part)
