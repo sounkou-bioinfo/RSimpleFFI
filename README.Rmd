@@ -1149,4 +1149,4 @@ This project is licensed under the GPL-3 License.
 
 - [CPython's ctypes module](https://docs.python.org/3/library/ctypes.html)
 
-- [purectypes repo] https://github.com/aguinet/purectypes.git
+- [purectypes repo](https://github.com/aguinet/purectypes.git)
