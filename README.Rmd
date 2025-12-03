@@ -1102,3 +1102,5 @@ This project is licensed under the GPL-3 License.
 - [libffi Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
 
 - [CPython's ctypes module](https://docs.python.org/3/library/ctypes.html)
+
+- [purectypes repo] https://github.com/aguinet/purectypes.git
