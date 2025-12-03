@@ -93,7 +93,8 @@ generate_struct_definition <- function(struct_name, struct_def) {
         } else if (grepl("\\*", field_type)) {
           base_type <- "ffi_pointer()"
         } else {
-          base_type <- paste0("ffi_pointer()  # ", field_type)
+          base_type <- paste0("ffi_pointer()")  # Will add comment separately
+          base_comment <- field_type
         }
         
         # Build nested array types for multi-dimensional arrays
@@ -104,23 +105,34 @@ generate_struct_definition <- function(struct_name, struct_def) {
         
         # Escape field name if needed
         escaped_field_name <- escape_r_name(base_name)
-        field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
+        if (exists("base_comment", inherits = FALSE)) {
+          field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, base_comment))
+          rm(base_comment)
+        } else {
+          field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
+        }
       }
     } else {
       # Regular field (no array)
       # Handle pointers
+      field_comment <- NULL
       if (grepl("\\*", field_type)) {
         ffi_type <- "ffi_pointer()"
       } else if (field_type %in% names(type_map)) {
         ffi_type <- type_map[[field_type]]
       } else {
         # Unknown type - could be typedef or struct, use pointer
-        ffi_type <- paste0("ffi_pointer()  # ", field_type)
+        ffi_type <- "ffi_pointer()"
+        field_comment <- field_type
       }
       
       # Escape field name if needed
       escaped_field_name <- escape_r_name(field_name)
-      field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
+      if (!is.null(field_comment)) {
+        field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_comment))
+      } else {
+        field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
+      }
     }
   }
   
