@@ -357,11 +357,46 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       if (value != "") {
         escaped_name <- escape_r_name(name)
         
-        # Strip C literal suffixes that R doesn't understand
-        # Be careful with hex values to not strip valid hex digits (F can be hex or float suffix)
+        # Clean up C-specific patterns that R doesn't understand
+        
+        # 1. String concatenation: "hello" "world" -> "helloworld"
+        if (grepl('^"[^"]*"\\s+"[^"]*"', value)) {
+          # Extract all string literals and concatenate
+          strings <- regmatches(value, gregexpr('"[^"]*"', value))[[1]]
+          # Remove quotes, concatenate, re-quote
+          value <- paste0('"', paste(gsub('"', '', strings), collapse = ''), '"')
+        }
+        
+        # 2. Character literals: '\n' -> "\n" (R uses strings not chars)
+        # Need to handle escape sequences carefully
+        if (grepl("^'.*'$", value)) {
+          # Extract the content between quotes
+          content <- gsub("^'(.+)'$", "\\1", value)
+          # R string: just re-quote (escapes like \n, \t work the same)
+          # But \' becomes ' in R strings (no need to escape single quote)
+          content <- gsub("\\\\'", "'", content)
+          # And \" is not needed in single-quote context, but we're using double quotes
+          value <- paste0('"', content, '"')
+        }
+        
+        # 3. Binary literals: 0b11111111 -> convert to decimal or hex
+        if (grepl("^0[bB][01]+$", value)) {
+          # Convert binary to decimal
+          binary_str <- sub("^0[bB]", "", value)
+          decimal_val <- sum(as.integer(strsplit(binary_str, "")[[1]]) * 2^(nchar(binary_str):1 - 1))
+          value <- as.character(decimal_val)
+        }
+        
+        # 4. Digit separators: 1'000'000 -> 1000000
+        if (grepl("'", value)) {
+          value <- gsub("'", "", value)
+        }
+        
+        # 5. Negative hex: -0x80000000 -> keep as is, will be quoted later
+        
+        # 6. Strip C literal suffixes from numeric values
         # Handle hex values: 0x123ULL, 0xabcLL, etc. - strip U and L suffixes only
         if (grepl("^0[xX][0-9a-fA-F]+[UuLl]+$", value)) {
-          # Strip only the trailing U and L characters (but not F which could be hex)
           value <- sub("[UuLl]+$", "", value)
         }
         # Handle decimal integers: 123LL, 456ULL, etc.
@@ -371,7 +406,6 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
           if (as.numeric(value) <= 2147483647) {
             value <- paste0(value, "L")
           }
-          # Otherwise leave as numeric (will be double)
         }
         # Handle floats: 3.14f, 1.0F (but NOT hex like 0xF)
         else if (grepl("^[0-9.+-]+[Ff]$", value) && !grepl("^0[xX]", value)) {
