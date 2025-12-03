@@ -773,6 +773,13 @@ S7::method(
     )
   }
 
+  # For packed structs, use offset-based access
+  if (!is.null(struct_type@pack)) {
+    offset <- ffi_packed_offset(struct_type, field)
+    field_type <- struct_type@field_types[[field]]
+    return(.Call("R_get_struct_field_at_offset", ptr, as.integer(offset), field_type@ref))
+  }
+
   .Call("R_get_struct_field", ptr, as.integer(field - 1), struct_type@ref)
 }
 
@@ -848,6 +855,14 @@ S7::method(
     )
   }
 
+  # For packed structs, use offset-based access
+  if (!is.null(struct_type@pack)) {
+    offset <- ffi_packed_offset(struct_type, field_index)
+    field_type <- struct_type@field_types[[field_index]]
+    .Call("R_set_struct_field_at_offset", ptr, as.integer(offset), value, field_type@ref)
+    return(invisible(ptr))
+  }
+
   .Call(
     "R_set_struct_field",
     ptr,
@@ -871,6 +886,14 @@ S7::method(
       length(struct_type@fields),
       " fields."
     )
+  }
+
+  # For packed structs, use offset-based access
+  if (!is.null(struct_type@pack)) {
+    offset <- ffi_packed_offset(struct_type, field)
+    field_type <- struct_type@field_types[[field]]
+    .Call("R_set_struct_field_at_offset", ptr, as.integer(offset), value, field_type@ref)
+    return(invisible(ptr))
   }
 
   .Call(

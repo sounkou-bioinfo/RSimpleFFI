@@ -1083,9 +1083,9 @@ ffi_extract_signed_bit_field(packed, 0L, 4L)
 ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 ```
 
-### Struct Packing & Unions
+### Unions & Struct Passing
 
-Struct packing attributes (`#pragma pack`, `__attribute__((packed))`) not supported. Union support limited on some ABIs - prefer passing by pointer.
+Union and struct passing by value may be unreliable across platforms due to ABI differences. Prefer passing by pointer. The `pack` parameter for `ffi_struct()` correctly computes sizes and offsets for field access via `ffi_get_field()`/`ffi_set_field()`.
 
 ## License
 

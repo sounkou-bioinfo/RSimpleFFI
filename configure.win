@@ -84,9 +84,11 @@ if [ -d "$TINYCC_SRC" ]; then
     cp -f win32/lib/*.def "$TINYCC_DEST/lib/" 2>/dev/null || true
     
     echo "TinyCC tcc executable and support files installed to $TINYCC_DEST"
-    ls -la "$TINYCC_DEST/" "$TINYCC_DEST/include/" "$TINYCC_DEST/lib/" 2>/dev/null || true
+    #ls -la "$TINYCC_DEST/" "$TINYCC_DEST/include/" "$TINYCC_DEST/lib/" 2>/dev/null || true
     echo "Verifying tcc.exe exists:"
-    ls -la "$TINYCC_DEST/tcc.exe" || echo "ERROR: tcc.exe not found at expected location!"
+    #ls -la "$TINYCC_DEST/tcc.exe" || echo "ERROR: tcc.exe not found at expected location!"
+    # remove tinycc source
+    rm -rf "${TINYCC_SRC}"
 else
     echo "Error: tinycc source directory $TINYCC_SRC does not exist."
     exit 1
