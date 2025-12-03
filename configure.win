@@ -44,18 +44,29 @@ if [ -d "$TINYCC_SRC" ]; then
     mkdir -p "$TINYCC_DEST/include"
     
     echo "Building c2str helper ..."
-    $MAKE c2str.exe
-    
+    "$MAKE" c2str.exe || { echo "Failed to build c2str.exe" >&2; exit 1; }
+
     echo "Generating tccdefs_.h ..."
-    $MAKE tccdefs_.h
-    
-    echo "Running make ..."
-    $MAKE
-    
-    echo "Running make install ..."
-    $MAKE install
-    
-    echo "tinycc built and installed to $TINYCC_DEST"
+    "$MAKE" tccdefs_.h || { echo "Failed to generate tccdefs_.h" >&2; exit 1; }
+
+    echo "Building tcc executable only ..."
+    # Build just the tcc executable to avoid linking the full libtcc DLL which
+    # can fail under some Rtools/linker combinations. This still produces the
+    # command-line compiler used for preprocessing headers.
+    "$MAKE" tcc$(EXESUF) || { echo "Failed to build tcc executable" >&2; exit 1; }
+
+    # Ensure destination bin exists and copy tcc executable there
+    mkdir -p "$TINYCC_DEST/bin"
+    if [ -f "tcc$(EXESUF)" ]; then
+        cp -f "tcc$(EXESUF)" "$TINYCC_DEST/bin/"
+    elif [ -f "./tcc$(EXESUF)" ]; then
+        cp -f "./tcc$(EXESUF)" "$TINYCC_DEST/bin/"
+    else
+        echo "tcc executable not found after build" >&2
+        exit 1
+    fi
+
+    echo "tinycc tcc executable built and installed to $TINYCC_DEST/bin"
 else
     echo "Error: tinycc source directory $TINYCC_SRC does not exist."
     exit 1
