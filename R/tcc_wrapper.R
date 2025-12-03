@@ -4,8 +4,12 @@
 tcc_binary_path <- function() {
     if(.Platform$OS.type == "windows") {
         tcc_path <- system.file("tinycc", "bin", "tcc.exe", package = "RSimpleFFI")
+        tcc_path <- normalizePath(tcc_path)
+        message("TCC path (Windows): ", tcc_path)
     } else {
         tcc_path <- system.file("tinycc", "bin", "tcc", package = "RSimpleFFI")
+        tcc_path <- normalizePath(tcc_path)
+        message("TCC path (Unix): ", tcc_path)
     }
 
     if (!file.exists(tcc_path) || tcc_path == "") {
@@ -223,61 +227,218 @@ tcc_extract_structs <- function(preprocessed_lines) {
   
   result <- list()
   
-  # Pattern 1: struct Name { ... };
-  pattern1 <- "struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{([^}]*)\\}\\s*;"
-  matches1 <- gregexpr(pattern1, code, perl = TRUE)
-  match_data1 <- regmatches(code, matches1)[[1]]
-  
-  # Pattern 2: typedef struct { ... } TypeName;
-  pattern2 <- "typedef\\s+struct\\s*\\{([^}]*)\\}\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;"
-  matches2 <- gregexpr(pattern2, code, perl = TRUE)
-  match_data2 <- regmatches(code, matches2)[[1]]
-  
-  # Helper function to parse struct fields
-  parse_fields <- function(body) {
-    field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;"
-    field_matches <- gregexpr(field_pattern, body, perl = TRUE)
-    field_data <- regmatches(body, field_matches)[[1]]
+  # Helper to extract balanced braces content
+  extract_balanced_braces <- function(text, start_pos) {
+    chars <- strsplit(text, "")[[1]]
+    if (start_pos > length(chars) || chars[start_pos] != "{") {
+      return(NULL)
+    }
     
-    fields <- lapply(field_data, function(field) {
-      fm <- regexec(field_pattern, field, perl = TRUE)
-      fparts <- regmatches(field, fm)[[1]]
-      if (length(fparts) >= 3) {
-        list(
-          type = trimws(fparts[2]),
-          name = trimws(fparts[3])
-        )
-      } else {
-        NULL
+    depth <- 0
+    for (i in start_pos:length(chars)) {
+      if (chars[i] == "{") depth <- depth + 1
+      if (chars[i] == "}") {
+        depth <- depth - 1
+        if (depth == 0) {
+          return(list(
+            content = paste(chars[(start_pos+1):(i-1)], collapse = ""),
+            end_pos = i
+          ))
+        }
       }
-    })
-    
-    Filter(Negate(is.null), fields)
+    }
+    NULL
   }
   
-  # Process pattern 1: struct Name { ... };
-  if (length(match_data1) > 0) {
-    structs1 <- lapply(match_data1, function(struct_def) {
-      m <- regexec(pattern1, struct_def, perl = TRUE)
-      parts <- regmatches(struct_def, m)[[1]]
+  # Find typedef struct { ... } Name; patterns
+  typedef_pattern <- "typedef\\s+struct\\s*\\{"
+  typedef_matches <- gregexpr(typedef_pattern, code, perl = TRUE)[[1]]
+  
+  if (typedef_matches[1] != -1) {
+    for (match_start in typedef_matches) {
+      # Find the opening brace
+      brace_pos <- regexpr("\\{", substring(code, match_start))[[1]] + match_start - 1
       
-      if (length(parts) >= 3) {
-        name <- trimws(parts[2])
-        body <- trimws(parts[3])
-        fields <- parse_fields(body)
-        list(name = name, fields = fields)
-      } else {
-        NULL
+      # Extract balanced content
+      balanced <- extract_balanced_braces(code, brace_pos)
+      if (!is.null(balanced)) {
+        # Find the type name after closing brace
+        remainder <- substring(code, balanced$end_pos + 1)
+        name_match <- regexpr("^\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;", remainder, perl = TRUE)
+        
+        if (name_match != -1) {
+          name_text <- regmatches(remainder, name_match)[[1]]
+          name <- trimws(gsub(";", "", name_text))
+          
+          body <- balanced$content
+          fields <- parse_fields_with_nested(body)
+          if (length(fields) > 0) {
+            result[[name]] <- fields
+          }
+        }
       }
-    })
-    
-    structs1 <- Filter(Negate(is.null), structs1)
-    for (s in structs1) {
-      result[[s$name]] <- s$fields
     }
   }
   
-  # Process pattern 2: typedef struct { ... } TypeName;
+  # Find struct Name { ... }; patterns
+  struct_pattern <- "struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{"
+  struct_matches <- gregexpr(struct_pattern, code, perl = TRUE)[[1]]
+  
+  if (struct_matches[1] != -1) {
+    for (i in seq_along(struct_matches)) {
+      match_start <- struct_matches[i]
+      match_len <- attr(struct_matches, "match.length")[i]
+      
+      # Extract struct name
+      name_text <- substring(code, match_start, match_start + match_len - 1)
+      name_match <- regexpr("struct\\s+([a-zA-Z_][a-zA-Z0-9_]*)", name_text, perl = TRUE)
+      name_capture <- regmatches(name_text, name_match)[[1]]
+      name <- sub("struct\\s+", "", name_capture)
+      
+      # Find opening brace
+      brace_pos <- regexpr("\\{", substring(code, match_start))[[1]] + match_start - 1
+      
+      # Extract balanced content
+      balanced <- extract_balanced_braces(code, brace_pos)
+      if (!is.null(balanced)) {
+        # Check if followed by semicolon
+        remainder <- substring(code, balanced$end_pos + 1, balanced$end_pos + 10)
+        if (grepl("^\\s*;", remainder)) {
+          body <- balanced$content
+          fields <- parse_fields_with_nested(body)
+          if (length(fields) > 0) {
+            result[[name]] <- fields
+          }
+        }
+      }
+    }
+  }
+  
+  result
+}
+
+# Helper function to parse struct fields, handling nested anonymous types
+parse_fields_with_nested <- function(body) {
+  fields <- list()
+  
+  # First, handle nested structs/unions by replacing them temporarily
+  placeholders <- list()
+  counter <- 1
+  
+  # Replace nested struct { ... } fieldname; patterns
+  while (grepl("struct\\s*\\{", body)) {
+    match_pos <- regexpr("struct\\s*\\{", body, perl = TRUE)[[1]]
+    if (match_pos == -1) break
+    
+    # Find balanced braces
+    brace_start <- regexpr("\\{", substring(body, match_pos))[[1]] + match_pos - 1
+    chars <- strsplit(body, "")[[1]]
+    depth <- 0
+    end_pos <- NA
+    
+    for (i in brace_start:length(chars)) {
+      if (chars[i] == "{") depth <- depth + 1
+      if (chars[i] == "}") {
+        depth <- depth - 1
+        if (depth == 0) {
+          end_pos <- i
+          break
+        }
+      }
+    }
+    
+    if (is.na(end_pos)) break
+    
+    # Get field name after closing brace
+    remainder <- substring(body, end_pos + 1)
+    name_match <- regexpr("^\\s*([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;", remainder, perl = TRUE)
+    
+    if (name_match != -1) {
+      field_name <- trimws(gsub(";", "", regmatches(remainder, name_match)[[1]]))
+      placeholder <- paste0("__NESTED_STRUCT_", counter, "__")
+      placeholders[[placeholder]] <- list(type = "struct", name = field_name)
+      
+      # Replace the whole nested definition with placeholder
+      before <- substring(body, 1, match_pos - 1)
+      after <- substring(body, end_pos + name_match + attr(name_match, "match.length") - 1)
+      body <- paste0(before, placeholder, " ", field_name, ";", after)
+      counter <- counter + 1
+    } else {
+      break
+    }
+  }
+  
+  # Replace nested union { ... } fieldname; patterns
+  while (grepl("union\\s*\\{", body)) {
+    match_pos <- regexpr("union\\s*\\{", body, perl = TRUE)[[1]]
+    if (match_pos == -1) break
+    
+    brace_start <- regexpr("\\{", substring(body, match_pos))[[1]] + match_pos - 1
+    chars <- strsplit(body, "")[[1]]
+    depth <- 0
+    end_pos <- NA
+    
+    for (i in brace_start:length(chars)) {
+      if (chars[i] == "{") depth <- depth + 1
+      if (chars[i] == "}") {
+        depth <- depth - 1
+        if (depth == 0) {
+          end_pos <- i
+          break
+        }
+      }
+    }
+    
+    if (is.na(end_pos)) break
+    
+    remainder <- substring(body, end_pos + 1)
+    name_match <- regexpr("^\\s*([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;", remainder, perl = TRUE)
+    
+    if (name_match != -1) {
+      field_name <- trimws(gsub(";", "", regmatches(remainder, name_match)[[1]]))
+      placeholder <- paste0("__NESTED_UNION_", counter, "__")
+      placeholders[[placeholder]] <- list(type = "union", name = field_name)
+      
+      before <- substring(body, 1, match_pos - 1)
+      after <- substring(body, end_pos + name_match + attr(name_match, "match.length") - 1)
+      body <- paste0(before, placeholder, " ", field_name, ";", after)
+      counter <- counter + 1
+    } else {
+      break
+    }
+  }
+  
+  # Now parse simple fields
+  field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;"
+  field_matches <- gregexpr(field_pattern, body, perl = TRUE)
+  field_data <- regmatches(body, field_matches)[[1]]
+  
+  for (field in field_data) {
+    fm <- regexec(field_pattern, field, perl = TRUE)
+    fparts <- regmatches(field, fm)[[1]]
+    if (length(fparts) >= 3) {
+      type_part <- trimws(fparts[2])
+      name_part <- trimws(fparts[3])
+      
+      # Check if this is a placeholder
+      if (type_part %in% names(placeholders)) {
+        # It's a nested type
+        nested_info <- placeholders[[type_part]]
+        fields[[length(fields) + 1]] <- list(
+          type = nested_info$type,
+          name = name_part
+        )
+      } else {
+        fields[[length(fields) + 1]] <- list(
+          type = type_part,
+          name = name_part
+        )
+      }
+    }
+  }
+  
+  fields
+}
   if (length(match_data2) > 0) {
     structs2 <- lapply(match_data2, function(struct_def) {
       m <- regexec(pattern2, struct_def, perl = TRUE)
@@ -302,10 +463,216 @@ tcc_extract_structs <- function(preprocessed_lines) {
   result
 }
 
+#' Extract enum definitions from preprocessed C code
+#' @param preprocessed_lines Character vector from tcc_preprocess()
+#' @return List of enum definitions (name -> named integer vector of values)
+#' @export
+tcc_extract_enums <- function(preprocessed_lines) {
+  # Remove line markers
+  code_lines <- preprocessed_lines[!grepl("^#", preprocessed_lines)]
+  code <- paste(code_lines, collapse = " ")
+  
+  # Remove comments
+  code <- gsub("/\\*.*?\\*/", " ", code)
+  code <- gsub("//.*?($|;)", ";", code)
+  
+  result <- list()
+  
+  # Pattern 1: enum Name { ... };
+  pattern1 <- "enum\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{([^}]*)\\}\\s*;"
+  matches1 <- gregexpr(pattern1, code, perl = TRUE)
+  match_data1 <- regmatches(code, matches1)[[1]]
+  
+  # Pattern 2: typedef enum { ... } TypeName;
+  pattern2 <- "typedef\\s+enum\\s*\\{([^}]*)\\}\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;"
+  matches2 <- gregexpr(pattern2, code, perl = TRUE)
+  match_data2 <- regmatches(code, matches2)[[1]]
+  
+  # Helper to parse enum values
+  parse_enum_values <- function(body) {
+    # Split by comma
+    entries <- strsplit(body, ",")[[1]]
+    values <- list()
+    current_value <- 0L
+    
+    for (entry in entries) {
+      entry <- trimws(entry)
+      if (nzchar(entry)) {
+        # Check if has explicit value: NAME = VALUE
+        if (grepl("=", entry)) {
+          parts <- strsplit(entry, "=")[[1]]
+          name <- trimws(parts[1])
+          value_expr <- trimws(parts[2])
+          # Try to evaluate simple expressions
+          value <- tryCatch({
+            as.integer(eval(parse(text = value_expr)))
+          }, error = function(e) {
+            # If can't evaluate, use current_value
+            current_value
+          })
+          current_value <- value
+        } else {
+          name <- entry
+          value <- current_value
+        }
+        
+        values[[name]] <- as.integer(value)
+        current_value <- current_value + 1L
+      }
+    }
+    
+    values
+  }
+  
+  # Process pattern 1: enum Name { ... };
+  if (length(match_data1) > 0) {
+    enums1 <- lapply(match_data1, function(enum_def) {
+      m <- regexec(pattern1, enum_def, perl = TRUE)
+      parts <- regmatches(enum_def, m)[[1]]
+      
+      if (length(parts) >= 3) {
+        name <- trimws(parts[2])
+        body <- trimws(parts[3])
+        values <- parse_enum_values(body)
+        list(name = name, values = values)
+      } else {
+        NULL
+      }
+    })
+    
+    enums1 <- Filter(Negate(is.null), enums1)
+    for (e in enums1) {
+      if (length(e$values) > 0) {
+        result[[e$name]] <- unlist(e$values)
+      }
+    }
+  }
+  
+  # Process pattern 2: typedef enum { ... } TypeName;
+  if (length(match_data2) > 0) {
+    enums2 <- lapply(match_data2, function(enum_def) {
+      m <- regexec(pattern2, enum_def, perl = TRUE)
+      parts <- regmatches(enum_def, m)[[1]]
+      
+      if (length(parts) >= 3) {
+        body <- trimws(parts[2])
+        name <- trimws(parts[3])
+        values <- parse_enum_values(body)
+        list(name = name, values = values)
+      } else {
+        NULL
+      }
+    })
+    
+    enums2 <- Filter(Negate(is.null), enums2)
+    for (e in enums2) {
+      if (length(e$values) > 0) {
+        result[[e$name]] <- unlist(e$values)
+      }
+    }
+  }
+  
+  result
+}
+
+#' Extract union definitions from preprocessed C code
+#' @param preprocessed_lines Character vector from tcc_preprocess()
+#' @return List of union definitions (name -> list of fields)
+#' @export
+tcc_extract_unions <- function(preprocessed_lines) {
+  # Remove line markers
+  code_lines <- preprocessed_lines[!grepl("^#", preprocessed_lines)]
+  code <- paste(code_lines, collapse = " ")
+  
+  # Remove comments
+  code <- gsub("/\\*.*?\\*/", " ", code)
+  code <- gsub("//.*?($|;)", ";", code)
+  
+  result <- list()
+  
+  # Pattern 1: union Name { ... };
+  pattern1 <- "union\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{([^}]*)\\}\\s*;"
+  matches1 <- gregexpr(pattern1, code, perl = TRUE)
+  match_data1 <- regmatches(code, matches1)[[1]]
+  
+  # Pattern 2: typedef union { ... } TypeName;
+  pattern2 <- "typedef\\s+union\\s*\\{([^}]*)\\}\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;"
+  matches2 <- gregexpr(pattern2, code, perl = TRUE)
+  match_data2 <- regmatches(code, matches2)[[1]]
+  
+  # Helper function to parse union fields (same as struct)
+  parse_fields <- function(body) {
+    field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;"
+    field_matches <- gregexpr(field_pattern, body, perl = TRUE)
+    field_data <- regmatches(body, field_matches)[[1]]
+    
+    fields <- lapply(field_data, function(field) {
+      fm <- regexec(field_pattern, field, perl = TRUE)
+      fparts <- regmatches(field, fm)[[1]]
+      if (length(fparts) >= 3) {
+        list(
+          type = trimws(fparts[2]),
+          name = trimws(fparts[3])
+        )
+      } else {
+        NULL
+      }
+    })
+    
+    Filter(Negate(is.null), fields)
+  }
+  
+  # Process pattern 1: union Name { ... };
+  if (length(match_data1) > 0) {
+    unions1 <- lapply(match_data1, function(union_def) {
+      m <- regexec(pattern1, union_def, perl = TRUE)
+      parts <- regmatches(union_def, m)[[1]]
+      
+      if (length(parts) >= 3) {
+        name <- trimws(parts[2])
+        body <- trimws(parts[3])
+        fields <- parse_fields(body)
+        list(name = name, fields = fields)
+      } else {
+        NULL
+      }
+    })
+    
+    unions1 <- Filter(Negate(is.null), unions1)
+    for (u in unions1) {
+      result[[u$name]] <- u$fields
+    }
+  }
+  
+  # Process pattern 2: typedef union { ... } TypeName;
+  if (length(match_data2) > 0) {
+    unions2 <- lapply(match_data2, function(union_def) {
+      m <- regexec(pattern2, union_def, perl = TRUE)
+      parts <- regmatches(union_def, m)[[1]]
+      
+      if (length(parts) >= 3) {
+        body <- trimws(parts[2])
+        name <- trimws(parts[3])
+        fields <- parse_fields(body)
+        list(name = name, fields = fields)
+      } else {
+        NULL
+      }
+    })
+    
+    unions2 <- Filter(Negate(is.null), unions2)
+    for (u in unions2) {
+      result[[u$name]] <- u$fields
+    }
+  }
+  
+  result
+}
+
 #' Parse C header file and extract all declarations
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
-#' @return List with components: functions, structs, defines
+#' @return List with components: functions, structs, unions, enums, defines
 #' @export
 tcc_parse_header <- function(header_file, includes = NULL) {
   # Get preprocessed output
@@ -315,6 +682,8 @@ tcc_parse_header <- function(header_file, includes = NULL) {
   list(
     functions = tcc_extract_functions(preprocessed),
     structs = tcc_extract_structs(preprocessed),
+    unions = tcc_extract_unions(preprocessed),
+    enums = tcc_extract_enums(preprocessed),
     defines = tcc_extract_defines(header_file = header_file, preprocessed_lines = preprocessed)
   )
 }

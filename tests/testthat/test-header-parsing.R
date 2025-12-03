@@ -12,7 +12,7 @@ test_that("ffi_parse_header works on simple header", {
   result <- ffi_parse_header(header)
   
   expect_s3_class(result, "parsed_header")
-  expect_named(result, c("file", "defines", "structs", "functions"))
+  expect_named(result, c("file", "defines", "structs", "unions", "enums", "functions"))
   
   # Check defines
   expect_type(result$defines, "list")

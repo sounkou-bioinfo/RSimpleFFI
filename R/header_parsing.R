@@ -3,7 +3,7 @@
 #' Parse C header file and create structured result
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
-#' @return List with parsed components (file, defines, structs, functions)
+#' @return List with parsed components (file, defines, structs, unions, enums, functions)
 #' @export
 ffi_parse_header <- function(header_file, includes = NULL) {
   if (!tcc_available()) {
@@ -21,6 +21,8 @@ ffi_parse_header <- function(header_file, includes = NULL) {
   defines <- tcc_extract_defines(header_file = header_file, 
                                    preprocessed_lines = preprocessed)
   structs <- tcc_extract_structs(preprocessed)
+  unions <- tcc_extract_unions(preprocessed)
+  enums <- tcc_extract_enums(preprocessed)
   functions <- tcc_extract_functions(preprocessed)
   
   # Create structured result
@@ -29,6 +31,8 @@ ffi_parse_header <- function(header_file, includes = NULL) {
       file = header_file,
       defines = defines,
       structs = structs,
+      unions = unions,
+      enums = enums,
       functions = functions
     ),
     class = "parsed_header"
@@ -153,6 +157,117 @@ generate_struct_definition <- function(struct_name, struct_def) {
   # Generate struct code
   code <- c(
     sprintf("%s <- ffi_struct(", struct_name),
+    paste(field_defs, collapse = "\n"),
+    ")"
+  )
+  
+  paste(code, collapse = "\n")
+}
+
+#' Generate R enum definition from parsed enum
+#' @param enum_name Name of the enum
+#' @param enum_values Named integer vector of enum values
+#' @return Character vector with R code
+#' @export
+generate_enum_definition <- function(enum_name, enum_values) {
+  if (length(enum_values) == 0) {
+    return(NULL)
+  }
+  
+  # Create named value pairs
+  value_defs <- character()
+  for (i in seq_along(enum_values)) {
+    name <- names(enum_values)[i]
+    value <- enum_values[[i]]
+    escaped_name <- escape_r_name(name)
+    value_defs <- c(value_defs, sprintf("  %s = %dL", escaped_name, value))
+  }
+  
+  # Add commas to all except last
+  if (length(value_defs) > 1) {
+    value_defs[-length(value_defs)] <- paste0(value_defs[-length(value_defs)], ",")
+  }
+  
+  # Generate enum code
+  code <- c(
+    sprintf("%s <- ffi_enum(", enum_name),
+    paste(value_defs, collapse = "\n"),
+    ")"
+  )
+  
+  paste(code, collapse = "\n")
+}
+
+#' Generate R union definition from parsed union
+#' @param union_name Name of the union
+#' @param union_def Union definition (list of fields)
+#' @return Character vector with R code
+#' @export
+generate_union_definition <- function(union_name, union_def) {
+  if (length(union_def) == 0) {
+    return(NULL)
+  }
+  
+  # Map C types to FFI types (reuse logic from struct generation)
+  type_map <- c(
+    "int" = "ffi_int()",
+    "long" = "ffi_long()",
+    "short" = "ffi_short()",
+    "char" = "ffi_char()",
+    "float" = "ffi_float()",
+    "double" = "ffi_double()",
+    "void*" = "ffi_pointer()",
+    "void *" = "ffi_pointer()",
+    "size_t" = "ffi_size_t()",
+    "uint8_t" = "ffi_uint8()",
+    "uint16_t" = "ffi_uint16()",
+    "uint32_t" = "ffi_uint32()",
+    "uint64_t" = "ffi_uint64()",
+    "int8_t" = "ffi_int8()",
+    "int16_t" = "ffi_int16()",
+    "int32_t" = "ffi_int32()",
+    "int64_t" = "ffi_int64()",
+    "unsigned char" = "ffi_uint8()",
+    "unsigned short" = "ffi_uint16()",
+    "unsigned int" = "ffi_uint32()",
+    "unsigned long" = "ffi_uint64()"
+  )
+  
+  # Generate field definitions
+  field_defs <- character()
+  for (field in union_def) {
+    field_type <- trimws(field$type)
+    field_name <- field$name
+    
+    # Get FFI type
+    if (field_type %in% names(type_map)) {
+      ffi_type <- type_map[[field_type]]
+    } else if (grepl("\\*", field_type)) {
+      ffi_type <- "ffi_pointer()"
+    } else {
+      # Unknown type - add comment
+      ffi_type <- sprintf("ffi_pointer()  # %s", field_type)
+    }
+    
+    escaped_field_name <- escape_r_name(field_name)
+    field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
+  }
+  
+  # Add commas
+  if (length(field_defs) > 1) {
+    # Insert comma before comment if present, otherwise append
+    for (i in seq_along(field_defs)[-length(field_defs)]) {
+      if (grepl("#", field_defs[i])) {
+        field_defs[i] <- sub("  #", ",  #", field_defs[i])
+      } else {
+        field_defs[i] <- paste0(field_defs[i], ",")
+      }
+    }
+  }
+  
+  # Generate union code
+  code <- c(
+    sprintf("%s <- ffi_union(", union_name),
     paste(field_defs, collapse = "\n"),
     ")"
   )
@@ -365,6 +480,8 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
     "#  - char*: use ffi_string(), automatically converts to/from R character",
     "#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()",
     "#  - Struct fields: access with ffi_get_field() and ffi_set_field()",
+    "#  - Union fields: same as structs, all fields share memory at offset 0",
+    "#  - Enums: convert with ffi_enum_to_int() and ffi_int_to_enum()",
     ""
   )
   
@@ -466,6 +583,46 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
         code_sections$structs <- c(
           code_sections$structs,
           struct_code,
+          ""
+        )
+      }
+    }
+  }
+  
+  # Enum definitions
+  if (length(parsed_header$enums) > 0) {
+    code_sections$enums <- c(
+      "# Enum definitions",
+      ""
+    )
+    for (enum_name in names(parsed_header$enums)) {
+      enum_values <- parsed_header$enums[[enum_name]]
+      escaped_name <- escape_r_name(enum_name)
+      enum_code <- generate_enum_definition(escaped_name, enum_values)
+      if (!is.null(enum_code)) {
+        code_sections$enums <- c(
+          code_sections$enums,
+          enum_code,
+          ""
+        )
+      }
+    }
+  }
+  
+  # Union definitions
+  if (length(parsed_header$unions) > 0) {
+    code_sections$unions <- c(
+      "# Union definitions",
+      ""
+    )
+    for (union_name in names(parsed_header$unions)) {
+      union_def <- parsed_header$unions[[union_name]]
+      escaped_name <- escape_r_name(union_name)
+      union_code <- generate_union_definition(escaped_name, union_def)
+      if (!is.null(union_code)) {
+        code_sections$unions <- c(
+          code_sections$unions,
+          union_code,
           ""
         )
       }
