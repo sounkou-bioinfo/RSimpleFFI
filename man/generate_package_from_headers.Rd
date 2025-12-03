@@ -8,9 +8,12 @@ generate_package_from_headers(
   header_files,
   package_name,
   library_name,
-  output_dir = "R",
+  output_dir = package_name,
   use_system_lib = TRUE,
-  include_helpers = TRUE
+  include_helpers = TRUE,
+  authors_r = NULL,
+  title = NULL,
+  description = NULL
 )
 }
 \arguments{
@@ -20,17 +23,26 @@ generate_package_from_headers(
 
 \item{library_name}{Name of the shared library}
 
-\item{output_dir}{Directory to write generated files}
+\item{output_dir}{Directory to create the package (package root)}
 
 \item{use_system_lib}{Logical: search system library paths}
 
 \item{include_helpers}{Logical: include allocation helper functions}
+
+\item{authors_r}{Authors@R field for DESCRIPTION (R code string).
+Default creates a placeholder person().}
+
+\item{title}{Package title (default: auto-generated)}
+
+\item{description}{Package description (default: auto-generated)}
 }
 \value{
 Invisibly returns list of generated files
 }
 \description{
-Creates all necessary R files for a package wrapping a C library
+Creates all necessary R files for a package wrapping a C library.
+Generates a proper R package structure with DESCRIPTION, NAMESPACE,
+and R code in the R/ subfolder. Uses templates from inst/templates/.
 }
 \examples{
 \dontrun{
@@ -38,8 +50,9 @@ generate_package_from_headers(
   header_files = c("mylib.h", "mylib_utils.h"),
   package_name = "MyRPackage",
   library_name = "mylib",
-  output_dir = "MyRPackage/R",
-  use_system_lib = TRUE
+  output_dir = "MyRPackage",
+  use_system_lib = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
 }
 }

@@ -242,6 +242,45 @@ ffi_all_offsets(Mixed)
 ffi_field_info(Mixed, "b")
 ```
 
+### Struct Packing
+
+By default, structs use natural alignment (platform ABI). Use the `pack` parameter to control alignment, matching C's `#pragma pack(n)`:
+
+```{r}
+# Natural alignment: int (4) + padding (4) + double (8) = 16 bytes
+Natural <- ffi_struct(a = ffi_int(), b = ffi_double())
+ffi_sizeof(Natural)
+
+# Packed (no padding): int (4) + double (8) = 12 bytes
+Packed <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 1)
+ffi_sizeof(Packed)
+
+# Field offsets differ between packed and natural
+ffi_offsetof(Natural, "b")  # 8 (aligned to 8-byte boundary)
+ffi_offsetof(Packed, "b")   # 4 (immediately after int)
+```
+
+Pack values work like GCC/Clang/MSVC: each field's alignment is `min(natural_alignment, pack)`.
+
+```{r}
+# pack=2: fields aligned to at most 2-byte boundaries
+Pack2 <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 2)
+ffi_sizeof(Pack2)   # 12 bytes
+ffi_offsetof(Pack2, "b")  # 4
+
+# pack=4: useful for matching 32-bit packed structures
+Pack4 <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 4)
+ffi_sizeof(Pack4)  # 12 bytes
+```
+
+Use `ffi_all_offsets()` to see the complete layout:
+
+```{r}
+# Compare layouts
+ffi_all_offsets(Natural)  # a=0, b=8
+ffi_all_offsets(Packed)   # a=0, b=4
+```
+
 ### Enumerations
 
 Enums map named constants to integer values, useful for flags, status codes, or options:
@@ -903,11 +942,13 @@ generate_package_from_headers(
   package_name = "MyRPackage",
   library_name = "mylib",
   output_dir = tmpdir,
-  use_system_lib = TRUE
+  use_system_lib = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
 
-# Check what was created
+# Check what was created - proper R package structure
 list.files(tmpdir)
+list.files(file.path(tmpdir, "R"))
 ```
 
 ### Helper Functions

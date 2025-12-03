@@ -2,17 +2,44 @@
 
 ## New Features
 
+* Added `pack` parameter to `ffi_struct()` for controlling struct alignment:
+  - `pack = 1` for byte-packed structs (no padding)
+  - `pack = 2`, `4`, `8`, or `16` for specific alignment boundaries
+  - `pack = NULL` (default) uses natural alignment
+  - Matches GCC/Clang `#pragma pack(n)` and MSVC packing behavior
+
+* Added `ffi_packed_offset()` and `ffi_packed_size()` for computing packed struct layouts
+
 * Added bit-field helper functions for manual bit manipulation:
   - `ffi_pack_bits()` / `ffi_unpack_bits()` - pack/unpack multiple bit-fields
   - `ffi_extract_bit_field()` / `ffi_set_bit_field()` - single field operations
   - `ffi_create_bitfield_accessors()` - generate accessor functions for bit-field structs
+  - 64-bit bit-field support with `ffi_longlong()` / `ffi_ulonglong()` storage types
+  - Signed bit-field extraction with sign extension
 
 * Automatic bit-field detection and code generation:
   - Parser detects bit-field syntax (`: N`) in struct definitions
   - `generate_r_bindings()` auto-generates accessor code when bit-fields are present
   - Generated code includes usage examples showing `pack()`, `get()`, `set()` operations
 
+* Added typedef extraction from C headers:
+  - `tcc_extract_typedefs()` parses typedef definitions
+  - `generate_typedef_definition()` generates R code for typedefs
+  - Dependency-aware ordering via `sort_typedefs_by_dependency()`
+  - Automatic detection and filtering of unresolvable typedefs
+
 * Autogeneration of bindings using tinycc for preprocessing of header files
+
+## Improvements
+
+* Centralized C-to-FFI type mappings in `get_ffi_type_map()`:
+  - 300+ type mappings including cross-platform aliases
+  - Support for glibc, musl, macOS/Darwin, BSD, MSYS2/MinGW types
+  - Clang-specific typedefs and compiler builtins
+
+* Added `strip_type_qualifiers()` for handling const/volatile in type resolution
+
+* Added `get_resolvable_types()` and `get_c_type_keywords()` helper functions
 
 
 # RSimpleFFI 1.0.1

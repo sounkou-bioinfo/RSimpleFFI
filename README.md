@@ -279,6 +279,58 @@ ffi_field_info(Mixed, "b")
 #> FieldInfo('b' type=double, offset=8, size=8)
 ```
 
+### Struct Packing
+
+By default, structs use natural alignment (platform ABI). Use the `pack`
+parameter to control alignment, matching C’s `#pragma pack(n)`:
+
+``` r
+# Natural alignment: int (4) + padding (4) + double (8) = 16 bytes
+Natural <- ffi_struct(a = ffi_int(), b = ffi_double())
+ffi_sizeof(Natural)
+#> [1] 16
+
+# Packed (no padding): int (4) + double (8) = 12 bytes
+Packed <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 1)
+ffi_sizeof(Packed)
+#> [1] 12
+
+# Field offsets differ between packed and natural
+ffi_offsetof(Natural, "b")  # 8 (aligned to 8-byte boundary)
+#> [1] 8
+ffi_offsetof(Packed, "b")   # 4 (immediately after int)
+#> [1] 4
+```
+
+Pack values work like GCC/Clang/MSVC: each field’s alignment is
+`min(natural_alignment, pack)`.
+
+``` r
+# pack=2: fields aligned to at most 2-byte boundaries
+Pack2 <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 2)
+ffi_sizeof(Pack2)   # 12 bytes
+#> [1] 12
+ffi_offsetof(Pack2, "b")  # 4
+#> [1] 4
+
+# pack=4: useful for matching 32-bit packed structures
+Pack4 <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 4)
+ffi_sizeof(Pack4)  # 12 bytes
+#> [1] 12
+```
+
+Use `ffi_all_offsets()` to see the complete layout:
+
+``` r
+# Compare layouts
+ffi_all_offsets(Natural)  # a=0, b=8
+#> a b 
+#> 0 8
+ffi_all_offsets(Packed)   # a=0, b=4
+#> a b 
+#> 0 4
+```
+
 ### Enumerations
 
 Enums map named constants to integer values, useful for flags, status
@@ -596,10 +648,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1530020626
+#> [1] 789645863
 rand_value <- rand_func()
 rand_value
-#> [1] 661281513
+#> [1] 2063065658
 dll_unload(libc_path)
 ```
 
@@ -621,7 +673,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x646b26ff7e60>
+#> <pointer: 0x6466eea69360>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -712,8 +764,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   28.9µs    36738.    78.2KB        0
-#> 2 ffi_call     99.1µs  123.2µs     8170.    78.7KB        0
+#> 1 native_r       13µs   29.2µs    33643.    78.2KB      0  
+#> 2 ffi_call     97.1µs  109.7µs     8762.    78.7KB     88.5
 dll_unload(lib_path)
 ```
 
@@ -795,7 +847,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x646b298953f0>
+#> <pointer: 0x6466f4779230>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -827,8 +879,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r             2.6ms   2.91ms      356.    78.2KB     18.8
-#> 2 c_ffi         103µs 106.56µs     8643.    78.7KB      0
+#> 1 r            2.52ms   2.68ms      357.    78.2KB     18.8
+#> 2 c_ffi         102µs  112.8µs     8077.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -910,7 +962,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764780887
+#> [1] 1764782417
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -951,7 +1003,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 17:54:46.86768\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:20:16.647813\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1008,8 +1060,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file3e770cdc7518a.h
-#> # Generated on: 2025-12-03 17:54:46.887514
+#> # Auto-generated R bindings for file3f66a07f8bd5e.h
+#> # Generated on: 2025-12-03 18:20:16.669924
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -1059,30 +1111,14 @@ generate_package_from_headers(
   package_name = "MyRPackage",
   library_name = "mylib",
   output_dir = tmpdir,
-  use_system_lib = TRUE
+  use_system_lib = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
-#> Generating package initialization (zzz.R)...
-#> Processing header: /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h 
-#> Generating helper functions...
-#> 
-#> ========================================
-#> Package generation complete!
-#> ========================================
-#> 
-#> Generated files:
-#>   - /tmp/RtmpDA8zD7/file3e770c43b690e6/zzz.R 
-#>   - /tmp/RtmpDA8zD7/file3e770c43b690e6/simple_types_bindings.R 
-#>   - /tmp/RtmpDA8zD7/file3e770c43b690e6/helpers.R 
-#> 
-#> Next steps:
-#> 1. Review generated R files in /tmp/RtmpDA8zD7/file3e770c43b690e6 
-#> 2. Add DESCRIPTION file with dependencies: RSimpleFFI
-#> 3. Generate NAMESPACE with: devtools::document()
-#> 4. Build package: R CMD build
-#> 5. Install: R CMD INSTALL
 
-# Check what was created
+# Check what was created - proper R package structure
 list.files(tmpdir)
+#> [1] "DESCRIPTION" "LICENSE"     "NAMESPACE"   "R"
+list.files(file.path(tmpdir, "R"))
 #> [1] "helpers.R"               "simple_types_bindings.R"
 #> [3] "zzz.R"
 ```
