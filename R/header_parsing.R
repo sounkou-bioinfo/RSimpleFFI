@@ -136,10 +136,24 @@ generate_struct_definition <- function(struct_name, struct_def) {
     }
   }
   
+  # Add commas to all fields except the last one
+  # Need to insert comma BEFORE any comment (# ...)
+  if (length(field_defs) > 0) {
+    for (i in seq_along(field_defs)[-length(field_defs)]) {
+      if (grepl("#", field_defs[i])) {
+        # Has a comment - insert comma before the comment
+        field_defs[i] <- sub("  #", ",  #", field_defs[i])
+      } else {
+        # No comment - just append comma
+        field_defs[i] <- paste0(field_defs[i], ",")
+      }
+    }
+  }
+  
   # Generate struct code
   code <- c(
     sprintf("%s <- ffi_struct(", struct_name),
-    paste(field_defs, collapse = ",\n"),
+    paste(field_defs, collapse = "\n"),
     ")"
   )
   
@@ -292,8 +306,17 @@ generate_function_wrapper <- function(func_def) {
 #' @param name Variable name to escape
 #' @return Escaped name if needed, original otherwise
 escape_r_name <- function(name) {
-  # Check if name is valid R identifier
-  if (!grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) || grepl("^_", name)) {
+  # R reserved words that must be escaped
+  reserved_words <- c(
+    "if", "else", "repeat", "while", "function", "for", "in", "next", "break",
+    "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_",
+    "NA_complex_", "NA_character_"
+  )
+  
+  # Check if name is a reserved word or invalid R identifier
+  if (name %in% reserved_words ||
+      !grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) ||
+      grepl("^_", name)) {
     return(paste0("`", name, "`"))
   }
   name
@@ -333,8 +356,17 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       value <- parsed_header$defines[[name]]
       if (value != "") {
         escaped_name <- escape_r_name(name)
+        # Strip C literal suffixes (LL, ULL, L, U, etc.) from numeric values
+        # R doesn't recognize these and they cause parse errors
+        if (grepl("^[0-9.+-]+[LlUu]+$", value)) {
+          value <- sub("[LlUu]+$", "", value)
+          # If it's a large integer, add L suffix for R (but only one L)
+          if (grepl("^[0-9]+$", value) && !grepl("\\.", value)) {
+            value <- paste0(value, "L")
+          }
+        }
         # Quote value if it's not a number or already quoted
-        if (!grepl("^[0-9.+-]+[LlUu]*$", value) && !grepl("^['\"]", value)) {
+        if (!grepl("^[0-9.+-]+L?$", value) && !grepl("^['\"]", value)) {
           value <- paste0('"', value, '"')
         }
         code_sections$defines <- c(
