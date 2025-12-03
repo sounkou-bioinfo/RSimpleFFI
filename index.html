@@ -571,10 +571,10 @@
 <span><span class="va">rand_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dll_ffi_symbol.html">dll_ffi_symbol</a></span><span class="op">(</span><span class="st">"rand"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 501681217</span></span>
+<span><span class="co">#&gt; [1] 1784434733</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 1674072837</span></span>
+<span><span class="co">#&gt; [1] 648763151</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">libc_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -596,7 +596,7 @@
 <span></span>
 <span><span class="co"># Fill the buffer with ASCII 'A' (0x41)</span></span>
 <span><span class="fu">memset_fn</span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fl">0x41</span><span class="op">)</span>, <span class="fl">8L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x63729fc1dde0&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x574f804eacf0&gt;</span></span>
 <span></span>
 <span><span class="co"># Read back the buffer and print as string</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rawConversion.html" class="external-link">rawToChar</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fl">8L</span>, <span class="va">raw_type</span><span class="op">)</span><span class="op">)</span></span>
@@ -683,8 +683,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 native_r     21.1µs   54.1µs    12626.    78.2KB        0</span></span>
-<span><span class="co">#&gt; 2 ffi_call    223.3µs  299.6µs     2737.    78.7KB        0</span></span>
+<span><span class="co">#&gt; 1 native_r     14.1µs   36.9µs    24023.    78.2KB        0</span></span>
+<span><span class="co">#&gt; 2 ffi_call    139.6µs  160.8µs     5742.    78.7KB        0</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -765,7 +765,7 @@
 <span>      <span class="va">out_ptr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span><span class="va">out_ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x6372a135f300&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x574f84f7e850&gt;</span></span>
 <span><span class="va">c_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">out_ptr</span>, <span class="va">n_out</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run R convolution</span></span>
@@ -797,8 +797,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 r            4.78ms   5.28ms      178.    78.2KB     9.38</span></span>
-<span><span class="co">#&gt; 2 c_ffi       227.6µs 260.45µs     3640.    78.7KB     0</span></span>
+<span><span class="co">#&gt; 1 r            3.61ms   3.94ms      255.    78.2KB     13.4</span></span>
+<span><span class="co">#&gt; 2 c_ffi       179.1µs  207.5µs     4495.    78.7KB      0</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -866,7 +866,7 @@
 <span><span class="va">call_expr</span> <span class="op">&lt;-</span> <span class="fu">rf_lang1</span><span class="op">(</span><span class="va">sys_time_sym</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">rf_eval</span><span class="op">(</span><span class="va">call_expr</span>, <span class="va">R_GlobalEnv</span><span class="op">)</span></span>
 <span><span class="fu">rf_REAL_ELT</span><span class="op">(</span><span class="va">result</span>, <span class="fl">0L</span><span class="op">)</span>  <span class="co"># Unix timestamp</span></span>
-<span><span class="co">#&gt; [1] 1764770991</span></span>
+<span><span class="co">#&gt; [1] 1764771406</span></span>
 <span></span>
 <span><span class="co"># Call abs(-42) via C API</span></span>
 <span><span class="va">abs_sym</span> <span class="op">&lt;-</span> <span class="fu">rf_install</span><span class="op">(</span><span class="st">"abs"</span><span class="op">)</span></span>
@@ -905,7 +905,7 @@
 <span></span>
 <span><span class="co"># Preview first part of generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">code</span>, <span class="fl">1</span>, <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:09:50.59485\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"</span></span>
+<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:16:45.875274\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"</span></span>
 <span></span>
 <span><span class="co"># The generated code includes:</span></span>
 <span><span class="co"># - Constants from #define</span></span>
@@ -961,8 +961,8 @@
 <span></span>
 <span><span class="co"># Preview generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">libc_code</span>, <span class="fl">1</span>, <span class="fl">600</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # Auto-generated R bindings for filed431a72229a26.h</span></span>
-<span><span class="co">#&gt; # Generated on: 2025-12-03 18:09:50.641245</span></span>
+<span><span class="co">#&gt; # Auto-generated R bindings for filed55676a1940c2.h</span></span>
+<span><span class="co">#&gt; # Generated on: 2025-12-03 18:16:45.914382</span></span>
 <span><span class="co">#&gt; #</span></span>
 <span><span class="co">#&gt; # NOTE: These functions expect symbols to be available in the current process.</span></span>
 <span><span class="co">#&gt; # For external libraries, load them first with dll_load() or use dll_ffi_symbol().</span></span>
@@ -1023,12 +1023,12 @@
 <span><span class="co">#&gt; ========================================</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Generated files:</span></span>
-<span><span class="co">#&gt;   - /tmp/RtmpE14ucd/filed431a61a2ca/zzz.R </span></span>
-<span><span class="co">#&gt;   - /tmp/RtmpE14ucd/filed431a61a2ca/simple_types_bindings.R </span></span>
-<span><span class="co">#&gt;   - /tmp/RtmpE14ucd/filed431a61a2ca/helpers.R </span></span>
+<span><span class="co">#&gt;   - /tmp/RtmpdKDFAn/filed55677a20257a/zzz.R </span></span>
+<span><span class="co">#&gt;   - /tmp/RtmpdKDFAn/filed55677a20257a/simple_types_bindings.R </span></span>
+<span><span class="co">#&gt;   - /tmp/RtmpdKDFAn/filed55677a20257a/helpers.R </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Next steps:</span></span>
-<span><span class="co">#&gt; 1. Review generated R files in /tmp/RtmpE14ucd/filed431a61a2ca </span></span>
+<span><span class="co">#&gt; 1. Review generated R files in /tmp/RtmpdKDFAn/filed55677a20257a </span></span>
 <span><span class="co">#&gt; 2. Add DESCRIPTION file with dependencies: RSimpleFFI</span></span>
 <span><span class="co">#&gt; 3. Generate NAMESPACE with: devtools::document()</span></span>
 <span><span class="co">#&gt; 4. Build package: R CMD build</span></span>
@@ -1075,64 +1075,59 @@
 <div class="section level3">
 <h3 id="bit-fields">Bit-fields<a class="anchor" aria-label="anchor" href="#bit-fields"></a>
 </h3>
-<p>libffi does not support passing bit-field structs by value (they’re compiler/platform-specific). The workaround is to model them as packed integers.</p>
-<p><strong>The Problem:</strong> If C code has this:</p>
+<p>Bit-field structs are laid out by the compiler as compact integers. While they are structs in C, <code><a href="reference/ffi_struct.html">ffi_struct()</a></code> models each field as a separate full-sized type, mismatching the actual memory layout.</p>
+<p>Example:</p>
 <div class="sourceCode" id="cb39"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> <span class="op">{</span> <span class="dt">unsigned</span> enabled<span class="op">:</span><span class="dv">1</span><span class="op">;</span> mode<span class="op">:</span><span class="dv">3</span><span class="op">;</span> priority<span class="op">:</span><span class="dv">4</span><span class="op">;</span> reserved<span class="op">:</span><span class="dv">24</span><span class="op">;</span> <span class="op">}</span> SettingsFlags<span class="op">;</span></span>
-<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a><span class="dt">int</span> get_mode<span class="op">(</span>SettingsFlags settings<span class="op">);</span>           <span class="co">// Takes struct by value</span></span>
-<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>SettingsFlags increment<span class="op">(</span>SettingsFlags settings<span class="op">);</span> <span class="co">// Returns struct by value</span></span></code></pre></div>
-<p><strong>You cannot use <code><a href="reference/ffi_struct.html">ffi_struct()</a></code> for this.</strong> libffi will fail or give incorrect results.</p>
-<p><strong>The Solution:</strong> Treat bit-field structs as their underlying integer type. Calculate size by summing bit widths and rounding up (1, 2, 4, or 8 bytes). For <code>SettingsFlags</code> above: 1+3+4+24 = 32 bits → use <code><a href="reference/ffi_uint32.html">ffi_uint32()</a></code>.</p>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a><span class="dt">int</span> get_mode<span class="op">(</span>SettingsFlags settings<span class="op">);</span></span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>SettingsFlags increment<span class="op">(</span>SettingsFlags settings<span class="op">);</span></span></code></pre></div>
+<p>Modeling with <code>ffi_struct(enabled=ffi_int(), mode=ffi_int(), ...)</code> creates a 16-byte struct (4 fields × 4 bytes), but the C compiler packs <code>SettingsFlags</code> into 4 bytes (32 bits total).</p>
+<p>Model bit-field structs as their packed integer type. Sum bit widths (1+3+4+24 = 32 bits) and use the corresponding <code>ffi_uintN()</code> type (<code><a href="reference/ffi_uint32.html">ffi_uint32()</a></code> here).</p>
 <div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># C functions that internally use SettingsFlags struct but expose uint32_t interface:</span></span>
-<span><span class="co"># uint32_t test_bitfield_pack(int enabled, int mode, int priority);</span></span>
-<span><span class="co"># int test_bitfield_get_mode(uint32_t packed);</span></span>
-<span><span class="co"># uint32_t test_bitfield_toggle_enabled(uint32_t packed);</span></span>
+<code class="sourceCode R"><span><span class="co"># C functions that take/return SettingsFlags (32-bit bit-field struct)</span></span>
+<span><span class="co"># Model the struct as uint32_t in the FFI signature</span></span>
 <span></span>
-<span><span class="co"># Create a packed value</span></span>
+<span><span class="co"># Create a packed value (enabled=1, mode=5, priority=10)</span></span>
 <span><span class="va">pack_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_pack"</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">packed</span> <span class="op">&lt;-</span> <span class="fu">pack_fn</span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">5L</span>, <span class="fl">10L</span><span class="op">)</span>  <span class="co"># enabled=1, mode=5, priority=10</span></span>
+<span><span class="va">packed</span> <span class="op">&lt;-</span> <span class="fu">pack_fn</span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">5L</span>, <span class="fl">10L</span><span class="op">)</span></span>
 <span><span class="va">packed</span></span>
 <span><span class="co">#&gt; [1] 171</span></span>
 <span></span>
-<span><span class="co"># "Pass struct by value" - actually passing uint32_t</span></span>
-<span><span class="va">get_mode_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_get_mode"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu">get_mode_fn</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">packed</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Pass bit-field struct by value (as uint32_t)</span></span>
+<span><span class="va">get_mode_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_struct_get_mode"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">get_mode_fn</span><span class="op">(</span><span class="va">packed</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 5</span></span>
 <span></span>
-<span><span class="co"># "Return struct by value" - actually returning uint32_t</span></span>
-<span><span class="va">toggle_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_toggle_enabled"</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">toggled</span> <span class="op">&lt;-</span> <span class="fu">toggle_fn</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">packed</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Return bit-field struct by value (as uint32_t)</span></span>
+<span><span class="va">increment_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_struct_increment_priority"</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">incremented</span> <span class="op">&lt;-</span> <span class="fu">increment_fn</span><span class="op">(</span><span class="va">packed</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Verify the toggle worked</span></span>
-<span><span class="va">get_enabled_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_get_enabled"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu">get_enabled_fn</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">packed</span><span class="op">)</span><span class="op">)</span>    <span class="co"># Original: 1</span></span>
-<span><span class="co">#&gt; [1] 1</span></span>
-<span><span class="fu">get_enabled_fn</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">toggled</span><span class="op">)</span><span class="op">)</span>   <span class="co"># Toggled: 0</span></span>
-<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
-<p><strong>Passing by Pointer:</strong> Bit-field structs can also be passed by pointer:</p>
+<span><span class="co"># Verify the change</span></span>
+<span><span class="va">get_priority_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_get_priority"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">get_priority_fn</span><span class="op">(</span><span class="va">packed</span><span class="op">)</span>      <span class="co"># Original: 10</span></span>
+<span><span class="co">#&gt; [1] 10</span></span>
+<span><span class="fu">get_priority_fn</span><span class="op">(</span><span class="va">incremented</span><span class="op">)</span> <span class="co"># After increment: 11</span></span>
+<span><span class="co">#&gt; [1] 11</span></span></code></pre></div>
+<p>Bit-field structs passed by pointer:</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># C functions: int test_bitfield_struct_ptr_get_mode(SettingsFlags* settings);</span></span>
-<span><span class="co">#              void test_bitfield_struct_ptr_set_mode(SettingsFlags* settings, int mode);</span></span>
+<code class="sourceCode R"><span><span class="co"># C functions that take SettingsFlags* (pointer to bit-field struct)</span></span>
 <span></span>
-<span><span class="co"># Allocate buffer and pack initial value</span></span>
+<span><span class="co"># Allocate buffer for 32-bit bit-field struct</span></span>
 <span><span class="va">buf</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/alloc.html">ffi_alloc</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fl">1L</span><span class="op">)</span>  <span class="co"># uint32_t and int are same size</span></span>
 <span><span class="va">pack_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_pack"</span>, <span class="fu"><a href="reference/ffi_uint32.html">ffi_uint32</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">packed</span> <span class="op">&lt;-</span> <span class="fu">pack_fn</span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">3L</span>, <span class="fl">7L</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/ffi_fill_typed_buffer.html">ffi_fill_typed_buffer</a></span><span class="op">(</span><span class="va">buf</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">packed</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span></span>
-<span><span class="co"># Read field via pointer</span></span>
+<span><span class="co"># Read field via pointer to struct</span></span>
 <span><span class="va">ptr_get_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_struct_ptr_get_mode"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">ptr_get_fn</span><span class="op">(</span><span class="va">buf</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3</span></span>
 <span></span>
-<span><span class="co"># Modify field via pointer</span></span>
+<span><span class="co"># Modify field via pointer to struct</span></span>
 <span><span class="va">ptr_set_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_bitfield_struct_ptr_set_mode"</span>, <span class="fu"><a href="reference/ffi_void.html">ffi_void</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">ptr_set_fn</span><span class="op">(</span><span class="va">buf</span>, <span class="fl">5L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
-<span></span>
-<span><span class="co"># Verify modification</span></span>
-<span><span class="fu">ptr_get_fn</span><span class="op">(</span><span class="va">buf</span><span class="op">)</span></span>
+<span><span class="fu">ptr_get_fn</span><span class="op">(</span><span class="va">buf</span><span class="op">)</span>  <span class="co"># Verify: now 5</span></span>
 <span><span class="co">#&gt; [1] 5</span></span></code></pre></div>
 <p>For convenient access, use bitfield helpers:</p>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
