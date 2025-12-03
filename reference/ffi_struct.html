@@ -66,18 +66,19 @@ for default/natural alignment. When pack=1, fields are byte-aligned (no padding)
     <p>StructType object</p>
     </div>
     <div class="section level2">
-    <h2 id="packing-and-libffi">Packing and libffi<a class="anchor" aria-label="anchor" href="#packing-and-libffi"></a></h2>
+    <h2 id="packing">Packing<a class="anchor" aria-label="anchor" href="#packing"></a></h2>
 
 
-<p>The <code>pack</code> parameter affects how <code><a href="ffi_offsetof.html">ffi_offsetof()</a></code>, <code><a href="ffi_sizeof.html">ffi_sizeof()</a></code>,
-<code><a href="ffi_get_field.html">ffi_get_field()</a></code>, and <code><a href="ffi_set_field.html">ffi_set_field()</a></code> calculate field offsets and struct size.
-This is useful when working with memory buffers that use packed C structs.</p>
-<p><strong>Important</strong>: libffi internally always uses natural alignment when passing
-structs by value in function calls. Packed structs work correctly when:</p><ul><li><p>Reading/writing to memory buffers (ffi_alloc, ffi_get_field, ffi_set_field)</p></li>
-<li><p>Passing struct pointers to C functions (the C code handles the packed layout)</p></li>
-<li><p>Computing offsets for manual memory manipulation</p></li>
-</ul><p>However, passing a packed struct <strong>by value</strong> to ffi_call may not work correctly
-because libffi will use natural alignment for the call.</p>
+<p>The <code>pack</code> parameter affects <code><a href="ffi_offsetof.html">ffi_offsetof()</a></code>, <code><a href="ffi_sizeof.html">ffi_sizeof()</a></code>,
+<code><a href="ffi_get_field.html">ffi_get_field()</a></code>, and <code><a href="ffi_set_field.html">ffi_set_field()</a></code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="packed-structs-by-value">Packed Structs By Value<a class="anchor" aria-label="anchor" href="#packed-structs-by-value"></a></h2>
+
+
+<p>Packed structs cannot be passed by value - GCC compiles functions taking
+<code>__attribute__((packed))</code> structs to expect arguments on the stack, but
+libffi passes via registers. Use pointers instead.</p>
     </div>
 
     <div class="section level2">

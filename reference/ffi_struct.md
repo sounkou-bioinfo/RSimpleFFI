@@ -26,31 +26,20 @@ ffi_struct(..., pack = NULL)
 
 StructType object
 
-## Packing and libffi
+## Packing
 
-The `pack` parameter affects how
+The `pack` parameter affects
 [`ffi_offsetof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_offsetof.md),
 [`ffi_sizeof()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_sizeof.md),
 [`ffi_get_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_get_field.md),
 and
-[`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
-calculate field offsets and struct size. This is useful when working
-with memory buffers that use packed C structs.
+[`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md).
 
-**Important**: libffi internally always uses natural alignment when
-passing structs by value in function calls. Packed structs work
-correctly when:
+## Packed Structs By Value
 
-- Reading/writing to memory buffers (ffi_alloc, ffi_get_field,
-  ffi_set_field)
-
-- Passing struct pointers to C functions (the C code handles the packed
-  layout)
-
-- Computing offsets for manual memory manipulation
-
-However, passing a packed struct **by value** to ffi_call may not work
-correctly because libffi will use natural alignment for the call.
+Packed structs cannot be passed by value - GCC compiles functions taking
+`__attribute__((packed))` structs to expect arguments on the stack, but
+libffi passes via registers. Use pointers instead.
 
 ## Examples
 

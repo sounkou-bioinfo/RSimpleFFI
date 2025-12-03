@@ -343,6 +343,42 @@ ffi_all_offsets(Packed)   # a=0, b=4
 #> 0 4
 ```
 
+#### Packed Struct Limitation: By-Value Passing
+
+**Important**: Packed structs cannot be passed **by value** through
+libffi. This is a fundamental ABI limitation, not a bug.
+
+When GCC/Clang compile a C function that accepts a packed struct by
+value, they generate code expecting the argument on the **stack**. For
+non-packed structs, the x86-64 ABI passes small structs via
+**registers**. libffi implements standard ABI conventions and has no way
+to know a function was compiled with `__attribute__((packed))`.
+
+``` R
+┌─────────────────────────────────────────────────────────────────────┐
+│ At compile time: GCC sees __attribute__((packed))                   │
+│                  → generates code expecting data on STACK           │
+│                                                                     │
+│ At runtime:      libffi sees "struct with N bytes"                  │
+│                  → passes data via REGISTERS (standard ABI)         │
+│                                                                     │
+│ Result:          Function reads from wrong location → garbage data  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Packed structs work correctly when:**
+
+- Passing struct **pointers** to C functions (always works)
+- Reading/writing memory buffers (`ffi_alloc`, `ffi_get_field`,
+  `ffi_set_field`)
+- Computing offsets and sizes
+
+**Workarounds for by-value:**
+
+- Change C API to accept pointers: `void func(PackedStruct* p)`
+- Create a thin C wrapper that accepts a pointer and calls the by-value
+  function
+
 ### Enumerations
 
 Enums map named constants to integer values, useful for flags, status
@@ -664,10 +700,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 450612177
+#> [1] 156273257
 rand_value <- rand_func()
 rand_value
-#> [1] 753706019
+#> [1] 2072265712
 dll_unload(libc_path)
 ```
 
@@ -689,7 +725,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x619bc30d3a10>
+#> <pointer: 0x64ddd569f080>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -780,8 +816,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.2µs     29µs    35885.    78.2KB      0  
-#> 2 ffi_call     97.1µs    101µs     9296.    78.7KB     93.9
+#> 1 native_r     12.7µs   28.1µs    36645.    78.2KB       0 
+#> 2 ffi_call     90.6µs   95.1µs     9910.    78.7KB     100.
 dll_unload(lib_path)
 ```
 
@@ -863,7 +899,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x619bc9498620>
+#> <pointer: 0x64dddc32da10>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -895,8 +931,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.49ms   2.58ms      366.    78.2KB     19.3
-#> 2 c_ffi      106.47µs 127.72µs     7652.    78.7KB      0
+#> 1 r            2.43ms   2.53ms      377.    78.2KB     19.9
+#> 2 c_ffi      100.38µs 115.53µs     8433.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -980,7 +1016,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764784813
+#> [1] 1764793375
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1021,7 +1057,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 19:00:13.35094\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - Str"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 21:22:54.675298\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1078,8 +1114,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file1bf26eb8195d.h
-#> # Generated on: 2025-12-03 19:00:13.373576
+#> # Auto-generated R bindings for file189211753dc67.h
+#> # Generated on: 2025-12-03 21:22:54.69697
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
