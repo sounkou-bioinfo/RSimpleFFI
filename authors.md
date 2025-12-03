@@ -10,7 +10,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/sounkou-bioinfo/RSimpleFFI/blob/1.0.1/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/sounkou-bioinfo/RSimpleFFI/blob/main/DESCRIPTION)
 
 Toure S (2025). *RSimpleFFI: Simple Foreign Function Interface using
 'S7' and 'libffi'*. R package version 1.0.1,
