@@ -97,6 +97,20 @@ double test_varargs_sum_doubles(int nargs, ...);
 int test_varargs_mixed(const char* prefix, int nargs, ...);
 double test_varargs_mixed_types(int npairs, ...);
 
+/* 64-bit bitfield test functions */
+uint64_t test_bitfield64_pack(uint32_t low, uint32_t high);
+uint32_t test_bitfield64_get_low(uint64_t packed);
+uint32_t test_bitfield64_get_high(uint64_t packed);
+
+/* Signed bitfield test functions */
+uint16_t test_signed_bitfield_pack(int val4, int val5);
+int test_signed_bitfield_get4(uint16_t packed);
+int test_signed_bitfield_get5(uint16_t packed);
+
+/* Long long test functions */
+long long test_longlong_func(long long a);
+unsigned long long test_ulonglong_func(unsigned long long a);
+
 /* pointer utility functions */
 SEXP R_pointer_to_string(SEXP r_ptr);
 SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name);
@@ -108,6 +122,13 @@ SEXP R_read_global(SEXP r_ptr, SEXP r_type);
 SEXP R_ffi_closures_supported(void);
 SEXP R_create_closure(SEXP r_function, SEXP r_cif);
 SEXP R_get_closure_pointer(SEXP r_closure);
+
+/* 64-bit bitfield operations */
+SEXP R_ffi_pack_bits64(SEXP r_values, SEXP r_widths);
+SEXP R_ffi_unpack_bits64(SEXP r_packed, SEXP r_widths);
+SEXP R_ffi_extract_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
+SEXP R_ffi_extract_signed_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
+SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width);
 
 /* Registration table */
 static const R_CallMethodDef CallEntries[] = {
@@ -149,6 +170,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_ffi_closures_supported",  (DL_FUNC) &R_ffi_closures_supported,  0},
     {"R_create_closure",          (DL_FUNC) &R_create_closure,          2},
     {"R_get_closure_pointer",     (DL_FUNC) &R_get_closure_pointer,     1},
+    /* 64-bit bitfield operations */
+    {"R_ffi_pack_bits64",         (DL_FUNC) &R_ffi_pack_bits64,         2},
+    {"R_ffi_unpack_bits64",       (DL_FUNC) &R_ffi_unpack_bits64,       2},
+    {"R_ffi_extract_bits64",      (DL_FUNC) &R_ffi_extract_bits64,      3},
+    {"R_ffi_extract_signed_bits64",(DL_FUNC) &R_ffi_extract_signed_bits64, 3},
+    {"R_ffi_set_bits64",          (DL_FUNC) &R_ffi_set_bits64,          4},
     {NULL, NULL, 0}
 };
 
@@ -206,6 +233,20 @@ static const R_CMethodDef CEntries[] = {
     {"test_varargs_sum_doubles", (DL_FUNC) &test_varargs_sum_doubles, 1},
     {"test_varargs_mixed", (DL_FUNC) &test_varargs_mixed, 2},
     {"test_varargs_mixed_types", (DL_FUNC) &test_varargs_mixed_types, 1},
+    
+    // 64-bit bitfield test functions
+    {"test_bitfield64_pack", (DL_FUNC) &test_bitfield64_pack, 2},
+    {"test_bitfield64_get_low", (DL_FUNC) &test_bitfield64_get_low, 1},
+    {"test_bitfield64_get_high", (DL_FUNC) &test_bitfield64_get_high, 1},
+    
+    // Signed bitfield test functions
+    {"test_signed_bitfield_pack", (DL_FUNC) &test_signed_bitfield_pack, 2},
+    {"test_signed_bitfield_get4", (DL_FUNC) &test_signed_bitfield_get4, 1},
+    {"test_signed_bitfield_get5", (DL_FUNC) &test_signed_bitfield_get5, 1},
+    
+    // Long long test functions
+    {"test_longlong_func", (DL_FUNC) &test_longlong_func, 1},
+    {"test_ulonglong_func", (DL_FUNC) &test_ulonglong_func, 1},
     {NULL, NULL, 0}
 };
 

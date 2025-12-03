@@ -1742,3 +1742,141 @@ SEXP R_get_closure_pointer(SEXP r_closure) {
 }
 
 #endif /* FFI_CLOSURES */
+
+/* ==========================================================================
+ * 64-bit Bitfield Operations
+ * 
+ * R integers are 32-bit signed, which limits bitfield operations.
+ * These C functions handle 64-bit bitfield operations using doubles
+ * (which can exactly represent integers up to 2^53).
+ * ==========================================================================*/
+
+// Pack 64-bit bitfield: values and widths as integer vectors, returns double
+SEXP R_ffi_pack_bits64(SEXP r_values, SEXP r_widths) {
+    int n = LENGTH(r_values);
+    if (n != LENGTH(r_widths)) {
+        Rf_error("Length of values must match length of widths");
+    }
+    
+    int* values = INTEGER(r_values);
+    int* widths = INTEGER(r_widths);
+    
+    uint64_t result = 0;
+    int bit_offset = 0;
+    
+    for (int i = 0; i < n; i++) {
+        int width = widths[i];
+        if (width <= 0 || width > 64) {
+            Rf_error("Width must be between 1 and 64");
+        }
+        if (bit_offset + width > 64) {
+            Rf_error("Total bit width exceeds 64 bits");
+        }
+        
+        uint64_t mask = (width == 64) ? UINT64_MAX : ((1ULL << width) - 1);
+        uint64_t val = ((uint64_t)values[i]) & mask;
+        result |= (val << bit_offset);
+        bit_offset += width;
+    }
+    
+    return ScalarReal((double)result);
+}
+
+// Unpack 64-bit bitfield: packed_value as double, widths as integer vector
+// Returns integer vector (values truncated to 32-bit)
+SEXP R_ffi_unpack_bits64(SEXP r_packed, SEXP r_widths) {
+    uint64_t packed = (uint64_t)REAL(r_packed)[0];
+    int n = LENGTH(r_widths);
+    int* widths = INTEGER(r_widths);
+    
+    SEXP result = PROTECT(allocVector(INTSXP, n));
+    int* out = INTEGER(result);
+    
+    int bit_offset = 0;
+    for (int i = 0; i < n; i++) {
+        int width = widths[i];
+        if (width <= 0 || width > 64) {
+            UNPROTECT(1);
+            Rf_error("Width must be between 1 and 64");
+        }
+        
+        uint64_t mask = (width == 64) ? UINT64_MAX : ((1ULL << width) - 1);
+        uint64_t val = (packed >> bit_offset) & mask;
+        out[i] = (int)val;  // Truncate to 32-bit
+        bit_offset += width;
+    }
+    
+    UNPROTECT(1);
+    return result;
+}
+
+// Extract single 64-bit bitfield
+SEXP R_ffi_extract_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width) {
+    uint64_t packed = (uint64_t)REAL(r_packed)[0];
+    int offset = INTEGER(r_offset)[0];
+    int width = INTEGER(r_width)[0];
+    
+    if (width <= 0 || width > 64) {
+        Rf_error("Width must be between 1 and 64");
+    }
+    if (offset < 0 || offset >= 64) {
+        Rf_error("Offset must be between 0 and 63");
+    }
+    
+    uint64_t mask = (width == 64) ? UINT64_MAX : ((1ULL << width) - 1);
+    uint64_t val = (packed >> offset) & mask;
+    
+    return ScalarReal((double)val);
+}
+
+// Extract signed 64-bit bitfield (with sign extension)
+SEXP R_ffi_extract_signed_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width) {
+    uint64_t packed = (uint64_t)REAL(r_packed)[0];
+    int offset = INTEGER(r_offset)[0];
+    int width = INTEGER(r_width)[0];
+    
+    if (width <= 0 || width > 64) {
+        Rf_error("Width must be between 1 and 64");
+    }
+    if (offset < 0 || offset >= 64) {
+        Rf_error("Offset must be between 0 and 63");
+    }
+    
+    uint64_t mask = (width == 64) ? UINT64_MAX : ((1ULL << width) - 1);
+    uint64_t val = (packed >> offset) & mask;
+    
+    // Sign extend if the high bit is set
+    if (width < 64) {
+        uint64_t sign_bit = 1ULL << (width - 1);
+        if (val & sign_bit) {
+            // Sign extend: set all bits above width
+            val |= ~mask;
+        }
+    }
+    
+    // Return as signed integer (via double for range)
+    int64_t signed_val = (int64_t)val;
+    return ScalarReal((double)signed_val);
+}
+
+// Set single 64-bit bitfield
+SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width) {
+    uint64_t packed = (uint64_t)REAL(r_packed)[0];
+    int64_t value = (int64_t)REAL(r_value)[0];
+    int offset = INTEGER(r_offset)[0];
+    int width = INTEGER(r_width)[0];
+    
+    if (width <= 0 || width > 64) {
+        Rf_error("Width must be between 1 and 64");
+    }
+    if (offset < 0 || offset >= 64) {
+        Rf_error("Offset must be between 0 and 63");
+    }
+    
+    uint64_t mask = (width == 64) ? UINT64_MAX : ((1ULL << width) - 1);
+    uint64_t clear_mask = ~(mask << offset);
+    uint64_t set_val = ((uint64_t)value & mask) << offset;
+    
+    uint64_t result = (packed & clear_mask) | set_val;
+    return ScalarReal((double)result);
+}

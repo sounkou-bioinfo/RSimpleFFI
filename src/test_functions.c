@@ -604,3 +604,88 @@ SettingsFlags test_bitfield_struct_increment_priority(SettingsFlags settings) {
     settings.priority = (settings.priority + 1) & 0xF;
     return settings;
 }
+
+
+/* ==========================================================================
+ * 64-bit Bitfield Test Functions
+ * 
+ * Test functions for verifying 64-bit bitfield operations.
+ * ==========================================================================*/
+
+/* 64-bit bitfield struct for testing */
+typedef struct {
+    uint64_t low32 : 32;
+    uint64_t high32 : 32;
+} Split64;
+
+typedef union {
+    Split64 fields;
+    uint64_t packed;
+} Split64Union;
+
+/* Create packed 64-bit value from two 32-bit parts */
+uint64_t test_bitfield64_pack(uint32_t low, uint32_t high) {
+    Split64Union u;
+    u.packed = 0;
+    u.fields.low32 = low;
+    u.fields.high32 = high;
+    return u.packed;
+}
+
+/* Extract low 32 bits from packed 64-bit value */
+uint32_t test_bitfield64_get_low(uint64_t packed) {
+    Split64Union u;
+    u.packed = packed;
+    return (uint32_t)u.fields.low32;
+}
+
+/* Extract high 32 bits from packed 64-bit value */
+uint32_t test_bitfield64_get_high(uint64_t packed) {
+    Split64Union u;
+    u.packed = packed;
+    return (uint32_t)u.fields.high32;
+}
+
+/* Signed bitfield test struct */
+typedef struct {
+    int8_t signed4 : 4;   /* -8 to 7 */
+    int8_t signed5 : 5;   /* -16 to 15 */
+    int8_t padding : 7;
+} SignedBitfield;
+
+typedef union {
+    SignedBitfield fields;
+    uint16_t packed;
+} SignedBitfieldUnion;
+
+/* Pack signed values into bitfield struct */
+uint16_t test_signed_bitfield_pack(int val4, int val5) {
+    SignedBitfieldUnion u;
+    u.packed = 0;
+    u.fields.signed4 = (int8_t)val4;
+    u.fields.signed5 = (int8_t)val5;
+    return u.packed;
+}
+
+/* Extract signed 4-bit value */
+int test_signed_bitfield_get4(uint16_t packed) {
+    SignedBitfieldUnion u;
+    u.packed = packed;
+    return u.fields.signed4;
+}
+
+/* Extract signed 5-bit value */
+int test_signed_bitfield_get5(uint16_t packed) {
+    SignedBitfieldUnion u;
+    u.packed = packed;
+    return u.fields.signed5;
+}
+
+/* Long long test functions */
+long long test_longlong_func(long long a) {
+    return a * 2;
+}
+
+unsigned long long test_ulonglong_func(unsigned long long a) {
+    return a * 3;
+}

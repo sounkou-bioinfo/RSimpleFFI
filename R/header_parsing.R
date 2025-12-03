@@ -18,14 +18,14 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
       fields[[field_name]] <- field_width
     }
   }
-  
+
   if (length(fields) == 0) {
     return(sprintf("# %s - bit-field struct (see ?ffi_create_bitfield_accessors)", struct_name))
   }
-  
+
   # Generate code
   field_list <- paste(sprintf("  %s = %dL", names(fields), unlist(fields)), collapse = ",\n")
-  
+
   code <- sprintf(
     "# Bit-field accessor for %s\n# C struct has bit-fields: %s\n%s <- ffi_create_bitfield_accessors(\n  list(\n%s\n  )\n)\n# Usage:\n#  packed <- %s$pack(list(%s))\n#  %s$get(packed, \"%s\")\n#  packed <- %s$set(packed, \"%s\", new_value)",
     struct_name,
@@ -39,7 +39,7 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
     struct_name,
     names(fields)[1]
   )
-  
+
   code
 }
 
@@ -52,22 +52,24 @@ ffi_parse_header <- function(header_file, includes = NULL) {
   if (!tcc_available()) {
     stop("TinyCC not available. Package may not be installed correctly.")
   }
-  
+
   if (!file.exists(header_file)) {
     stop("Header file not found: ", header_file)
   }
-  
+
   # Use TCC to parse header
   preprocessed <- tcc_preprocess(header_file, includes = includes)
-  
+
   # Extract components
-  defines <- tcc_extract_defines(header_file = header_file, 
-                                   preprocessed_lines = preprocessed)
+  defines <- tcc_extract_defines(
+    header_file = header_file,
+    preprocessed_lines = preprocessed
+  )
   structs <- tcc_extract_structs(preprocessed)
   unions <- tcc_extract_unions(preprocessed)
   enums <- tcc_extract_enums(preprocessed)
   functions <- tcc_extract_functions(preprocessed)
-  
+
   # Create structured result
   structure(
     list(
@@ -91,11 +93,11 @@ generate_struct_definition <- function(struct_name, struct_def) {
   if (length(struct_def) == 0) {
     return(NULL)
   }
-  
+
   # Check for bit-field warning
   bitfield_warning <- attr(struct_def, "bitfield_warning")
   has_bitfields <- !is.null(bitfield_warning) && bitfield_warning$has_bitfields
-  
+
   if (has_bitfields) {
     warning(
       sprintf(
@@ -105,11 +107,11 @@ generate_struct_definition <- function(struct_name, struct_def) {
       ),
       call. = FALSE
     )
-    
+
     # Generate bit-field accessor code instead of struct
     return(generate_bitfield_accessor_code(struct_name, bitfield_warning$fields))
   }
-  
+
   # Map C types to FFI types
   type_map <- c(
     "int" = "ffi_int()",
@@ -132,25 +134,35 @@ generate_struct_definition <- function(struct_name, struct_def) {
     "unsigned char" = "ffi_uint8()",
     "unsigned short" = "ffi_uint16()",
     "unsigned int" = "ffi_uint32()",
-    "unsigned long" = "ffi_uint64()"
+    "unsigned long" = "ffi_ulong()",
+    "long long" = "ffi_longlong()",
+    "long long int" = "ffi_longlong()",
+    "signed long long" = "ffi_longlong()",
+    "signed long long int" = "ffi_longlong()",
+    "unsigned long long" = "ffi_ulonglong()",
+    "unsigned long long int" = "ffi_ulonglong()",
+    "ssize_t" = "ffi_ssize_t()",
+    "ptrdiff_t" = "ffi_ssize_t()",
+    "bool" = "ffi_bool()",
+    "_Bool" = "ffi_bool()"
   )
-  
+
   # Generate field definitions
   field_defs <- character()
   for (field in struct_def) {
     field_type <- trimws(field$type)
     field_name <- field$name
-    
+
     # Handle arrays: name[N] or name[N][M] -> extract name and sizes
     # Match patterns like name[10] or matrix[3][3]
     if (grepl("\\[", field_name)) {
       # Extract base name and array dimensions
       base_name <- sub("\\[.*", "", field_name)
-      
+
       # Extract all array dimensions
-      dimensions <- regmatches(field_name, gregexpr("\\[([0-9]+)\\]", field_name, perl=TRUE))[[1]]
+      dimensions <- regmatches(field_name, gregexpr("\\[([0-9]+)\\]", field_name, perl = TRUE))[[1]]
       dimensions <- as.integer(gsub("\\[|\\]", "", dimensions))
-      
+
       if (length(dimensions) > 0) {
         # Get base type
         if (field_type %in% names(type_map)) {
@@ -158,16 +170,16 @@ generate_struct_definition <- function(struct_name, struct_def) {
         } else if (grepl("\\*", field_type)) {
           base_type <- "ffi_pointer()"
         } else {
-          base_type <- paste0("ffi_pointer()")  # Will add comment separately
+          base_type <- paste0("ffi_pointer()") # Will add comment separately
           base_comment <- field_type
         }
-        
+
         # Build nested array types for multi-dimensional arrays
         ffi_type <- base_type
         for (dim in rev(dimensions)) {
           ffi_type <- sprintf("ffi_array_type(%s, %dL)", ffi_type, dim)
         }
-        
+
         # Escape field name if needed
         escaped_field_name <- escape_r_name(base_name)
         if (exists("base_comment", inherits = FALSE)) {
@@ -190,7 +202,7 @@ generate_struct_definition <- function(struct_name, struct_def) {
         ffi_type <- "ffi_pointer()"
         field_comment <- field_type
       }
-      
+
       # Escape field name if needed
       escaped_field_name <- escape_r_name(field_name)
       if (!is.null(field_comment)) {
@@ -200,7 +212,7 @@ generate_struct_definition <- function(struct_name, struct_def) {
       }
     }
   }
-  
+
   # Add commas to all fields except the last one
   # Need to insert comma BEFORE any comment (# ...)
   if (length(field_defs) > 0) {
@@ -214,14 +226,14 @@ generate_struct_definition <- function(struct_name, struct_def) {
       }
     }
   }
-  
+
   # Generate struct code
   code <- c(
     sprintf("%s <- ffi_struct(", struct_name),
     paste(field_defs, collapse = "\n"),
     ")"
   )
-  
+
   paste(code, collapse = "\n")
 }
 
@@ -234,7 +246,7 @@ generate_enum_definition <- function(enum_name, enum_values) {
   if (length(enum_values) == 0) {
     return(NULL)
   }
-  
+
   # Create named value pairs
   value_defs <- character()
   for (i in seq_along(enum_values)) {
@@ -243,19 +255,19 @@ generate_enum_definition <- function(enum_name, enum_values) {
     escaped_name <- escape_r_name(name)
     value_defs <- c(value_defs, sprintf("  %s = %dL", escaped_name, value))
   }
-  
+
   # Add commas to all except last
   if (length(value_defs) > 1) {
     value_defs[-length(value_defs)] <- paste0(value_defs[-length(value_defs)], ",")
   }
-  
+
   # Generate enum code
   code <- c(
     sprintf("%s <- ffi_enum(", enum_name),
     paste(value_defs, collapse = "\n"),
     ")"
   )
-  
+
   paste(code, collapse = "\n")
 }
 
@@ -268,7 +280,7 @@ generate_union_definition <- function(union_name, union_def) {
   if (length(union_def) == 0) {
     return(NULL)
   }
-  
+
   # Map C types to FFI types (reuse logic from struct generation)
   type_map <- c(
     "int" = "ffi_int()",
@@ -293,13 +305,13 @@ generate_union_definition <- function(union_name, union_def) {
     "unsigned int" = "ffi_uint32()",
     "unsigned long" = "ffi_uint64()"
   )
-  
+
   # Generate field definitions
   field_defs <- character()
   for (field in union_def) {
     field_type <- trimws(field$type)
     field_name <- field$name
-    
+
     # Get FFI type
     if (field_type %in% names(type_map)) {
       ffi_type <- type_map[[field_type]]
@@ -309,11 +321,11 @@ generate_union_definition <- function(union_name, union_def) {
       # Unknown type - add comment
       ffi_type <- sprintf("ffi_pointer()  # %s", field_type)
     }
-    
+
     escaped_field_name <- escape_r_name(field_name)
     field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
   }
-  
+
   # Add commas
   if (length(field_defs) > 1) {
     # Insert comma before comment if present, otherwise append
@@ -325,14 +337,14 @@ generate_union_definition <- function(union_name, union_def) {
       }
     }
   }
-  
+
   # Generate union code
   code <- c(
     sprintf("%s <- ffi_union(", union_name),
     paste(field_defs, collapse = "\n"),
     ")"
   )
-  
+
   paste(code, collapse = "\n")
 }
 
@@ -346,13 +358,13 @@ escape_r_name <- function(name) {
     "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_",
     "NA_complex_", "NA_character_"
   )
-  
+
   # Check if name is a reserved word or invalid R identifier
   # Single underscore or names starting with underscore need backticks
   if (name %in% reserved_words ||
-      name == "_" ||
-      !grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) ||
-      grepl("^_", name)) {
+    name == "_" ||
+    !grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) ||
+    grepl("^_", name)) {
     return(paste0("`", name, "`"))
   }
   name
@@ -366,7 +378,7 @@ generate_function_wrapper <- function(func_def) {
   func_name <- func_def$name
   return_type <- func_def$return_type
   params <- func_def$params
-  
+
   # Map C type to FFI type call
   type_map <- c(
     "int" = "ffi_int()",
@@ -380,6 +392,12 @@ generate_function_wrapper <- function(func_def) {
     "unsigned char" = "ffi_uchar()",
     "unsigned short" = "ffi_ushort()",
     "unsigned long" = "ffi_ulong()",
+    "long long" = "ffi_longlong()",
+    "long long int" = "ffi_longlong()",
+    "signed long long" = "ffi_longlong()",
+    "signed long long int" = "ffi_longlong()",
+    "unsigned long long" = "ffi_ulonglong()",
+    "unsigned long long int" = "ffi_ulonglong()",
     "int8_t" = "ffi_int8()",
     "int16_t" = "ffi_int16()",
     "int32_t" = "ffi_int32()",
@@ -389,16 +407,18 @@ generate_function_wrapper <- function(func_def) {
     "uint32_t" = "ffi_uint32()",
     "uint64_t" = "ffi_uint64()",
     "size_t" = "ffi_size_t()",
+    "ssize_t" = "ffi_ssize_t()",
+    "ptrdiff_t" = "ffi_ssize_t()",
     "bool" = "ffi_bool()",
     "_Bool" = "ffi_bool()",
     "char*" = "ffi_string()",
     "const char*" = "ffi_string()"
   )
-  
+
   # Function to map a C type to FFI type (handles both "type name" and "type")
   map_type_from_string <- function(type_string) {
     type_string <- trimws(type_string)
-    
+
     # Check for pointer types (treat as ffi_pointer())
     if (grepl("\\*", type_string) && !grepl("char\\s*\\*", type_string)) {
       return("ffi_pointer()")
@@ -410,49 +430,51 @@ generate_function_wrapper <- function(func_def) {
     # Default to pointer for unknown types (likely structs)
     return("ffi_pointer()")
   }
-  
+
   # Function to extract type from "type varname" parameter
   extract_type <- function(param_decl) {
     param_decl <- trimws(param_decl)
     tokens <- strsplit(param_decl, "\\s+")[[1]]
     if (length(tokens) < 2) {
-      return(param_decl)  # No variable name, just type
+      return(param_decl) # No variable name, just type
     }
     # Type is all tokens except the last (which is the variable name)
     type_part <- paste(tokens[-length(tokens)], collapse = " ")
     return(trimws(type_part))
   }
-  
+
   # Parse parameters
   param_parts <- strsplit(params, ",")[[1]]
   param_names <- character()
   param_types_c <- character()
   param_types_ffi <- character()
-  
+
   # Common C type keywords (to detect unnamed parameters)
-  c_types <- c("void", "char", "short", "int", "long", "float", "double", 
-               "signed", "unsigned", "const", "volatile", "struct", "union", 
-               "enum", "size_t", "ssize_t", "ptrdiff_t", "wchar_t",
-               "int8_t", "int16_t", "int32_t", "int64_t",
-               "uint8_t", "uint16_t", "uint32_t", "uint64_t",
-               "FILE", "_Bool", "bool")
-  
+  c_types <- c(
+    "void", "char", "short", "int", "long", "float", "double",
+    "signed", "unsigned", "const", "volatile", "struct", "union",
+    "enum", "size_t", "ssize_t", "ptrdiff_t", "wchar_t",
+    "int8_t", "int16_t", "int32_t", "int64_t",
+    "uint8_t", "uint16_t", "uint32_t", "uint64_t",
+    "FILE", "_Bool", "bool"
+  )
+
   for (part in param_parts) {
     part <- trimws(part)
     if (part == "" || part == "void") next
-    
+
     # Extract parameter name (last word, remove * and [])
     tokens <- strsplit(part, "\\s+")[[1]]
     if (length(tokens) > 0) {
       param_name <- tokens[length(tokens)]
       # Remove pointers, arrays, and clean up
-      param_name <- gsub("\\*+", "", param_name)  # Remove *
-      param_name <- gsub("\\[.*?\\]", "", param_name)  # Remove []
+      param_name <- gsub("\\*+", "", param_name) # Remove *
+      param_name <- gsub("\\[.*?\\]", "", param_name) # Remove []
       param_name <- trimws(param_name)
-      
+
       # Check if param_name is actually a C type (meaning no variable name was provided)
       is_type_keyword <- param_name %in% c_types
-      
+
       if (param_name != "" && !grepl("^[0-9]", param_name) && !is_type_keyword) {
         # Check for duplicate names and make unique
         if (param_name %in% param_names) {
@@ -467,20 +489,20 @@ generate_function_wrapper <- function(func_def) {
         # Generate a name for unnamed parameters or type keywords
         param_names <- c(param_names, paste0("arg", length(param_names) + 1))
       }
-      
+
       # Type is everything except last token
       param_type_c <- extract_type(part)
       param_types_c <- c(param_types_c, param_type_c)
       param_types_ffi <- c(param_types_ffi, map_type_from_string(param_type_c))
     }
   }
-  
+
   # Map return type (it's just a type, no variable name)
   return_ffi <- map_type_from_string(return_type)
-  
+
   # Generate R function
   r_func_name <- paste0("r_", func_name)
-  
+
   # Build ffi_function call
   if (length(param_types_ffi) == 0) {
     ffi_call <- sprintf('  .fn <- ffi_function("%s", %s)', func_name, return_ffi)
@@ -489,21 +511,25 @@ generate_function_wrapper <- function(func_def) {
   } else {
     ffi_params <- paste(param_types_ffi, collapse = ", ")
     ffi_call <- sprintf('  .fn <- ffi_function("%s", %s, %s)', func_name, return_ffi, ffi_params)
-    signature <- paste0(r_func_name, " <- function(", 
-                        paste(param_names, collapse = ", "), 
-                        ")")
+    signature <- paste0(
+      r_func_name, " <- function(",
+      paste(param_names, collapse = ", "),
+      ")"
+    )
     call_line <- sprintf("  .fn(%s)", paste(param_names, collapse = ", "))
   }
-  
+
   # Add parameter documentation with C types
   param_docs <- character()
   if (length(param_names) > 0) {
     for (i in seq_along(param_names)) {
-      param_docs <- c(param_docs, 
-                      sprintf("#' @param %s %s", param_names[i], param_types_c[i]))
+      param_docs <- c(
+        param_docs,
+        sprintf("#' @param %s %s", param_names[i], param_types_c[i])
+      )
     }
   }
-  
+
   code <- c(
     sprintf("#' Wrapper for C function: %s %s(%s)", return_type, func_name, params),
     "#'",
@@ -516,7 +542,7 @@ generate_function_wrapper <- function(func_def) {
     call_line,
     "}"
   )
-  
+
   paste(code, collapse = "\n")
 }
 
@@ -527,7 +553,7 @@ generate_function_wrapper <- function(func_def) {
 #' @export
 generate_r_bindings <- function(parsed_header, output_file = NULL) {
   code_sections <- list()
-  
+
   # Header comment
   code_sections$header <- c(
     sprintf("# Auto-generated R bindings for %s", basename(parsed_header$file)),
@@ -545,7 +571,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
     "#  - Enums: convert with ffi_enum_to_int() and ffi_int_to_enum()",
     ""
   )
-  
+
   # Defines as R constants (escape invalid names with backticks)
   if (length(parsed_header$defines) > 0) {
     code_sections$defines <- c(
@@ -556,17 +582,17 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       value <- parsed_header$defines[[name]]
       if (value != "") {
         escaped_name <- escape_r_name(name)
-        
+
         # Clean up C-specific patterns that R doesn't understand
-        
+
         # 1. String concatenation: "hello" "world" -> "helloworld"
         if (grepl('^"[^"]*"\\s+"[^"]*"', value)) {
           # Extract all string literals and concatenate
           strings <- regmatches(value, gregexpr('"[^"]*"', value))[[1]]
           # Remove quotes, concatenate, re-quote
-          value <- paste0('"', paste(gsub('"', '', strings), collapse = ''), '"')
+          value <- paste0('"', paste(gsub('"', "", strings), collapse = ""), '"')
         }
-        
+
         # 2. Character literals: '\n' -> "\n" (R uses strings not chars)
         # Need to handle escape sequences carefully
         if (grepl("^'.*'$", value)) {
@@ -578,7 +604,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
           # And \" is not needed in single-quote context, but we're using double quotes
           value <- paste0('"', content, '"')
         }
-        
+
         # 3. Binary literals: 0b11111111 -> convert to decimal or hex
         if (grepl("^0[bB][01]+$", value)) {
           # Convert binary to decimal
@@ -586,14 +612,14 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
           decimal_val <- sum(as.integer(strsplit(binary_str, "")[[1]]) * 2^(nchar(binary_str):1 - 1))
           value <- as.character(decimal_val)
         }
-        
+
         # 4. Digit separators: 1'000'000 -> 1000000
         if (grepl("'", value)) {
           value <- gsub("'", "", value)
         }
-        
+
         # 5. Negative hex: -0x80000000 -> keep as is, will be quoted later
-        
+
         # 6. Strip C literal suffixes from numeric values
         # Handle hex values: 0x123ULL, 0xabcLL, etc. - strip U and L suffixes only
         if (grepl("^0[xX][0-9a-fA-F]+[UuLl]+$", value)) {
@@ -615,12 +641,12 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
         else if (grepl("^[0-9.+-]+[eE][+-]?[0-9]+[LlUuFf]*$", value)) {
           value <- sub("[LlUuFf]+$", "", value)
         }
-        
+
         # Quote value if it's not a number or already quoted
         if (!grepl("^(0[xX][0-9a-fA-F]+|[0-9.+-]+([eE][+-]?[0-9]+)?L?)$", value) && !grepl("^['\"]", value)) {
           value <- paste0('"', value, '"')
         }
-        
+
         code_sections$defines <- c(
           code_sections$defines,
           sprintf("%s <- %s", escaped_name, value)
@@ -629,7 +655,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
     }
     code_sections$defines <- c(code_sections$defines, "")
   }
-  
+
   # Struct definitions (escape invalid names with backticks)
   if (length(parsed_header$structs) > 0) {
     code_sections$structs <- c(
@@ -649,7 +675,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       }
     }
   }
-  
+
   # Enum definitions
   if (length(parsed_header$enums) > 0) {
     code_sections$enums <- c(
@@ -669,7 +695,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       }
     }
   }
-  
+
   # Union definitions
   if (length(parsed_header$unions) > 0) {
     code_sections$unions <- c(
@@ -689,19 +715,19 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       }
     }
   }
-  
+
   # Function wrappers
   if (nrow(parsed_header$functions) > 0) {
     code_sections$functions <- c(
       "# Function wrappers",
       ""
     )
-    
+
     # Filter out system functions (those starting with extern)
     user_funcs <- parsed_header$functions[
       !grepl("^extern", parsed_header$functions$return_type),
     ]
-    
+
     for (i in seq_len(nrow(user_funcs))) {
       func_code <- generate_function_wrapper(user_funcs[i, ])
       code_sections$functions <- c(
@@ -711,18 +737,18 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       )
     }
   }
-  
+
   # Combine all sections
   all_code <- unlist(code_sections)
-  
+
   # Combine into single string for easier use
   code_string <- paste(all_code, collapse = "\n")
-  
+
   # Write to file if requested
   if (!is.null(output_file)) {
     writeLines(all_code, output_file)
     message("Generated R bindings written to: ", output_file)
   }
-  
+
   code_string
 }
