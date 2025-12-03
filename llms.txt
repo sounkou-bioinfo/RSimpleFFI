@@ -12,7 +12,7 @@ package for unix systems. RSimpleFFI is inspired by the [Rffi
 package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It
 builds on the same structure with S7 classes. As an experimental
 feature, the package includes automatic R binding generation from C
-header files using the [TinyCC](https://github.com/TinyCC/tinycc)
+header files using the [tinycc](https://github.com/tinycc/tinycc)
 compiler, allowing you to parse C headers and automatically generate R
 wrapper functions for easy package development. Note that this is a
 wrapper of the `tinycc` compiler cli and not the in memory compilation
@@ -531,10 +531,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 985061480
+#> [1] 902957152
 rand_value <- rand_func()
 rand_value
-#> [1] 1018010228
+#> [1] 1114337491
 dll_unload(libc_path)
 ```
 
@@ -556,7 +556,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x63d2fd3fb840>
+#> <pointer: 0x5f31be3ac840>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -647,8 +647,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     14.7µs   31.4µs    31536.    78.2KB      0  
-#> 2 ffi_call    127.9µs  141.1µs     6437.    78.7KB     65.0
+#> 1 native_r     14.2µs   32.1µs    30535.    78.2KB      0  
+#> 2 ffi_call    124.1µs  142.5µs     6518.    78.7KB     65.8
 dll_unload(lib_path)
 ```
 
@@ -730,7 +730,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x63d301304320>
+#> <pointer: 0x5f31c22b5320>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -762,8 +762,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            3.13ms   3.53ms      262.    78.2KB     13.8
-#> 2 c_ffi       136.9µs  174.3µs     5238.    78.7KB      0
+#> 1 r            3.19ms   3.53ms      272.    78.2KB     14.3
+#> 2 c_ffi      135.28µs 165.18µs     5712.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -847,7 +847,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764752616
+#> [1] 1764753000
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -861,13 +861,13 @@ rf_INTEGER_ELT(abs_result, 0L)
 ## Header Parsing and Code Generation
 
 RSimpleFFI can parse C header files using
-[TinyCC](https://github.com/TinyCC/tinycc) and automatically generate R
+[tinycc](https://github.com/tinycc/tinycc) and automatically generate R
 bindings, making it easy to create R packages that wrap C libraries.
 
 ### Parse Headers
 
 ``` r
-# Parse a C header file using TinyCC preprocessor
+# Parse a C header file using tinycc preprocessor
 header_file <- system.file("extdata", "simple_types.h", package = "RSimpleFFI")
 parsed <- ffi_parse_header(header_file)
 
@@ -888,7 +888,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 13:03:36.070542\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 13:09:59.734218\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -945,8 +945,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file5af725a5873b0.h
-#> # Generated on: 2025-12-03 13:03:36.102296
+#> # Auto-generated R bindings for file5bbc28d2272e.h
+#> # Generated on: 2025-12-03 13:09:59.766163
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -959,7 +959,7 @@ cat(substr(libc_code, 1, 600))
 #> 
 #> # Function wrappers
 #> 
-#> #' Wrapper f
+#> #' Wrapper fo
 
 # Source the bindings
 tmpfile <- tempfile(fileext = ".R")
@@ -1010,12 +1010,12 @@ generate_package_from_headers(
 #> ========================================
 #> 
 #> Generated files:
-#>   - /tmp/RtmpLTwJkm/file5af7227797c98/zzz.R 
-#>   - /tmp/RtmpLTwJkm/file5af7227797c98/simple_types_bindings.R 
-#>   - /tmp/RtmpLTwJkm/file5af7227797c98/helpers.R 
+#>   - /tmp/RtmpnvorU1/file5bbc226479c3c/zzz.R 
+#>   - /tmp/RtmpnvorU1/file5bbc226479c3c/simple_types_bindings.R 
+#>   - /tmp/RtmpnvorU1/file5bbc226479c3c/helpers.R 
 #> 
 #> Next steps:
-#> 1. Review generated R files in /tmp/RtmpLTwJkm/file5af7227797c98 
+#> 1. Review generated R files in /tmp/RtmpnvorU1/file5bbc226479c3c 
 #> 2. Add DESCRIPTION file with dependencies: RSimpleFFI
 #> 3. Generate NAMESPACE with: devtools::document()
 #> 4. Build package: R CMD build
@@ -1074,7 +1074,7 @@ This project is licensed under the GPL-3 License.
 - [libffi](https://github.com/libffi/libffi) - Portable foreign function
   interface library
 
-- [TinyCC](https://github.com/TinyCC/tinycc) - Tiny C Compiler used for
+- [tinycc](https://github.com/tinycc/tinycc) - Tiny C Compiler used for
   header parsing
 
 - [libffi

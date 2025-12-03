@@ -8,7 +8,7 @@
   libffi authors and COPYRIGHT holders
 
 - **Fabrice Bellard and tinycc Authors**. Contributor.  
-  Tiny C Compiler (TCC) authors and COPYRIGHT holders
+  Tinycc Compiler (tinycc) authors and COPYRIGHT holders
 
 ## Citation
 
