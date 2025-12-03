@@ -88,6 +88,8 @@ size_t_type <- ffi_size_t()
 ssize_t_type <- ffi_ssize_t()
 long_type <- ffi_long()
 ulong_type <- ffi_ulong()
+longlong_type <- ffi_longlong()
+ulonglong_type <- ffi_ulonglong()
 
 longdouble_type <- ffi_longdouble()
 bool_type <- ffi_bool()
@@ -1004,6 +1006,41 @@ settings$get(packed, "priority")
 ```
 
 Helper functions: `ffi_pack_bits()`, `ffi_unpack_bits()`, `ffi_extract_bit_field()`, `ffi_set_bit_field()`, `ffi_create_bitfield_accessors()`.
+
+### 64-bit Bitfields
+
+For bitfields exceeding 32 bits or requiring full 64-bit range, use the 64-bit variants:
+
+```{r}
+# Pack fields totaling more than 32 bits
+packed64 <- ffi_pack_bits64(c(1L, 0x7FFFFFFFL), c(1L, 31L))
+packed64
+
+# Extract fields
+ffi_unpack_bits64(packed64, c(1L, 31L))
+
+# Single field extraction
+ffi_extract_bits64(packed64, 0L, 1L)   # First field
+ffi_extract_bits64(packed64, 1L, 31L)  # Second field
+```
+
+### Signed Bitfields
+
+For signed integer fields (common in hardware registers), use signed extraction:
+
+```{r}
+# Pack value 13 (0xD) which represents -3 in signed 4-bit
+packed <- ffi_pack_bits(c(13L), c(4L))
+
+# Unsigned extraction returns 13
+ffi_extract_bit_field(packed, 0L, 4L)
+
+# Signed extraction returns -3 (sign-extended)
+ffi_extract_signed_bit_field(packed, 0L, 4L)
+
+# 64-bit signed extraction also available
+ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
+```
 
 ### Struct Packing & Unions
 
