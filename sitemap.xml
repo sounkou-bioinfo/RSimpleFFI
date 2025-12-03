@@ -6,12 +6,14 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/news/index.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ArrayType.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/CIF.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/EnumType.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIClosure.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIType.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FieldInfo.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/NativeSymbol.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/RSimpleFFI-package.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/StructType.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/UnionType.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/alloc.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/create_builtin_type.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_ffi_symbol.html</loc></url>
@@ -35,6 +37,7 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_copy_array_type.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_deref_pointer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_enum.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_float.html</loc></url>
@@ -79,6 +82,7 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uint8.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ulong.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ulonglong.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_union.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_wchar_t.html</loc></url>

@@ -6,6 +6,8 @@
   : FFI Array Type
 - [`CIF()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/CIF.md)
   : FFI Call Interface (CIF)
+- [`EnumType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/EnumType.md)
+  : FFI Enumeration Type
 - [`FFIClosure()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIClosure.md)
   : FFI Closure - R function as C callback
 - [`FFIType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/FFIType.md)
@@ -16,6 +18,8 @@
   : Native Symbol Reference
 - [`StructType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/StructType.md)
   : FFI Structure Type
+- [`UnionType()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/UnionType.md)
+  : FFI Union Type
 - [`ffi_alloc()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/alloc.md)
   : Allocate a buffer for a given FFI type
 - [`create_builtin_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/create_builtin_type.md)
@@ -67,6 +71,8 @@
   : Dereference a pointer
 - [`ffi_double()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.md)
   : double FFI type
+- [`ffi_enum()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_enum.md)
+  : Create FFI enumeration type
 - [`ffi_field_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_field_info.md)
   : Get field information from a struct type
 - [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
@@ -155,6 +161,8 @@
   : ulong FFI type
 - [`ffi_ulonglong()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ulonglong.md)
   : ulonglong FFI type
+- [`ffi_union()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_union.md)
+  : Create FFI union type
 - [`ffi_ushort()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_ushort.md)
   : Ushort FFI type
 - [`ffi_void()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_void.md)
