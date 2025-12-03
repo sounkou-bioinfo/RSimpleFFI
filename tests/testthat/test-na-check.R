@@ -86,21 +86,19 @@ test_that("na_check can be set per-call", {
 })
 
 test_that("dll_ffi_symbol respects na_check parameter", {
-    # The abs() function from libc/msvcrt is always available since R is linked against it
-    # We can use it without explicitly loading any library
-    
-    # abs() function: int abs(int)
+    # Use test_add_int from RSimpleFFI package - works on all platforms
     int_t <- ffi_int()
 
     # With na_check = TRUE (default)
-    abs_fn <- dll_ffi_symbol("abs", int_t, int_t)
-    expect_error(abs_fn(NA_integer_), "NA value not allowed")
+    add_fn <- dll_ffi_symbol("test_add_int", int_t, int_t, int_t, package = "RSimpleFFI")
+    expect_error(add_fn(NA_integer_, 2L), "NA value not allowed")
 
     # With na_check = FALSE
-    abs_fn_no_check <- dll_ffi_symbol("abs", int_t, int_t, na_check = FALSE)
-    # abs(INT_MIN) is undefined behavior in C, but won't error in R
-    result <- abs_fn_no_check(NA_integer_)
-    expect_type(result, "integer")
+    add_fn_no_check <- dll_ffi_symbol("test_add_int", int_t, int_t, int_t, 
+                                       package = "RSimpleFFI", na_check = FALSE)
+    # With na_check = FALSE, NA_integer_ passes through as INT_MIN
+    result <- add_fn_no_check(NA_integer_, 1L)
+    expect_equal(result, -2147483647L)
 })
 
 test_that("NA check works with string type", {
