@@ -15,6 +15,12 @@
     single field operations
   - [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md) -
     generate accessor functions for bit-field structs
+- Automatic bit-field detection and code generation:
+  - Parser detects bit-field syntax (`: N`) in struct definitions
+  - [`generate_r_bindings()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.md)
+    auto-generates accessor code when bit-fields are present
+  - Generated code includes usage examples showing `pack()`,
+    [`get()`](https://rdrr.io/r/base/get.html), `set()` operations
 - Autogeneration of bindings using tinycc for preprocessing of header
   files
 

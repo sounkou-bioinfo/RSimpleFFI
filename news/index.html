@@ -44,6 +44,12 @@
 <li>
 <code><a href="../reference/ffi_create_bitfield_accessors.html">ffi_create_bitfield_accessors()</a></code> - generate accessor functions for bit-field structs</li>
 </ul></li>
+<li>Automatic bit-field detection and code generation:
+<ul><li>Parser detects bit-field syntax (<code>: N</code>) in struct definitions</li>
+<li>
+<code><a href="../reference/generate_r_bindings.html">generate_r_bindings()</a></code> auto-generates accessor code when bit-fields are present</li>
+<li>Generated code includes usage examples showing <code>pack()</code>, <code><a href="https://rdrr.io/r/base/get.html" class="external-link">get()</a></code>, <code>set()</code> operations</li>
+</ul></li>
 <li>Autogeneration of bindings using tinycc for preprocessing of header files</li>
 </ul></div>
 </div>
