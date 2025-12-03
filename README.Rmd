@@ -930,7 +930,75 @@ ffi_print_struct(pt, Point)
 
 ## Limitations and issues
 
-Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized. We do not support complex types or special packing for alignment for Structs. This is ABI level access to C Routines in dynamic libraries, so care must be taken to alignment issues.
+Current limitations include unnecessary copying, lack of protection, potential memory leaks, and type objects are C pointers that are never finalized.
+
+### Bit-fields and Struct Packing
+
+**RSimpleFFI does not support bit-fields** in C structures. This is an inherent limitation of libffi. As stated in the libffi manual (section 2.3.2):
+
+> Note that 'libffi' has no special support for bit-fields. You must manage these manually.
+
+If you attempt to parse a header file containing structs with bit-fields, you will receive a warning pointing to workarounds.
+
+#### Workaround: Manual Bit Manipulation
+
+RSimpleFFI provides helper functions for manual bit-field handling:
+
+```{r}
+# C struct with bit-fields we want to work with:
+# typedef struct {
+#   unsigned int enabled : 1;
+#   unsigned int mode : 3;
+#   unsigned int priority : 4;
+# } Settings;
+
+# Create accessor functions for the bit-field layout
+settings <- ffi_create_bitfield_accessors(
+  list(enabled = 1L, mode = 3L, priority = 4L)
+)
+
+# Pack values into a single integer
+packed <- settings$pack(list(enabled = 1L, mode = 5L, priority = 10L))
+packed
+
+# Get individual fields
+settings$get(packed, "mode")
+
+# Set individual fields
+packed <- settings$set(packed, "priority", 15L)
+settings$get(packed, "priority")
+
+# Unpack to list
+settings$unpack(packed)
+
+# Pass packed value to C function expecting uint32_t
+# config_func <- ffi_function("set_config", ffi_void(), ffi_uint32())
+# config_func(packed)
+```
+
+Available helper functions:
+
+- `ffi_pack_bits(values, widths)` - Pack multiple values into integer
+- `ffi_unpack_bits(packed, widths)` - Unpack integer into values
+- `ffi_extract_bit_field(packed, offset, width)` - Get single field
+- `ffi_set_bit_field(packed, value, offset, width)` - Set single field  
+- `ffi_create_bitfield_accessors(field_specs)` - Generate pack/unpack/get/set functions
+
+#### Why libffi Doesn't Support Bit-fields
+
+Bit-field layout is highly compiler-specific, platform-specific, and ABI-specific. Different compilers (GCC, MSVC, Clang) pack bit-fields differently, and the same compiler may use different rules on different platforms (x86-64 vs ARM) or ABIs (SysV vs Windows). libffi would need to replicate every compiler's bit-field algorithm for every supported platform - an intractable maintenance burden.
+
+Instead, libffi requires manual handling. RSimpleFFI's helper functions make this straightforward using R's built-in bitwise operators.
+
+### Struct Packing
+
+We do not support special packing or alignment attributes (`#pragma pack`, `__attribute__((packed))`). Struct layout is computed by libffi using the platform's native ABI rules. This is ABI level access to C Routines in dynamic libraries, so care must be taken with alignment issues.
+
+For cross-platform compatibility, document your assumptions about struct layout and test on each target platform.
+
+### Unions
+
+Union support has limitations on certain ABIs (particularly AMD64). When mixing float and integer types, the calling convention may not be correctly detected. **Recommendation:** Pass unions by pointer rather than by value whenever possible.
 
 ## License
 
