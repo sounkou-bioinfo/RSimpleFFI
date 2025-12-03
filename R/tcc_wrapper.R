@@ -5,13 +5,13 @@ tcc_binary_path <- function() {
     if(.Platform$OS.type == "windows") {
         # On Windows, tcc.exe must be in the root of tinycc/ so it can find include/ and lib/ subdirectories
         tcc_path <- system.file("tinycc", "tcc.exe", package = "RSimpleFFI")
-        message("TCC path (Windows): ", tcc_path)
+        #message("TCC path (Windows): ", tcc_path)
         if (nzchar(tcc_path) && file.exists(tcc_path)) {
             tcc_path <- normalizePath(tcc_path)
         }
     } else {
         tcc_path <- system.file("tinycc", "bin", "tcc", package = "RSimpleFFI")
-        message("TCC path (Unix): ", tcc_path)
+        #message("TCC path (Unix): ", tcc_path)
         if (nzchar(tcc_path) && file.exists(tcc_path)) {
             tcc_path <- normalizePath(tcc_path)
         }
@@ -413,8 +413,11 @@ parse_fields_with_nested <- function(body) {
     }
   }
   
-  # Now parse simple fields
-  field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;"
+  # Now parse fields (both regular and bit-fields)
+  # Regular field: type name;
+  # Bit-field: type name : width;
+  # Array field: type name[N];
+  field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*(?::\\s*[0-9]+)?\\s*;"
   field_matches <- gregexpr(field_pattern, body, perl = TRUE)
   field_data <- regmatches(body, field_matches)[[1]]
   
@@ -445,8 +448,11 @@ parse_fields_with_nested <- function(body) {
     }
   }
   
+  # Extract just the type and name parts (ignoring bit-field width for field list)
+  simple_field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*(?::\\s*[0-9]+)?\\s*;"
+  
   for (field in field_data) {
-    fm <- regexec(field_pattern, field, perl = TRUE)
+    fm <- regexec(simple_field_pattern, field, perl = TRUE)
     fparts <- regmatches(field, fm)[[1]]
     if (length(fparts) >= 3) {
       type_part <- trimws(fparts[2])
