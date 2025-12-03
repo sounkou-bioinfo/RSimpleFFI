@@ -934,7 +934,7 @@ Current limitations include unnecessary copying, lack of protection, potential m
 
 ### Bit-fields
 
-**RSimpleFFI does not support bit-fields.** libffi has no support for bit-fields (they're compiler/platform-specific). Use manual bit manipulation instead:
+libffi does not support bit-fields (they're compiler/platform-specific). Use manual bit manipulation instead:
 
 ```{r}
 # Create accessors for bit-field layout
@@ -961,9 +961,32 @@ packed <- increment(as.integer(packed))
 settings$get(packed, "priority")  # Now 11
 ```
 
-Helper functions: `ffi_pack_bits()`, `ffi_unpack_bits()`, `ffi_extract_bit_field()`, `ffi_set_bit_field()`, `ffi_create_bitfield_accessors()`.
+For by-value bit-field structs, model them as packed integer types (`ffi_uint8/16/32/64`). Calculate size by summing bit widths and rounding up to the next power-of-2 byte boundary (1, 2, 4, or 8 bytes).
 
-Parser detects bit-fields and warns with workaround suggestions.
+```{r}
+# C struct: typedef struct { unsigned enabled:1; mode:3; priority:4; reserved:24; } SettingsFlags;
+# Total 32 bits -> use ffi_uint32()
+
+# Create a packed value using test function
+pack_fn <- ffi_function("test_bitfield_pack", ffi_uint32(), ffi_int(), ffi_int(), ffi_int())
+packed <- pack_fn(1L, 5L, 10L)  # enabled=1, mode=5, priority=10
+packed
+
+# Pass packed struct by value to C function
+get_mode_fn <- ffi_function("test_bitfield_get_mode", ffi_int(), ffi_uint32())
+get_mode_fn(as.integer(packed))
+
+# Return modified packed struct
+toggle_fn <- ffi_function("test_bitfield_toggle_enabled", ffi_uint32(), ffi_uint32())
+toggled <- toggle_fn(as.integer(packed))
+
+# Verify the toggle worked
+get_enabled_fn <- ffi_function("test_bitfield_get_enabled", ffi_int(), ffi_uint32())
+get_enabled_fn(as.integer(packed))    # Original: 1
+get_enabled_fn(as.integer(toggled))   # Toggled: 0
+```
+
+Helper functions: `ffi_pack_bits()`, `ffi_unpack_bits()`, `ffi_extract_bit_field()`, `ffi_set_bit_field()`, `ffi_create_bitfield_accessors()`.
 
 ### Struct Packing & Unions
 
