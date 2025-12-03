@@ -46,6 +46,12 @@
 <code>pack = NULL</code> (default) uses natural alignment</li>
 <li>Matches GCC/Clang <code>#pragma pack(n)</code> and MSVC packing behavior</li>
 </ul></li>
+<li>
+<p>Added <code>pack</code> parameter to <code><a href="../reference/ffi_union.html">ffi_union()</a></code> for controlling union alignment:</p>
+<ul><li>Reduces union’s alignment requirement (size stays the same)</li>
+<li>Affects placement when union is a struct member</li>
+<li>Example: packed union in normal struct eliminates trailing padding</li>
+</ul></li>
 <li><p>Added <code><a href="../reference/ffi_packed_offset.html">ffi_packed_offset()</a></code> and <code><a href="../reference/ffi_packed_size.html">ffi_packed_size()</a></code> for computing packed struct layouts</p></li>
 <li>
 <p>Added bit-field helper functions for manual bit manipulation:</p>

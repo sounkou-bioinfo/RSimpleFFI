@@ -13,6 +13,14 @@
   - `pack = NULL` (default) uses natural alignment
   - Matches GCC/Clang `#pragma pack(n)` and MSVC packing behavior
 
+- Added `pack` parameter to
+  [`ffi_union()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_union.md)
+  for controlling union alignment:
+
+  - Reduces union’s alignment requirement (size stays the same)
+  - Affects placement when union is a struct member
+  - Example: packed union in normal struct eliminates trailing padding
+
 - Added
   [`ffi_packed_offset()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_packed_offset.md)
   and
