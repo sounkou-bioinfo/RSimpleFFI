@@ -972,11 +972,23 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
   }
 
   # Function to map a C type to FFI type (handles both "type name" and "type")
-  map_type_from_string <- function(type_string) {
+  # For return types, char* should be ffi_pointer() (could be buffer, not string)
+  # For parameters, char* should be ffi_string() (convenient for passing R strings)
+  map_type_from_string <- function(type_string, is_return_type = FALSE) {
     type_string <- strip_type_qualifiers(trimws(type_string))
 
-    # Check for pointer types (treat as ffi_pointer())
-    if (grepl("\\*", type_string) && !grepl("char\\s*\\*", type_string)) {
+    # For return types, treat char* as pointer (safer - could be buffer not string)
+    # For parameters, treat char* as string (convenient for R string passing)
+    if (grepl("char\\s*\\*", type_string)) {
+      if (is_return_type) {
+        return("ffi_pointer()")
+      } else {
+        return("ffi_string()")
+      }
+    }
+
+    # Check for other pointer types (treat as ffi_pointer())
+    if (grepl("\\*", type_string)) {
       return("ffi_pointer()")
     }
     # Check exact match in type_map (built-in types)
@@ -1052,12 +1064,13 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
       # Type is everything except last token
       param_type_c <- extract_type(part)
       param_types_c <- c(param_types_c, param_type_c)
-      param_types_ffi <- c(param_types_ffi, map_type_from_string(param_type_c))
+      param_types_ffi <- c(param_types_ffi, map_type_from_string(param_type_c, is_return_type = FALSE))
     }
   }
 
   # Map return type (it's just a type, no variable name)
-  return_ffi <- map_type_from_string(return_type)
+  # Use is_return_type = TRUE so char* returns ffi_pointer() not ffi_string()
+  return_ffi <- map_type_from_string(return_type, is_return_type = TRUE)
 
   # Generate R function
   r_func_name <- paste0("r_", func_name)
