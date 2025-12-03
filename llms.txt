@@ -12,11 +12,12 @@ package for unix systems. RSimpleFFI is inspired by the [Rffi
 package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It
 builds on the same structure with S7 classes. As an experimental
 feature, the package includes automatic R binding generation from C
-header files using the [tinycc](https://github.com/tinycc/tinycc)
-compiler, allowing you to parse C headers and automatically generate R
-wrapper functions for easy package development. Note that this is a
-wrapper of the `tinycc` compiler cli and not the in memory compilation
-facilities.
+header files using the [`tinycc`](https://github.com/tinycc/tinycc)
+compiler cli for preprocessed c file generation, allowing (attempt) to
+parse C headers and automatically generate R wrapper functions for easy
+package development. The `tinycc` is not used for the in memory
+compilation facilities but to preprocess the headers given includes and
+maybe in the future for more reliable C99 compliant parsing and JIT.
 
 ## Installation
 
@@ -663,10 +664,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 144632535
+#> [1] 1771386506
 rand_value <- rand_func()
 rand_value
-#> [1] 1074898639
+#> [1] 1892940866
 dll_unload(libc_path)
 ```
 
@@ -688,7 +689,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x606b0339ae80>
+#> <pointer: 0x5a93a323c270>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -779,8 +780,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.3µs   29.1µs    35681.    78.2KB      0  
-#> 2 ffi_call     95.8µs  100.3µs     9305.    78.7KB     94.0
+#> 1 native_r       13µs   28.6µs    36604.    78.2KB      0  
+#> 2 ffi_call     96.4µs    101µs     9285.    78.7KB     93.8
 dll_unload(lib_path)
 ```
 
@@ -862,7 +863,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x606b086b2230>
+#> <pointer: 0x5a93a7d515d0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -894,8 +895,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.39ms   2.55ms      377.    78.2KB     19.9
-#> 2 c_ffi      100.34µs 122.94µs     7928.    78.7KB      0
+#> 1 r            2.48ms   2.65ms      368.    78.2KB     19.3
+#> 2 c_ffi      106.43µs 126.52µs     7745.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -979,7 +980,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764783725
+#> [1] 1764784149
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1020,7 +1021,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:42:04.933401\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-03 18:49:09.496854\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1077,8 +1078,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file3fed267bd5a98d.h
-#> # Generated on: 2025-12-03 18:42:04.954925
+#> # Auto-generated R bindings for file3fef747baed2b1.h
+#> # Generated on: 2025-12-03 18:49:09.518997
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
