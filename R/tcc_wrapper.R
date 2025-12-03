@@ -439,29 +439,6 @@ parse_fields_with_nested <- function(body) {
   
   fields
 }
-  if (length(match_data2) > 0) {
-    structs2 <- lapply(match_data2, function(struct_def) {
-      m <- regexec(pattern2, struct_def, perl = TRUE)
-      parts <- regmatches(struct_def, m)[[1]]
-      
-      if (length(parts) >= 3) {
-        body <- trimws(parts[2])
-        name <- trimws(parts[3])
-        fields <- parse_fields(body)
-        list(name = name, fields = fields)
-      } else {
-        NULL
-      }
-    })
-    
-    structs2 <- Filter(Negate(is.null), structs2)
-    for (s in structs2) {
-      result[[s$name]] <- s$fields
-    }
-  }
-  
-  result
-}
 
 #' Extract enum definitions from preprocessed C code
 #' @param preprocessed_lines Character vector from tcc_preprocess()
@@ -590,79 +567,90 @@ tcc_extract_unions <- function(preprocessed_lines) {
   
   result <- list()
   
-  # Pattern 1: union Name { ... };
-  pattern1 <- "union\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{([^}]*)\\}\\s*;"
-  matches1 <- gregexpr(pattern1, code, perl = TRUE)
-  match_data1 <- regmatches(code, matches1)[[1]]
-  
-  # Pattern 2: typedef union { ... } TypeName;
-  pattern2 <- "typedef\\s+union\\s*\\{([^}]*)\\}\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;"
-  matches2 <- gregexpr(pattern2, code, perl = TRUE)
-  match_data2 <- regmatches(code, matches2)[[1]]
-  
-  # Helper function to parse union fields (same as struct)
-  parse_fields <- function(body) {
-    field_pattern <- "([a-zA-Z_][a-zA-Z0-9_*\\s]+)\\s+([a-zA-Z_][a-zA-Z0-9_\\[\\]]*)\\s*;"
-    field_matches <- gregexpr(field_pattern, body, perl = TRUE)
-    field_data <- regmatches(body, field_matches)[[1]]
+  # Helper to extract balanced braces content
+  extract_balanced_braces <- function(text, start_pos) {
+    chars <- strsplit(text, "")[[1]]
+    if (start_pos > length(chars) || chars[start_pos] != "{") {
+      return(NULL)
+    }
     
-    fields <- lapply(field_data, function(field) {
-      fm <- regexec(field_pattern, field, perl = TRUE)
-      fparts <- regmatches(field, fm)[[1]]
-      if (length(fparts) >= 3) {
-        list(
-          type = trimws(fparts[2]),
-          name = trimws(fparts[3])
-        )
-      } else {
-        NULL
+    depth <- 0
+    for (i in start_pos:length(chars)) {
+      if (chars[i] == "{") depth <- depth + 1
+      if (chars[i] == "}") {
+        depth <- depth - 1
+        if (depth == 0) {
+          return(list(
+            content = paste(chars[(start_pos+1):(i-1)], collapse = ""),
+            end_pos = i
+          ))
+        }
       }
-    })
-    
-    Filter(Negate(is.null), fields)
+    }
+    NULL
   }
   
-  # Process pattern 1: union Name { ... };
-  if (length(match_data1) > 0) {
-    unions1 <- lapply(match_data1, function(union_def) {
-      m <- regexec(pattern1, union_def, perl = TRUE)
-      parts <- regmatches(union_def, m)[[1]]
+  # Find typedef union { ... } Name; patterns
+  typedef_pattern <- "typedef\\s+union\\s*\\{"
+  typedef_matches <- gregexpr(typedef_pattern, code, perl = TRUE)[[1]]
+  
+  if (typedef_matches[1] != -1) {
+    for (match_start in typedef_matches) {
+      # Find the opening brace
+      brace_pos <- regexpr("\\{", substring(code, match_start))[[1]] + match_start - 1
       
-      if (length(parts) >= 3) {
-        name <- trimws(parts[2])
-        body <- trimws(parts[3])
-        fields <- parse_fields(body)
-        list(name = name, fields = fields)
-      } else {
-        NULL
+      # Extract balanced content
+      balanced <- extract_balanced_braces(code, brace_pos)
+      if (!is.null(balanced)) {
+        # Find the type name after closing brace
+        remainder <- substring(code, balanced$end_pos + 1)
+        name_match <- regexpr("^\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*;", remainder, perl = TRUE)
+        
+        if (name_match != -1) {
+          name_text <- regmatches(remainder, name_match)[[1]]
+          name <- trimws(gsub(";", "", name_text))
+          
+          body <- balanced$content
+          fields <- parse_fields_with_nested(body)
+          if (length(fields) > 0) {
+            result[[name]] <- fields
+          }
+        }
       }
-    })
-    
-    unions1 <- Filter(Negate(is.null), unions1)
-    for (u in unions1) {
-      result[[u$name]] <- u$fields
     }
   }
   
-  # Process pattern 2: typedef union { ... } TypeName;
-  if (length(match_data2) > 0) {
-    unions2 <- lapply(match_data2, function(union_def) {
-      m <- regexec(pattern2, union_def, perl = TRUE)
-      parts <- regmatches(union_def, m)[[1]]
+  # Find union Name { ... }; patterns
+  union_pattern <- "union\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\{"
+  union_matches <- gregexpr(union_pattern, code, perl = TRUE)[[1]]
+  
+  if (union_matches[1] != -1) {
+    for (i in seq_along(union_matches)) {
+      match_start <- union_matches[i]
+      match_len <- attr(union_matches, "match.length")[i]
       
-      if (length(parts) >= 3) {
-        body <- trimws(parts[2])
-        name <- trimws(parts[3])
-        fields <- parse_fields(body)
-        list(name = name, fields = fields)
-      } else {
-        NULL
+      # Extract union name
+      name_text <- substring(code, match_start, match_start + match_len - 1)
+      name_match <- regexpr("union\\s+([a-zA-Z_][a-zA-Z0-9_]*)", name_text, perl = TRUE)
+      name_capture <- regmatches(name_text, name_match)[[1]]
+      name <- sub("union\\s+", "", name_capture)
+      
+      # Find opening brace
+      brace_pos <- regexpr("\\{", substring(code, match_start))[[1]] + match_start - 1
+      
+      # Extract balanced content
+      balanced <- extract_balanced_braces(code, brace_pos)
+      if (!is.null(balanced)) {
+        # Check if followed by semicolon
+        remainder <- substring(code, balanced$end_pos + 1, balanced$end_pos + 10)
+        if (grepl("^\\s*;", remainder)) {
+          body <- balanced$content
+          fields <- parse_fields_with_nested(body)
+          if (length(fields) > 0) {
+            result[[name]] <- fields
+          }
+        }
       }
-    })
-    
-    unions2 <- Filter(Negate(is.null), unions2)
-    for (u in unions2) {
-      result[[u$name]] <- u$fields
     }
   }
   

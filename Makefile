@@ -25,7 +25,8 @@ install_deps:
 
 install: build
 	R CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
-
+install2:
+	R CMD INSTALL --no-configure .
 clean:
 	@rm -rf $(PKGNAME)_$(PKGVERS).tar.gz $(PKGNAME).Rcheck
 
