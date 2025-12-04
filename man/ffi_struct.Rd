@@ -4,25 +4,26 @@
 \alias{ffi_struct}
 \title{Create FFI structure type}
 \usage{
-ffi_struct(..., pack = NULL)
+ffi_struct(..., .pack = NULL)
 }
 \arguments{
 \item{...}{Named FFIType objects representing struct fields}
 
-\item{pack}{Integer specifying packing alignment (1, 2, 4, 8, or 16), or NULL
-for default/natural alignment. When pack=1, fields are byte-aligned (no padding).}
+\item{.pack}{Integer specifying packing alignment (1, 2, 4, 8, or 16), or NULL
+for default/natural alignment. When .pack=1, fields are byte-aligned (no padding).
+The dot prefix prevents collision with C struct field names.}
 }
 \value{
 StructType object
 }
 \description{
 Creates an FFI structure type from named field types. By default, libffi
-uses natural alignment (each field aligned to its size). Use the \code{pack}
+uses natural alignment (each field aligned to its size). Use the \code{.pack}
 parameter to specify tighter packing similar to \verb{#pragma pack(n)} in C.
 }
 \section{Packing}{
 
-The \code{pack} parameter affects \code{ffi_offsetof()}, \code{ffi_sizeof()},
+The \code{.pack} parameter affects \code{ffi_offsetof()}, \code{ffi_sizeof()},
 \code{ffi_get_field()}, and \code{ffi_set_field()}.
 }
 
@@ -41,7 +42,7 @@ Point <- ffi_struct(x = ffi_int(), y = ffi_int())
 PackedData <- ffi_struct(
   flag = ffi_uint8(),
   value = ffi_int32(),
-  pack = 1
+  .pack = 1
 )
 
 # Check sizes

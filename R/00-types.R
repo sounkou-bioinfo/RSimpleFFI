@@ -583,15 +583,16 @@ ffi_wchar_t <- function() create_builtin_type("wchar_t")
 #' Create FFI structure type
 #'
 #' Creates an FFI structure type from named field types. By default, libffi
-#' uses natural alignment (each field aligned to its size). Use the `pack`
+#' uses natural alignment (each field aligned to its size). Use the `.pack`
 #' parameter to specify tighter packing similar to `#pragma pack(n)` in C.
 #'
 #' @param ... Named FFIType objects representing struct fields
-#' @param pack Integer specifying packing alignment (1, 2, 4, 8, or 16), or NULL
-#'   for default/natural alignment. When pack=1, fields are byte-aligned (no padding).
+#' @param .pack Integer specifying packing alignment (1, 2, 4, 8, or 16), or NULL
+#'   for default/natural alignment. When .pack=1, fields are byte-aligned (no padding).
+#'   The dot prefix prevents collision with C struct field names.
 #'
 #' @section Packing:
-#' The `pack` parameter affects `ffi_offsetof()`, `ffi_sizeof()`,
+#' The `.pack` parameter affects `ffi_offsetof()`, `ffi_sizeof()`,
 #' `ffi_get_field()`, and `ffi_set_field()`.
 #'
 #' @section Packed Structs By Value:
@@ -609,7 +610,7 @@ ffi_wchar_t <- function() create_builtin_type("wchar_t")
 #' PackedData <- ffi_struct(
 #'   flag = ffi_uint8(),
 #'   value = ffi_int32(),
-#'   pack = 1
+#'   .pack = 1
 #' )
 #'
 #' # Check sizes
@@ -620,7 +621,7 @@ ffi_wchar_t <- function() create_builtin_type("wchar_t")
 #' # Use pointers instead:
 #' # ffi_function("some_func", ffi_void(), ffi_pointer())
 #' @export
-ffi_struct <- function(..., pack = NULL) {
+ffi_struct <- function(..., .pack = NULL) {
   fields <- list(...)
 
   if (length(fields) == 0) {
@@ -631,15 +632,15 @@ ffi_struct <- function(..., pack = NULL) {
     stop("All struct fields must be named")
   }
 
-  # Validate pack parameter
-  if (!is.null(pack)) {
-    if (!is.numeric(pack) || length(pack) != 1 || pack < 1 || pack > 16) {
-      stop("pack must be NULL or an integer between 1 and 16")
+  # Validate .pack parameter
+  if (!is.null(.pack)) {
+    if (!is.numeric(.pack) || length(.pack) != 1 || .pack < 1 || .pack > 16) {
+      stop(".pack must be NULL or an integer between 1 and 16")
     }
-    if (!(pack %in% c(1, 2, 4, 8, 16))) {
-      stop("pack must be a power of 2: 1, 2, 4, 8, or 16")
+    if (!(.pack %in% c(1, 2, 4, 8, 16))) {
+      stop(".pack must be a power of 2: 1, 2, 4, 8, or 16")
     }
-    pack <- as.integer(pack)
+    .pack <- as.integer(.pack)
   }
 
   # Validate all fields are FFIType objects
@@ -650,18 +651,18 @@ ffi_struct <- function(..., pack = NULL) {
   field_names <- names(fields)
   field_refs <- lapply(fields, function(f) f@ref)
 
-  struct_ref <- .Call("R_create_struct_ffi_type", field_refs, pack)
+  struct_ref <- .Call("R_create_struct_ffi_type", field_refs, .pack)
   struct_size <- .Call("R_get_ffi_type_size", struct_ref)
 
   # Determine if packing actually changes the layout
 
-  # This happens when pack < natural alignment of any field
+  # This happens when .pack < natural alignment of any field
   has_packed_change <- FALSE
-  if (!is.null(pack)) {
-    # Check if any field has alignment > pack
+  if (!is.null(.pack)) {
+    # Check if any field has alignment > .pack
     for (field in fields) {
       field_align <- .Call("R_get_ffi_type_alignment", field@ref)
-      if (field_align > pack) {
+      if (field_align > .pack) {
         has_packed_change <- TRUE
         break
       }
@@ -683,7 +684,7 @@ ffi_struct <- function(..., pack = NULL) {
     ref = struct_ref,
     fields = field_names,
     field_types = unname(fields),
-    pack = pack,
+    pack = .pack,
     has_packed_change = has_packed_change
   )
 }
@@ -695,8 +696,8 @@ ffi_struct <- function(..., pack = NULL) {
 #' The union's size is the size of its largest member.
 #'
 #' @param ... Named FFIType objects representing union fields
-#' @param pack Integer packing alignment (1, 2, 4, 8, or 16). When specified,
-#'   the union's alignment is reduced to min(natural_alignment, pack).
+#' @param .pack Integer packing alignment (1, 2, 4, 8, or 16). When specified,
+#'   the union's alignment is reduced to min(natural_alignment, .pack).
 #'   This affects placement when the union is used as a struct member.
 #'   Default NULL uses natural alignment.
 #' @return UnionType object
@@ -706,7 +707,7 @@ ffi_struct <- function(..., pack = NULL) {
 #' U <- ffi_union(c = ffi_char(), i = ffi_int())
 #'
 #' # Packed union (alignment = 1)
-#' PackedU <- ffi_union(c = ffi_char(), i = ffi_int(), pack = 1)
+#' PackedU <- ffi_union(c = ffi_char(), i = ffi_int(), .pack = 1)
 #'
 #' # Packed union in a struct - offset of next field is affected
 #' S <- ffi_struct(u = PackedU, after = ffi_char())
@@ -714,7 +715,7 @@ ffi_struct <- function(..., pack = NULL) {
 #' # Note: Packed unions cannot be passed by value to C functions.
 #' # Use pointers instead.
 #' @export
-ffi_union <- function(..., pack = NULL) {
+ffi_union <- function(..., .pack = NULL) {
   fields <- list(...)
 
   if (length(fields) == 0) {
@@ -725,15 +726,15 @@ ffi_union <- function(..., pack = NULL) {
     stop("All union fields must be named")
   }
 
-  # Validate pack parameter
-  if (!is.null(pack)) {
-    if (!is.numeric(pack) || length(pack) != 1 || pack < 1 || pack > 16) {
-      stop("pack must be NULL or an integer between 1 and 16")
+  # Validate .pack parameter
+  if (!is.null(.pack)) {
+    if (!is.numeric(.pack) || length(.pack) != 1 || .pack < 1 || .pack > 16) {
+      stop(".pack must be NULL or an integer between 1 and 16")
     }
-    if (!(pack %in% c(1, 2, 4, 8, 16))) {
-      stop("pack must be a power of 2: 1, 2, 4, 8, or 16")
+    if (!(.pack %in% c(1, 2, 4, 8, 16))) {
+      stop(".pack must be a power of 2: 1, 2, 4, 8, or 16")
     }
-    pack <- as.integer(pack)
+    .pack <- as.integer(.pack)
   }
 
   # Validate all fields are FFIType objects
@@ -744,16 +745,16 @@ ffi_union <- function(..., pack = NULL) {
   field_names <- names(fields)
   field_refs <- lapply(fields, function(f) f@ref)
 
-  union_ref <- .Call("R_create_union_ffi_type", field_refs, pack)
+  union_ref <- .Call("R_create_union_ffi_type", field_refs, .pack)
   union_size <- .Call("R_get_ffi_type_size", union_ref)
 
   # Determine if packing actually changes the layout
-  # For unions, this happens when pack < natural alignment of any field
+  # For unions, this happens when .pack < natural alignment of any field
   has_packed_change <- FALSE
-  if (!is.null(pack)) {
+  if (!is.null(.pack)) {
     for (field in fields) {
       field_align <- .Call("R_get_ffi_type_alignment", field@ref)
-      if (field_align > pack) {
+      if (field_align > .pack) {
         has_packed_change <- TRUE
         break
       }
@@ -775,7 +776,7 @@ ffi_union <- function(..., pack = NULL) {
     ref = union_ref,
     fields = field_names,
     field_types = unname(fields),
-    pack = pack,
+    pack = .pack,
     has_packed_change = has_packed_change
   )
 }
@@ -1251,8 +1252,8 @@ ffi_field_info <- function(struct_type, field) {
 #' ffi_offsetof(Point, "y") # 8 (aligned to 8-byte boundary)
 #'
 #' # Packed struct example
-#' Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), pack = 1)
-#' ffi_offsetof(Packed, "b") # 1 (no padding with pack=1)
+#' Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), .pack = 1)
+#' ffi_offsetof(Packed, "b") # 1 (no padding with .pack=1)
 #' }
 #'
 #' @export
@@ -1329,7 +1330,7 @@ ffi_packed_offset <- function(struct_type, field_index) {
 #' # 0 8
 #'
 #' # Packed struct
-#' Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), pack = 1)
+#' Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), .pack = 1)
 #' ffi_all_offsets(Packed)
 #' # a b
 #' # 0 1

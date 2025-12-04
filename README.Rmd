@@ -252,7 +252,7 @@ Natural <- ffi_struct(a = ffi_int(), b = ffi_double())
 ffi_sizeof(Natural)
 
 # Packed (no padding): int (4) + double (8) = 12 bytes
-Packed <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 1)
+Packed <- ffi_struct(a = ffi_int(), b = ffi_double(), .pack = 1)
 ffi_sizeof(Packed)
 
 # Field offsets differ between packed and natural
@@ -263,13 +263,13 @@ ffi_offsetof(Packed, "b")   # 4 (immediately after int)
 Pack values work like GCC/Clang/MSVC: each field's alignment is `min(natural_alignment, pack)`.
 
 ```{r}
-# pack=2: fields aligned to at most 2-byte boundaries
-Pack2 <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 2)
+# .pack=2: fields aligned to at most 2-byte boundaries
+Pack2 <- ffi_struct(a = ffi_int(), b = ffi_double(), .pack = 2)
 ffi_sizeof(Pack2)   # 12 bytes
 ffi_offsetof(Pack2, "b")  # 4
 
-# pack=4: useful for matching 32-bit packed structures
-Pack4 <- ffi_struct(a = ffi_int(), b = ffi_double(), pack = 4)
+# .pack=4: useful for matching 32-bit packed structures
+Pack4 <- ffi_struct(a = ffi_int(), b = ffi_double(), .pack = 4)
 ffi_sizeof(Pack4)  # 12 bytes
 ```
 
@@ -286,7 +286,7 @@ ffi_all_offsets(Packed)   # a=0, b=4
 Packed structs cannot be passed by value to C functions (libffi limitation). Use pointers instead.
 
 ```{r, error=TRUE}
-PackedPoint <- ffi_struct(x = ffi_uint8(), y = ffi_int32(), pack = 1L)
+PackedPoint <- ffi_struct(x = ffi_uint8(), y = ffi_int32(), .pack = 1L)
 tryCatch(
   ffi_cif(PackedPoint, ffi_int()),
   error = function(e) message(e$message)

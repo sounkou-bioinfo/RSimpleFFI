@@ -51,8 +51,8 @@ cat(sprintf("C ComplexPacked size:  %d bytes (pack=1)\n", c_complex_size))
 
 # Create equivalent R structs
 NaturalStruct <- ffi_struct(a = ffi_int32(), b = ffi_double())
-PackedStruct1 <- ffi_struct(a = ffi_int32(), b = ffi_double(), pack = 1)
-PackedStruct2 <- ffi_struct(a = ffi_int32(), b = ffi_double(), pack = 2)
+PackedStruct1 <- ffi_struct(a = ffi_int32(), b = ffi_double(), .pack = 1)
+PackedStruct2 <- ffi_struct(a = ffi_int32(), b = ffi_double(), .pack = 2)
 ComplexPacked <- ffi_struct(
   flags = ffi_uint8(),
   id = ffi_uint32(),

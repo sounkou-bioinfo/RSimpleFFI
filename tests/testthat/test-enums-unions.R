@@ -287,7 +287,7 @@ test_that("packed union creation works", {
   expect_null(U_normal@pack)
 
   # Packed union has alignment = 1 but same size
-  U_packed <- ffi_union(c = ffi_char(), i = ffi_int(), pack = 1L)
+  U_packed <- ffi_union(c = ffi_char(), i = ffi_int(), .pack = 1L)
   expect_equal(ffi_sizeof(U_packed), 4L)
   expect_equal(U_packed@pack, 1L)
 })
@@ -302,7 +302,7 @@ test_that("packed union affects struct layout", {
   expect_equal(ffi_offsetof(S1, "after"), 4L)
 
   # Packed union in struct
-  U_packed <- ffi_union(c = ffi_char(), i = ffi_int(), pack = 1L)
+  U_packed <- ffi_union(c = ffi_char(), i = ffi_int(), .pack = 1L)
   S2 <- ffi_struct(u = U_packed, after = ffi_char())
 
   # Struct with packed union has no trailing padding (size 5)
@@ -310,17 +310,17 @@ test_that("packed union affects struct layout", {
   expect_equal(ffi_offsetof(S2, "after"), 4L)
 })
 
-test_that("packed union validates pack parameter", {
+test_that("packed union validates .pack parameter", {
   expect_error(
-    ffi_union(x = ffi_int(), pack = 0L),
-    "pack must be NULL or an integer between 1 and 16"
+    ffi_union(x = ffi_int(), .pack = 0L),
+    ".pack must be NULL or an integer between 1 and 16"
   )
   expect_error(
-    ffi_union(x = ffi_int(), pack = 3L),
-    "pack must be a power of 2"
+    ffi_union(x = ffi_int(), .pack = 3L),
+    ".pack must be a power of 2"
   )
   expect_error(
-    ffi_union(x = ffi_int(), pack = 32L),
-    "pack must be NULL or an integer between 1 and 16"
+    ffi_union(x = ffi_int(), .pack = 32L),
+    ".pack must be NULL or an integer between 1 and 16"
   )
 })

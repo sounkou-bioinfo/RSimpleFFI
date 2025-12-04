@@ -594,7 +594,7 @@ generate_struct_definition <- function(
       ),
       sprintf("%s <- ffi_struct(", struct_name),
       paste(field_defs, collapse = "\n"),
-      "  pack = 1L",
+      "  .pack = 1L",
       ")"
     )
   } else {

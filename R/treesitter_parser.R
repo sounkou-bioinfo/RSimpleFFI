@@ -269,6 +269,11 @@ ts_parse_field_declaration <- function(field_node, source_text) {
   # Get field name and type
   field_name <- ts_get_declarator_name(declarator_node, source_text)
 
+  # Skip anonymous fields (e.g., anonymous bitfields for padding)
+  if (is.null(field_name) || nchar(field_name) == 0) {
+    return(NULL)
+  }
+
   if (is.null(type_node)) {
     # No type node found - skip this field
     return(NULL)
@@ -311,6 +316,10 @@ ts_get_declarator_name <- function(declarator_node, source_text) {
   node_type <- treesitter::node_type(declarator_node)
 
   if (node_type == "field_identifier") {
+    # Check for MISSING node (anonymous bitfield)
+    if (treesitter::node_is_missing(declarator_node)) {
+      return(NULL)
+    }
     return(treesitter::node_text(declarator_node))
   }
 

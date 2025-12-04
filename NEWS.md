@@ -1,5 +1,16 @@
 # RSimpleFFI 1.0.1.9002 (Development)
 
+## New Features
+
+* **Added `generate_htslib_package.R` tool**: Script to generate FFI bindings for
+  htslib (SAM/BAM/VCF/BCF library) demonstrating package generation capabilities.
+
+## Breaking Changes
+
+* **`ffi_struct()` and `ffi_union()` parameter renamed**: `pack` → `.pack`
+  - The dot prefix prevents collision with C struct field names like `pack`
+  - Old code using `pack = 1` should change to `.pack = 1`
+
 ## Internal Changes
 
 * Removed `strip_type_qualifiers()` - tree-sitter AST parsing handles type
@@ -7,6 +18,9 @@
   approach unnecessary.
 
 ## Bug Fixes
+
+* Fixed anonymous bitfields (e.g., `: 30` for padding) causing empty field names
+  in generated code by checking for `node_is_missing()` in tree-sitter parsing.
 
 * Fixed inline/nested struct definitions generating invalid R code by extracting
   just the struct name from `struct_specifier` nodes instead of the full body text.
