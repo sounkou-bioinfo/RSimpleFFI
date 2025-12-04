@@ -7,6 +7,8 @@
 #' @param includes Additional include directories (used for TCC preprocessing)
 #' @return List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
 #' @keywords internal
+#' @importFrom treesitter parser parser_parse tree_root_node query query_captures
+#' @importFrom treesitter node_text node_parent node_child node_child_count node_type
 ffi_parse_header_ts <- function(header_file, includes = NULL) {
   if (!file.exists(header_file)) {
     stop("Header file not found: ", header_file)
