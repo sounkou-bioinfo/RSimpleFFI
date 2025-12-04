@@ -443,9 +443,9 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
 }
 
 #' Parse C header file and create structured result
-#' 
+#'
 #' Uses tree-sitter for robust AST-based parsing of C headers.
-#' 
+#'
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
 #' @return List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
@@ -509,7 +509,7 @@ generate_struct_definition <- function(struct_name, struct_def) {
     if (grepl("\\[", field_type)) {
       # Extract base type (everything before first [)
       base_type_str <- sub("\\[.*", "", field_type)
-      
+
       # Extract all array dimensions from type
       dimensions <- regmatches(field_type, gregexpr("\\[([0-9]+)\\]", field_type, perl = TRUE))[[1]]
       dimensions <- as.integer(gsub("\\[|\\]", "", dimensions))
@@ -539,41 +539,6 @@ generate_struct_definition <- function(struct_name, struct_def) {
           field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type))
         } else {
           field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type))
-        }
-      }
-    } else if (grepl("\\[", field_name)) {
-      # Legacy: Handle arrays in field name (old regex parser format)
-      # Extract base name and array dimensions
-      base_name <- sub("\\[.*", "", field_name)
-
-      # Extract all array dimensions
-      dimensions <- regmatches(field_name, gregexpr("\\[([0-9]+)\\]", field_name, perl = TRUE))[[1]]
-      dimensions <- as.integer(gsub("\\[|\\]", "", dimensions))
-
-      if (length(dimensions) > 0) {
-        # Get base type
-        if (field_type %in% names(type_map)) {
-          base_type <- type_map[[field_type]]
-        } else if (grepl("\\*", field_type)) {
-          base_type <- "ffi_pointer()"
-        } else {
-          base_type <- paste0("ffi_pointer()") # Will add comment separately
-          base_comment <- field_type
-        }
-
-        # Build nested array types for multi-dimensional arrays
-        ffi_type <- base_type
-        for (dim in rev(dimensions)) {
-          ffi_type <- sprintf("ffi_array_type(%s, %dL)", ffi_type, dim)
-        }
-
-        # Escape field name if needed
-        escaped_field_name <- escape_r_name(base_name)
-        if (exists("base_comment", inherits = FALSE)) {
-          field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, base_comment))
-          rm(base_comment)
-        } else {
-          field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
         }
       }
     } else {
@@ -978,26 +943,26 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
   if (!("param_list" %in% names(func_def)) || is.null(func_def$param_list)) {
     stop("Function definition must include param_list from tree-sitter parser")
   }
-  
+
   # Use tree-sitter parsed parameters (clean, no attributes, no regex parsing)
   param_names <- character()
   param_types_c <- character()
   param_types_ffi <- character()
   is_variadic <- FALSE
-  
+
   # Extract the actual parameter list (it's a named list keyed by function name)
   params <- func_def$param_list[[1]]
-  
+
   # Process each parameter from AST
   for (param in params) {
     if (isTRUE(param$is_variadic)) {
       is_variadic <- TRUE
       next
     }
-    
+
     param_type <- strip_type_qualifiers(param$type)
     param_name <- param$name
-    
+
     # Generate name if missing
     if (is.null(param_name) || param_name == "") {
       param_name <- paste0("arg", length(param_names) + 1)
@@ -1009,33 +974,35 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
         param_name <- escape_r_name(param_name)
       }
     }
-    
+
     param_names <- c(param_names, param_name)
     param_types_c <- c(param_types_c, param_type)
-    
+
     # Map to FFI type
     ffi_type <- map_type_to_ffi(param_type, type_map, typedef_ffi_map)
     param_types_ffi <- c(param_types_ffi, ffi_type)
   }
-  
+
   # Generate wrapper code
   return_type_clean <- strip_type_qualifiers(return_type)
   return_type_ffi <- map_type_to_ffi(return_type_clean, type_map, typedef_ffi_map, is_return = TRUE)
-  
-  generate_wrapper_code(func_name, return_type_ffi, param_names, param_types_c, 
-                       param_types_ffi, is_variadic)
+
+  generate_wrapper_code(
+    func_name, return_type_ffi, param_names, param_types_c,
+    param_types_ffi, is_variadic
+  )
 }
 
 #' Map C type to FFI type string
 #' @keywords internal
 map_type_to_ffi <- function(type_string, type_map, typedef_ffi_map, is_return = FALSE) {
   type_string <- strip_type_qualifiers(trimws(type_string))
-  
+
   # Handle empty or NULL type
   if (is.null(type_string) || length(type_string) == 0 || type_string == "") {
-    return("ffi_pointer()")  # Default to pointer for unknown/empty types
+    return("ffi_pointer()") # Default to pointer for unknown/empty types
   }
-  
+
   # Check for pointer types
   if (grepl("\\*", type_string)) {
     return("ffi_pointer()")
@@ -1054,10 +1021,10 @@ map_type_to_ffi <- function(type_string, type_map, typedef_ffi_map, is_return = 
 
 #' Generate wrapper code from parameter information
 #' @keywords internal
-generate_wrapper_code <- function(func_name, return_type_ffi, param_names, 
-                                   param_types_c, param_types_ffi, is_variadic) {
+generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
+                                  param_types_c, param_types_ffi, is_variadic) {
   r_func_name <- paste0("r_", func_name)
-  
+
   # Handle variadic functions specially
   if (is_variadic) {
     n_fixed <- length(param_names)
@@ -1091,7 +1058,7 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
     )
     return(paste(code, collapse = "\n"))
   }
-  
+
   # Build ffi_function call for non-variadic functions
   if (length(param_types_ffi) == 0) {
     ffi_call <- sprintf('  .fn <- ffi_function("%s", %s)', func_name, return_type_ffi)
@@ -1107,7 +1074,7 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
     )
     call_line <- sprintf("  .fn(%s)", paste(param_names, collapse = ", "))
   }
-  
+
   # Generate parameter documentation
   param_docs <- character()
   if (length(param_names) > 0) {
@@ -1118,7 +1085,7 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
       )
     }
   }
-  
+
   # Full function code
   code <- c(
     sprintf("#' Wrapper for C function: %s", func_name),
@@ -1132,7 +1099,7 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
     "}",
     ""
   )
-  
+
   paste(code, collapse = "\n")
 }
 
@@ -1216,7 +1183,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
   } else {
     "unknown"
   }
-  
+
   code_sections$header <- c(
     sprintf("# Auto-generated R bindings for %s", basename(parsed_header$file)),
     sprintf("# Generated on: %s", Sys.time()),
