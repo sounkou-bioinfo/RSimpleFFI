@@ -6,6 +6,8 @@
   - Added `ffi_parse_header_ts()` for robust AST-based C header parsing
   - `ffi_parse_header()` now uses tree-sitter by default when available (with fallback to regex)
   - Correctly parses complex array declarations and nested structs
+  - **Now detects `__attribute__((packed))` and sets `packed` attribute on structs/unions**
+  - Generates code with `pack=1` for packed structs automatically
   - Depends on `treesitter` (CRAN) and `treesitter.c` packages
   - TCC preprocessor still used first to expand macros before tree-sitter parsing
 

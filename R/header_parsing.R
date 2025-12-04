@@ -545,9 +545,45 @@ generate_struct_definition <- function(struct_name, struct_def) {
     field_type <- strip_type_qualifiers(trimws(field$type))
     field_name <- field$name
 
-    # Handle arrays: name[N] or name[N][M] -> extract name and sizes
-    # Match patterns like name[10] or matrix[3][3]
-    if (grepl("\\[", field_name)) {
+    # Handle arrays: type[N] or type[N][M] -> extract base type and sizes
+    # Match patterns like int[10] or double[3][3]
+    if (grepl("\\[", field_type)) {
+      # Extract base type (everything before first [)
+      base_type_str <- sub("\\[.*", "", field_type)
+      
+      # Extract all array dimensions from type
+      dimensions <- regmatches(field_type, gregexpr("\\[([0-9]+)\\]", field_type, perl = TRUE))[[1]]
+      dimensions <- as.integer(gsub("\\[|\\]", "", dimensions))
+
+      if (length(dimensions) > 0) {
+        # Get FFI type for base type
+        base_comment <- NULL
+        if (base_type_str %in% names(type_map)) {
+          base_type <- type_map[[base_type_str]]
+        } else if (grepl("\\*", base_type_str)) {
+          base_type <- "ffi_pointer()"
+        } else {
+          base_type <- "ffi_pointer()" # Unknown type, use pointer
+          base_comment <- base_type_str
+        }
+
+        # Build nested array types for multi-dimensional arrays
+        # For double[3][3], we want ffi_array_type(ffi_array_type(ffi_double(), 3L), 3L)
+        ffi_type <- base_type
+        for (dim in rev(dimensions)) {
+          ffi_type <- sprintf("ffi_array_type(%s, %dL)", ffi_type, dim)
+        }
+
+        # Escape field name if needed
+        escaped_field_name <- escape_r_name(field_name)
+        if (!is.null(base_comment)) {
+          field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type))
+        } else {
+          field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type))
+        }
+      }
+    } else if (grepl("\\[", field_name)) {
+      # Legacy: Handle arrays in field name (old regex parser format)
       # Extract base name and array dimensions
       base_name <- sub("\\[.*", "", field_name)
 
@@ -1134,8 +1170,14 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
     }
   }
 
+  # Create function signature for roxygen, truncate if too long to avoid line wrapping issues
+  func_signature <- sprintf("%s %s(%s)", return_type, func_name, params)
+  if (nchar(func_signature) > 80) {
+    func_signature <- paste0(substr(func_signature, 1, 77), "...")
+  }
+  
   code <- c(
-    sprintf("#' Wrapper for C function: %s %s(%s)", return_type, func_name, params),
+    sprintf("#' Wrapper for C function: %s", func_signature),
     "#'",
     param_docs,
     sprintf("#' @return (%s) %s", return_ffi, return_type),

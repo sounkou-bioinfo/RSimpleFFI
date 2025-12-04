@@ -85,7 +85,16 @@ ts_extract_structs <- function(root_node, source_text) {
           struct_name <- treesitter::node_text(captures1$node[[i]])
           struct_body <- captures1$node[[i+1]]
           
+          # Get parent struct_specifier node to check for packed attribute
+          parent_node <- treesitter::node_parent(struct_body)
+          is_packed <- ts_check_packed_attribute(parent_node, source_text)
+          
           fields <- ts_extract_struct_fields(struct_body, source_text)
+          
+          # Set packed attribute if detected
+          if (is_packed) {
+            attr(fields, "packed") <- TRUE
+          }
           
           # Preserve attributes when adding to list
           field_attrs <- attributes(fields)
@@ -110,7 +119,16 @@ ts_extract_structs <- function(root_node, source_text) {
           struct_body <- captures2$node[[i]]
           struct_name <- treesitter::node_text(captures2$node[[i+1]])
           
+          # Get parent struct_specifier node to check for packed attribute
+          parent_node <- treesitter::node_parent(struct_body)
+          is_packed <- ts_check_packed_attribute(parent_node, source_text)
+          
           fields <- ts_extract_struct_fields(struct_body, source_text)
+          
+          # Set packed attribute if detected
+          if (is_packed) {
+            attr(fields, "packed") <- TRUE
+          }
           
           # Preserve attributes when adding to list
           field_attrs <- attributes(fields)
@@ -128,6 +146,31 @@ ts_extract_structs <- function(root_node, source_text) {
   })
   
   structs
+}
+
+#' Check if a struct has packed attribute
+#' @keywords internal
+ts_check_packed_attribute <- function(struct_node, source_text) {
+  if (is.null(struct_node)) return(FALSE)
+  
+  # Check all children of the struct_specifier for attribute_specifier nodes
+  child_count <- treesitter::node_child_count(struct_node)
+  
+  for (i in seq_len(child_count)) {
+    child <- treesitter::node_child(struct_node, i)
+    child_type <- treesitter::node_type(child)
+    
+    if (child_type == "attribute_specifier") {
+      # Get the text of the attribute
+      attr_text <- treesitter::node_text(child)
+      # Check if it contains "packed" (handles both __packed__ and packed)
+      if (grepl("packed", attr_text, fixed = TRUE)) {
+        return(TRUE)
+      }
+    }
+  }
+  
+  FALSE
 }
 
 #' Extract fields from a struct body node
@@ -323,7 +366,16 @@ ts_extract_unions <- function(root_node, source_text) {
           union_name <- treesitter::node_text(captures1$node[[i]])
           union_body <- captures1$node[[i+1]]
           
+          # Get parent union_specifier node to check for packed attribute
+          parent_node <- treesitter::node_parent(union_body)
+          is_packed <- ts_check_packed_attribute(parent_node, source_text)
+          
           fields <- ts_extract_struct_fields(union_body, source_text)
+          
+          # Set packed attribute if detected
+          if (is_packed) {
+            attr(fields, "packed") <- TRUE
+          }
           
           # Preserve attributes when adding to list
           field_attrs <- attributes(fields)
@@ -348,7 +400,16 @@ ts_extract_unions <- function(root_node, source_text) {
           union_body <- captures2$node[[i]]
           union_name <- treesitter::node_text(captures2$node[[i+1]])
           
+          # Get parent union_specifier node to check for packed attribute
+          parent_node <- treesitter::node_parent(union_body)
+          is_packed <- ts_check_packed_attribute(parent_node, source_text)
+          
           fields <- ts_extract_struct_fields(union_body, source_text)
+          
+          # Set packed attribute if detected
+          if (is_packed) {
+            attr(fields, "packed") <- TRUE
+          }
           
           # Preserve attributes when adding to list
           field_attrs <- attributes(fields)
