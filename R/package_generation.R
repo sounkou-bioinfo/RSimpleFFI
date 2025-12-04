@@ -61,17 +61,25 @@ generate_package_init <- function(
   library_path = NULL,
   use_system_lib = TRUE
 ) {
+  # Use basename without extension for variable name (handles libhts.so.3 -> hts)
+  var_name <- sub("^lib", "", sub("\\.(so|dll|dylib).*$", "", library_name))
+
   if (use_system_lib) {
+    # Don't append extension if library_name already has one
+    lib_file <- if (grepl("\\.(so|dll|dylib)", library_name)) {
+      library_name
+    } else {
+      paste0(library_name, .Platform$dynlib.ext)
+    }
     load_code <- sprintf(
-      '  .%s_lib <<- dll_load_system("%s%s")',
-      library_name,
-      library_name,
-      .Platform$dynlib.ext
+      '  .%s_lib <<- dll_load_system("%s")',
+      var_name,
+      lib_file
     )
   } else if (!is.null(library_path)) {
     load_code <- sprintf(
       '  .%s_lib <<- dll_load("%s")',
-      library_name,
+      var_name,
       library_path
     )
   } else {
@@ -85,15 +93,15 @@ generate_package_init <- function(
   } else {
     warning("Library file not found: ", lib_file)
   }',
-      library_name,
-      library_name
+      var_name,
+      var_name
     )
   }
 
   fill_template(
     "zzz.R.template",
     list(
-      LIBRARY_NAME = library_name,
+      LIBRARY_NAME = var_name,
       LOAD_CODE = load_code
     )
   )

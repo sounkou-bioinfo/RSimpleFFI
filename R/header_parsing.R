@@ -1053,6 +1053,11 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
     param_type <- param$type
     param_name <- param$name
 
+    # Skip void parameters - f(void) means no parameters in C
+    if (!is.null(param_type) && trimws(param_type) == "void") {
+      next
+    }
+
     # Generate name if missing
     if (is.null(param_name) || param_name == "") {
       param_name <- paste0("arg", length(param_names) + 1)
