@@ -9,6 +9,16 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
+/* Compatibility macros for older R versions */
+/* VECTOR_PTR_RO and STRING_PTR_RO were added in R 4.5.0 */
+#ifndef VECTOR_PTR_RO
+#define VECTOR_PTR_RO(x) ((const SEXP *)DATAPTR_RO(x))
+#endif
+
+#ifndef STRING_PTR_RO
+#define STRING_PTR_RO(x) ((const SEXP *)DATAPTR_RO(x))
+#endif
+
 /* Tag symbols for identifying our protected pointers */
 static SEXP protected_sexp_tag = NULL;
 static SEXP protected_data_tag = NULL;
