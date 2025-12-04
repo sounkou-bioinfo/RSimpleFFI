@@ -20,11 +20,22 @@ ffi_parse_header_ts <- function(header_file, includes = NULL) {
   }
 
 
-  preprocessed <- tcc_preprocess(header_file, includes = includes)
-  if (length(preprocessed) < 10) {
+  preprocessed <- tryCatch(
+    tcc_preprocess(header_file, includes = includes),
+    error = function(e) {
+      message(sprintf(
+        "TCC preprocessing failed for %s: %s", header_file, e$message
+      ))
+      warning(sprintf(
+        "TCC preprocessing failed for %s: %s", header_file, e$message
+      ))
+      character(0)
+    }
+  )
+  if (length(preprocessed) == 0) {
     warning(sprintf(
-      "TCC preprocessing returned very little output (%d lines) for %s. System headers may be missing or not found. Parsed structs may be empty.",
-      length(preprocessed), header_file
+      "TCC preprocessing produced no output for %s. System headers may be missing or not found. Parsed structs may be empty.",
+      header_file
     ))
   }
   preprocessed_text <- paste(preprocessed, collapse = "\n")
