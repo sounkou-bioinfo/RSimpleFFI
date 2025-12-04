@@ -4,7 +4,7 @@
 \alias{generate_struct_definition}
 \title{Generate R struct definition from parsed struct}
 \usage{
-generate_struct_definition(struct_name, struct_def)
+generate_struct_definition(struct_name, struct_def, typedefs = NULL)
 }
 \arguments{
 \item{struct_name}{Name of the struct}

@@ -2,11 +2,11 @@
 % Please edit documentation in R/treesitter_parser.R
 \name{ts_get_typedef_name}
 \alias{ts_get_typedef_name}
-\title{Get typedef name from declarator}
+\title{Get typedef name from declarator (legacy wrapper)}
 \usage{
 ts_get_typedef_name(declarator_node, source_text)
 }
 \description{
-Get typedef name from declarator
+Get typedef name from declarator (legacy wrapper)
 }
 \keyword{internal}

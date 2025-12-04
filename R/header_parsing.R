@@ -108,6 +108,22 @@ get_ffi_type_map <- function() {
     "uintptr_t" = "ffi_size_t()",
 
     # ============================================
+    # C11/C++11/C++20 character types
+    # (tree-sitter treats these as primitive_type)
+    # ============================================
+    "char8_t" = "ffi_uint8()", # C++20 UTF-8 character
+    "char16_t" = "ffi_uint16()", # C11/C++11 UTF-16 character
+    "char32_t" = "ffi_uint32()", # C11/C++11 UTF-32 character
+    "char64_t" = "ffi_uint64()", # Non-standard extension
+
+    # ============================================
+    # Other tree-sitter primitive types
+    # ============================================
+    "charptr_t" = "ffi_pointer()", # char* typedef
+    "nullptr_t" = "ffi_pointer()", # C23/C++11 null pointer type
+    "max_align_t" = "ffi_longdouble()", # Maximum alignment type
+
+    # ============================================
     # POSIX types
     # ============================================
     "size_t" = "ffi_size_t()",
