@@ -70,8 +70,10 @@ bindgen_r_api <- function(
     }
 
     results <- list()
+    n_headers <- length(headers)
 
-    for (header in headers) {
+    for (i in seq_along(headers)) {
+        header <- headers[i]
         header_path <- file.path(include_path, header)
 
         if (!file.exists(header_path)) {
@@ -79,7 +81,7 @@ bindgen_r_api <- function(
             next
         }
 
-        if (verbose) message("Parsing ", header, "...")
+        if (verbose) message(sprintf("[%d/%d] Parsing %s...", i, n_headers, header))
 
         parsed <- tryCatch(
             ffi_parse_header(header_path, includes = include_path),
@@ -96,7 +98,7 @@ bindgen_r_api <- function(
 
             if (verbose) {
                 message("  Structs: ", length(parsed$structs))
-                message("  Functions: ", length(parsed$functions))
+                message("  Functions: ", nrow(parsed$functions))
                 message("  Typedefs: ", length(parsed$typedefs))
                 message("  Enums: ", length(parsed$enums))
             }
@@ -144,7 +146,13 @@ bindgen_r_api <- function(
         }
 
         # Generate bindings
-        generate_r_bindings(combined, output_file = output_file)
+        if (verbose) {
+            message(sprintf(
+                "Generating bindings for %d functions, %d structs, %d typedefs...",
+                nrow(combined$functions), length(combined$structs), length(combined$typedefs)
+            ))
+        }
+        generate_r_bindings(combined, output_file = output_file, verbose = verbose)
 
         if (verbose) {
             message("Generated bindings: ", output_file)

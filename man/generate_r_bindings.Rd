@@ -4,12 +4,14 @@
 \alias{generate_r_bindings}
 \title{Generate R bindings from parsed header}
 \usage{
-generate_r_bindings(parsed_header, output_file = NULL)
+generate_r_bindings(parsed_header, output_file = NULL, verbose = FALSE)
 }
 \arguments{
 \item{parsed_header}{Parsed header object from ffi_parse_header()}
 
 \item{output_file}{Optional file to write code to}
+
+\item{verbose}{If TRUE, print progress messages}
 }
 \value{
 Character vector with all generated R code

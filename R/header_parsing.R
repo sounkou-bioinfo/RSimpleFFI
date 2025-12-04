@@ -1220,9 +1220,10 @@ sort_typedefs_by_dependency <- function(typedefs) {
 #' Generate R bindings from parsed header
 #' @param parsed_header Parsed header object from ffi_parse_header()
 #' @param output_file Optional file to write code to
+#' @param verbose If TRUE, print progress messages
 #' @return Character vector with all generated R code
 #' @export
-generate_r_bindings <- function(parsed_header, output_file = NULL) {
+generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FALSE) {
   code_sections <- list()
 
   # Header comment
@@ -1466,17 +1467,21 @@ generate_r_bindings <- function(parsed_header, output_file = NULL) {
       !grepl("^extern", parsed_header$functions$return_type),
     ]
 
-    for (i in seq_len(nrow(user_funcs))) {
-      func_code <- generate_function_wrapper(user_funcs[i, ], typedefs = parsed_header$typedefs)
-      code_sections$functions <- c(
-        code_sections$functions,
-        func_code,
-        ""
-      )
+    # Pre-generate all function wrappers (avoid O(n²) concatenation)
+    n_funcs <- nrow(user_funcs)
+    if (n_funcs > 0) {
+      if (verbose) message(sprintf("  Generating %d function wrappers...", n_funcs))
+      func_codes <- vapply(seq_len(n_funcs), function(i) {
+        if (verbose && i %% 500 == 0) {
+          message(sprintf("    Progress: %d/%d functions", i, n_funcs))
+        }
+        paste0(generate_function_wrapper(user_funcs[i, ], typedefs = parsed_header$typedefs), "\n")
+      }, character(1))
+      code_sections$functions <- c(code_sections$functions, func_codes)
     }
   }
 
-  # Combine all sections
+  if (verbose) message("  Combining code sections...")
   all_code <- unlist(code_sections)
 
   # Combine into single string for easier use
