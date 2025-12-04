@@ -1,3 +1,12 @@
+# RSimpleFFI 1.0.1.9002 (Development)
+
+## Bug Fixes
+
+* Fixed missing `treesitter` package import declaration (#2)
+  - Added `treesitter` to DESCRIPTION Imports field
+  - Added proper `@importFrom` roxygen2 directives for tree-sitter functions
+  - Resolves R CMD check warnings on macOS and Ubuntu
+
 # RSimpleFFI 1.0.1.9001 (Development)
 
 ## Major Milestones
