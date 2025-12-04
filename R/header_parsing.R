@@ -445,9 +445,18 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
 #' Parse C header file and create structured result
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
+#' @param use_treesitter If TRUE (default), use tree-sitter parser when available. If FALSE, use regex parser.
 #' @return List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
 #' @export
-ffi_parse_header <- function(header_file, includes = NULL) {
+ffi_parse_header <- function(header_file, includes = NULL, use_treesitter = TRUE) {
+  # Try tree-sitter first if requested
+  if (use_treesitter && 
+      requireNamespace("treesitter", quietly = TRUE) && 
+      requireNamespace("treesitter.c", quietly = TRUE)) {
+    return(ffi_parse_header_ts(header_file, includes, use_treesitter = TRUE))
+  }
+  
+  # Fall back to regex parser
   if (!tcc_available()) {
     stop("TinyCC not available. Package may not be installed correctly.")
   }
@@ -1268,8 +1277,8 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
         # 2. Character literals: '\n' -> "\n" (R uses strings not chars)
         # Need to handle escape sequences carefully
         if (grepl("^'.*'$", value)) {
-          # Extract the content between quotes
-          content <- gsub("^'(.+)'$", "\\1", value)
+          # Extract the content between quotes (allow empty with .*)
+          content <- gsub("^'(.*)'$", "\\1", value)
           # R string: just re-quote (escapes like \n, \t work the same)
           # But \' becomes ' in R strings (no need to escape single quote)
           content <- gsub("\\\\'", "'", content)
@@ -1314,18 +1323,8 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
           value <- sub("[LlUuFf]+$", "", value)
         }
 
-        # 7. Escape backslashes in string values (Windows paths, etc.)
-        if (grepl('^"', value)) {
-          # Extract content, escape backslashes, re-quote
-          content <- gsub('^"(.*)\"$', "\\1", value)
-          # Double any backslashes that aren't already escape sequences
-          # This is tricky - we want \n to stay as \n, but \ to become \\
-          # Simple approach: if backslash is followed by an invalid escape char, double it
-          # Valid R escapes: \n \r \t \b \a \f \v \\ \' \" \` \nnn \xnn \unnnn \Unnnnnnnn
-          # For now, just double all backslashes and let valid ones work
-          content <- gsub("\\\\", "\\\\\\\\", content)
-          value <- paste0('"', content, '"')
-        }
+        # 7. String values from character literals are already properly escaped
+        # Skip re-escaping to avoid breaking escape sequences like \n
 
         # Quote value if it's not a number or already quoted
         if (!grepl("^(0[xX][0-9a-fA-F]+|[0-9.+-]+([eE][+-]?[0-9]+)?L?)$", value) && !grepl("^['\"]", value)) {
