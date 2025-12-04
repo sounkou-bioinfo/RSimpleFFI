@@ -35,16 +35,36 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.1.9001" id="rsimpleffi-1019001-development">RSimpleFFI 1.0.1.9001 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1019001-development"></a></h2>
 <div class="section level3">
+<h3 id="major-milestones-1-0-1-9001">Major Milestones<a class="anchor" aria-label="anchor" href="#major-milestones-1-0-1-9001"></a></h3>
+<ul><li>
+<strong>Completed migration to treesitter.c</strong>: Full transition from regex-based parsing to AST-based parsing
+<ul><li>All legacy parsing code removed</li>
+<li>Tree-sitter now handles 100% of C header parsing</li>
+<li>More robust, accurate, and maintainable codebase</li>
+<li>Better support for complex C syntax patterns</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="breaking-changes-1-0-1-9001">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-1-9001"></a></h3>
+<ul><li>
+<strong>Removed regex-based header parser</strong>: The package now exclusively uses tree-sitter for C header parsing
+<ul><li>Removed functions: <code>tcc_extract_structs()</code>, <code>tcc_extract_unions()</code>, <code>tcc_extract_enums()</code>, <code>tcc_extract_functions()</code>, <code>tcc_extract_typedefs()</code>, <code>tcc_parse_header()</code>
+</li>
+<li>
+<code><a href="../reference/ffi_parse_header.html">ffi_parse_header()</a></code> now always uses tree-sitter (no <code>use_treesitter</code> parameter)</li>
+<li>Packages <code>treesitter</code> and <code>treesitter.c</code> are now required dependencies (not optional)</li>
+<li>Migration: Simply remove <code>use_treesitter = FALSE</code> from any code - tree-sitter handles all valid C syntax</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
 <h3 id="new-features-1-0-1-9001">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1-9001"></a></h3>
 <ul><li>
-<strong>Tree-sitter parser integration</strong>:
-<ul><li>Added <code><a href="../reference/ffi_parse_header_ts.html">ffi_parse_header_ts()</a></code> for robust AST-based C header parsing</li>
-<li>
-<code><a href="../reference/ffi_parse_header.html">ffi_parse_header()</a></code> now uses tree-sitter by default when available (with fallback to regex)</li>
+<strong>Tree-sitter parser is now the only parser</strong>:
+<ul><li>Robust AST-based parsing handles all valid C syntax</li>
+<li>Correctly parses pointer return types (e.g., <code>FILE* open_file(...)</code>)</li>
 <li>Correctly parses complex array declarations and nested structs</li>
-<li><strong>Now detects <code>__attribute__((packed))</code> and sets <code>packed</code> attribute on structs/unions</strong></li>
+<li><strong>Detects <code>__attribute__((packed))</code> and sets <code>packed</code> attribute on structs/unions</strong></li>
 <li>Generates code with <code>pack=1</code> for packed structs automatically</li>
-<li>Depends on <code>treesitter</code> (CRAN) and <code>treesitter.c</code> packages</li>
 <li>TCC preprocessor still used first to expand macros before tree-sitter parsing</li>
 </ul></li>
 <li>Struct allocation helpers are now auto-generated in R bindings:
@@ -63,7 +83,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-0-1-9001">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-1-9001"></a></h3>
-<ul><li>Fixed multi-line C comment removal in header parsing</li>
+<ul><li>Fixed pointer return type extraction in tree-sitter parser (was missing functions like <code>FILE* open_file(...)</code>)</li>
+<li>Fixed multi-line C comment removal in header parsing</li>
 <li>Fixed R name escaping for reserved words (<code><a href="https://rdrr.io/r/base/Control.html" class="external-link">next</a></code>, <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">break</a></code>, etc.) and underscore-prefixed identifiers</li>
 </ul></div>
 </div>
