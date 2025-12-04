@@ -10,7 +10,6 @@
 #include <R_ext/Rdynload.h>
 
 /* Compatibility macros for older R versions */
-/* VECTOR_PTR_RO and STRING_PTR_RO were added in R 4.5.0 */
 #ifndef VECTOR_PTR_RO
 #define VECTOR_PTR_RO(x) ((const SEXP *)DATAPTR_RO(x))
 #endif
