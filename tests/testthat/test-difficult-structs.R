@@ -3,6 +3,108 @@
 library(testthat)
 library(RSimpleFFI)
 
+# Helper function to dump debug info when tests fail
+dump_parse_debug_info <- function(parsed, header_path) {
+  message("\n=== DEBUG INFO FOR DIFFICULT STRUCTS TEST ===")
+  message("Header path: ", header_path)
+  message("Header exists: ", file.exists(header_path))
+
+  # Show preprocessed code (first 200 lines)
+  if (!is.null(parsed$preprocessed_code)) {
+    message("\n--- Preprocessed code (first 200 lines) ---")
+    lines <- strsplit(parsed$preprocessed_code, "\n")[[1]]
+    message(paste(head(lines, 200), collapse = "\n"))
+    if (length(lines) > 200) {
+      message("... (", length(lines) - 200, " more lines)")
+    }
+  }
+
+  # Show parsed structs
+  message("\n--- Parsed structs (", nrow(parsed$structs), " total) ---")
+  if (!is.null(parsed$structs) && nrow(parsed$structs) > 0) {
+    for (i in seq_len(min(nrow(parsed$structs), 20))) {
+      s <- parsed$structs[i, ]
+      message(sprintf("  Struct[%d]: %s", i, s$name))
+      if (!is.null(s$fields) && length(s$fields[[1]]) > 0) {
+        for (j in seq_along(s$fields[[1]])) {
+          f <- s$fields[[1]][[j]]
+          bitfield_info <- if (!is.null(f$bitfield_width) && !is.na(f$bitfield_width)) {
+            sprintf(" :BITFIELD(%s)", f$bitfield_width)
+          } else {
+            ""
+          }
+          message(sprintf("    field[%d]: %s %s%s", j, f$type, f$name, bitfield_info))
+        }
+      }
+    }
+  }
+
+  # Show parsed functions
+  message("\n--- Parsed functions (", nrow(parsed$functions), " total) ---")
+  if (!is.null(parsed$functions) && nrow(parsed$functions) > 0) {
+    for (i in seq_len(min(nrow(parsed$functions), 20))) {
+      fn <- parsed$functions[i, ]
+      message(sprintf("  Function[%d]: %s %s(...)", i, fn$return_type, fn$name))
+    }
+  }
+
+  # Check for bitfield_warning attribute
+  message("\n--- Bitfield detection ---")
+  message(
+    "bitfield_warning attribute: ",
+    if (!is.null(attr(parsed, "bitfield_warning"))) attr(parsed, "bitfield_warning") else "NULL"
+  )
+
+  # Look for any struct fields that might be bitfields
+  message("\n--- Searching for bitfield candidates in structs ---")
+  if (!is.null(parsed$structs) && nrow(parsed$structs) > 0) {
+    found_any <- FALSE
+    for (i in seq_len(nrow(parsed$structs))) {
+      s <- parsed$structs[i, ]
+      if (!is.null(s$fields) && length(s$fields[[1]]) > 0) {
+        for (j in seq_along(s$fields[[1]])) {
+          f <- s$fields[[1]][[j]]
+          if (!is.null(f$bitfield_width) && !is.na(f$bitfield_width)) {
+            message(sprintf("  FOUND BITFIELD: %s.%s : %s", s$name, f$name, f$bitfield_width))
+            found_any <- TRUE
+          }
+        }
+      }
+    }
+    if (!found_any) {
+      message("  NO BITFIELDS DETECTED IN ANY STRUCT")
+    }
+  }
+
+  message("=== END DEBUG INFO ===\n")
+}
+
+# Helper to generate bindings and check for bitfield warning with debug output
+generate_bindings_with_debug <- function(parsed, header_path) {
+  warning_caught <- FALSE
+  code <- tryCatch(
+    withCallingHandlers(
+      generate_r_bindings(parsed),
+      warning = function(w) {
+        if (grepl("bit-?field", conditionMessage(w), ignore.case = TRUE)) {
+          warning_caught <<- TRUE
+        }
+        invokeRestart("muffleWarning")
+      }
+    ),
+    error = function(e) {
+      dump_parse_debug_info(parsed, header_path)
+      stop(e)
+    }
+  )
+  
+  if (!warning_caught) {
+    dump_parse_debug_info(parsed, header_path)
+  }
+  
+  list(code = code, warning_caught = warning_caught)
+}
+
 test_that("FILE* and opaque pointers generate valid code", {
   skip_if_not(tcc_available(), "TCC not available")
 
@@ -10,9 +112,30 @@ test_that("FILE* and opaque pointers generate valid code", {
   skip_if(header == "", "difficult_structs.h not found")
 
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+
+  # Try to get warning, dump debug info if not found
+  warning_caught <- FALSE
+  code <- tryCatch(
+    withCallingHandlers(
+      generate_r_bindings(parsed),
+      warning = function(w) {
+        if (grepl("bit-?field", conditionMessage(w), ignore.case = TRUE)) {
+          warning_caught <<- TRUE
+        }
+        invokeRestart("muffleWarning")
+      }
+    ),
+    error = function(e) {
+      dump_parse_debug_info(parsed, header)
+      stop(e)
+    }
+  )
+
+  if (!warning_caught) {
+    dump_parse_debug_info(parsed, header)
+  }
+  expect_true(warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   tmpfile <- tempfile(fileext = ".R")
