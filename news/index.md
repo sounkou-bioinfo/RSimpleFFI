@@ -152,7 +152,7 @@
 
 - Added
   [`get_resolvable_types()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_resolvable_types.md)
-  and `get_c_type_keywords()` helper functions
+  helper function
 
 ## RSimpleFFI 1.0.1
 
