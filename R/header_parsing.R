@@ -459,7 +459,7 @@ ffi_parse_header <- function(header_file, includes = NULL) {
 #' @param struct_name Name of the struct
 #' @return Character vector with R code
 #' @export
-generate_struct_definition <- function(struct_name, struct_def) {
+generate_struct_definition <- function(struct_name, struct_def, typedefs = NULL) {
   if (length(struct_def) == 0) {
     return(NULL)
   }
@@ -549,8 +549,19 @@ generate_struct_definition <- function(struct_name, struct_def) {
         ffi_type <- "ffi_pointer()"
       } else if (field_type %in% names(type_map)) {
         ffi_type <- type_map[[field_type]]
+      } else if (!is.null(typedefs) && field_type %in% names(typedefs)) {
+        # Resolve typedef to underlying type
+        base_type <- strip_type_qualifiers(typedefs[[field_type]])
+        if (grepl("\\*", base_type)) {
+          ffi_type <- "ffi_pointer()"
+        } else if (base_type %in% names(type_map)) {
+          ffi_type <- type_map[[base_type]]
+        } else {
+          ffi_type <- "ffi_pointer()"
+          field_comment <- field_type
+        }
       } else {
-        # Unknown type - could be typedef or struct, use pointer
+        # Unknown type - could be nested struct, use pointer
         ffi_type <- "ffi_pointer()"
         field_comment <- field_type
       }
@@ -1310,7 +1321,7 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
     for (struct_name in names(parsed_header$structs)) {
       struct_def <- parsed_header$structs[[struct_name]]
       escaped_name <- escape_r_name(struct_name)
-      struct_code <- generate_struct_definition(escaped_name, struct_def)
+      struct_code <- generate_struct_definition(escaped_name, struct_def, typedefs = parsed_header$typedefs)
       if (!is.null(struct_code)) {
         code_sections$structs <- c(
           code_sections$structs,
