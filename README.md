@@ -665,10 +665,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 66749152
+#> [1] 934962216
 rand_value <- rand_func()
 rand_value
-#> [1] 991584933
+#> [1] 452855221
 dll_unload(libc_path)
 ```
 
@@ -690,7 +690,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5ea3f845b300>
+#> <pointer: 0x5f716d1266d0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -781,8 +781,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     12.8µs     29µs    35386.    78.2KB        0
-#> 2 ffi_call    108.6µs    112µs     8668.    78.7KB        0
+#> 1 native_r     13.1µs   29.3µs    33870.    78.2KB        0
+#> 2 ffi_call    103.1µs  108.1µs     8879.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -864,7 +864,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5ea3fb84c600>
+#> <pointer: 0x5f717002e610>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -896,8 +896,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.47ms   2.63ms      383.    78.2KB     20.2
-#> 2 c_ffi      110.93µs 123.63µs     7713.    78.7KB      0
+#> 1 r            2.48ms   2.58ms      383.    78.2KB     20.1
+#> 2 c_ffi      118.62µs 130.18µs     7227.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -979,7 +979,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764878952
+#> [1] 1764880579
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1021,7 +1021,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-04 21:09:12.236391\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-04 21:36:18.947716\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1078,8 +1078,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file94ddb2dc4f97f.h
-#> # Generated on: 2025-12-04 21:09:12.272799
+#> # Auto-generated R bindings for file9cb6e648c7e72.h
+#> # Generated on: 2025-12-04 21:36:18.984284
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1141,7 +1141,7 @@ Generate bindings and call statistical distribution functions directly:
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> Generated R bindings written to: /tmp/RtmptLqU9C/file94ddb599e47f5.R
+#> Generated R bindings written to: /tmp/RtmpTJnKcR/file9cb6e5d072848.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1379,7 +1379,7 @@ automatically released when the pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x5ea3fa0409a8>
+#> <pointer: 0x5f7171648eb8>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
