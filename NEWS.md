@@ -1,6 +1,18 @@
 # RSimpleFFI 1.0.1.9002 (Development)
 
+## Internal Changes
+
+* Removed `strip_type_qualifiers()` - tree-sitter AST parsing handles type
+  qualifier stripping directly via node type filtering, making the regex-based
+  approach unnecessary.
+
 ## Bug Fixes
+
+* Fixed inline/nested struct definitions generating invalid R code by extracting
+  just the struct name from `struct_specifier` nodes instead of the full body text.
+
+* Fixed typedef'd anonymous structs/unions/enums being duplicated in typedefs
+  (they are already extracted as structs/unions/enums).
 
 * Fixed missing `treesitter` package import declaration (#2)
   - Added `treesitter` to DESCRIPTION Imports field

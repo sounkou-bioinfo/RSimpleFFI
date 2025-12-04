@@ -1,33 +1,5 @@
 # Header Parsing and Code Generation
 
-#' Strip C type qualifiers from a type string
-#'
-#' Removes const, volatile, restrict, _Atomic, and related qualifiers
-#' from a C type string, normalizing whitespace.
-#'
-#' @param type_str Character string containing a C type
-#' @return Cleaned type string with qualifiers removed
-#' @keywords internal
-strip_type_qualifiers <- function(type_str) {
-  # Remove qualifiers (word boundaries to avoid partial matches)
-  type_str <- gsub("\\bconst\\b", "", type_str)
-  type_str <- gsub("\\bvolatile\\b", "", type_str)
-  type_str <- gsub("\\brestrict\\b", "", type_str)
-  type_str <- gsub("\\b__restrict\\b", "", type_str)
-  type_str <- gsub("\\b__restrict__\\b", "", type_str)
-  type_str <- gsub("\\b_Atomic\\b", "", type_str)
-  type_str <- gsub("\\bregister\\b", "", type_str)
-  type_str <- gsub("\\binline\\b", "", type_str)
-  type_str <- gsub("\\b__inline\\b", "", type_str)
-  type_str <- gsub("\\b__inline__\\b", "", type_str)
-  type_str <- gsub("\\bextern\\b", "", type_str)
-  type_str <- gsub("\\bstatic\\b", "", type_str)
-  # Normalize whitespace
-
-  type_str <- gsub("\\s+", " ", type_str)
-  trimws(type_str)
-}
-
 #' Get the master C-to-FFI type mapping
 #'
 #' Returns a named character vector mapping C type names to FFI type constructor calls.
@@ -501,7 +473,7 @@ generate_struct_definition <- function(
   # Generate field definitions
   field_defs <- character()
   for (field in struct_def) {
-    field_type <- strip_type_qualifiers(trimws(field$type))
+    field_type <- trimws(field$type)
     field_name <- field$name
 
     # Handle arrays: type[N] or type[N][M] -> extract base type and sizes
@@ -560,7 +532,7 @@ generate_struct_definition <- function(
         ffi_type <- type_map[[field_type]]
       } else if (!is.null(typedefs) && field_type %in% names(typedefs)) {
         # Resolve typedef to underlying type
-        base_type <- strip_type_qualifiers(typedefs[[field_type]])
+        base_type <- typedefs[[field_type]]
         if (grepl("\\*", base_type)) {
           ffi_type <- "ffi_pointer()"
         } else if (base_type %in% names(type_map)) {
@@ -689,7 +661,7 @@ generate_union_definition <- function(union_name, union_def) {
   # Generate field definitions
   field_defs <- character()
   for (field in union_def) {
-    field_type <- strip_type_qualifiers(trimws(field$type))
+    field_type <- trimws(field$type)
     field_name <- field$name
 
     # Get FFI type
@@ -846,9 +818,6 @@ can_resolve_typedef <- function(
   known_structs = character(),
   visited = character()
 ) {
-  # Strip qualifiers
-  base_type <- strip_type_qualifiers(base_type)
-
   # Avoid infinite loops from cycles
 
   if (base_type %in% visited) {
@@ -907,9 +876,6 @@ generate_typedef_definition <- function(
   known_structs = character(),
   known_typedefs = character()
 ) {
-  # Strip qualifiers from base type
-  base_type <- strip_type_qualifiers(base_type)
-
   # Get centralized type map
   type_map <- get_ffi_type_map()
 
@@ -1053,7 +1019,7 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
   typedef_ffi_map <- list()
   if (!is.null(typedefs) && length(typedefs) > 0) {
     for (td_name in names(typedefs)) {
-      base_type <- strip_type_qualifiers(typedefs[[td_name]])
+      base_type <- typedefs[[td_name]]
       # Check if base type is a known FFI type
       if (base_type %in% names(type_map)) {
         typedef_ffi_map[[td_name]] <- type_map[[base_type]]
@@ -1084,7 +1050,7 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
       next
     }
 
-    param_type <- strip_type_qualifiers(param$type)
+    param_type <- param$type
     param_name <- param$name
 
     # Generate name if missing
@@ -1108,9 +1074,8 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
   }
 
   # Generate wrapper code
-  return_type_clean <- strip_type_qualifiers(return_type)
   return_type_ffi <- map_type_to_ffi(
-    return_type_clean,
+    return_type,
     type_map,
     typedef_ffi_map,
     is_return = TRUE
@@ -1134,7 +1099,7 @@ map_type_to_ffi <- function(
   typedef_ffi_map,
   is_return = FALSE
 ) {
-  type_string <- strip_type_qualifiers(trimws(type_string))
+  type_string <- trimws(type_string)
 
   # Handle empty or NULL type
   if (is.null(type_string) || length(type_string) == 0 || type_string == "") {

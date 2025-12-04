@@ -268,17 +268,24 @@ ts_parse_field_declaration <- function(field_node, source_text) {
 
   # Get field name and type
   field_name <- ts_get_declarator_name(declarator_node, source_text)
-  base_type <- if (!is.null(type_node)) {
-    treesitter::node_text(type_node)
+
+  if (is.null(type_node)) {
+    # No type node found - skip this field
+    return(NULL)
+  }
+
+  # Handle struct_specifier specially - extract just the struct name
+  # to avoid including the full struct body in the type string
+  base_type <- if (treesitter::node_type(type_node) == "struct_specifier") {
+    ts_get_struct_type_name(type_node)
   } else {
-    "int" # default
+    treesitter::node_text(type_node)
   }
 
   # Handle pointer declarators - include * in type
   if (treesitter::node_type(declarator_node) == "pointer_declarator") {
-    # Count asterisks and add to type
-    decl_text <- treesitter::node_text(declarator_node)
-    ptr_count <- nchar(gsub("[^*]", "", decl_text))
+    # Count asterisks by traversing AST nodes
+    ptr_count <- ts_count_pointer_stars(declarator_node)
     base_type <- paste0(base_type, strrep("*", ptr_count))
   }
 
@@ -328,6 +335,56 @@ ts_get_declarator_name <- function(declarator_node, source_text) {
   }
 
   NULL
+}
+
+#' Count asterisks in a pointer_declarator by traversing AST
+#'
+#' Counts the number of pointer indirection levels by finding all '*' nodes
+#' in the pointer_declarator subtree.
+#'
+#' @param declarator_node A pointer_declarator node
+#' @return Integer count of pointer asterisks
+#' @keywords internal
+ts_count_pointer_stars <- function(declarator_node) {
+  count <- 0
+  current <- declarator_node
+  # Traverse nested pointer_declarator nodes
+  while (!is.null(current) && treesitter::node_type(current) == "pointer_declarator") {
+    # Each pointer_declarator level has exactly one '*'
+    child_count <- treesitter::node_child_count(current)
+    for (i in seq_len(child_count)) {
+      child <- treesitter::node_child(current, i)
+      if (treesitter::node_type(child) == "*") {
+        count <- count + 1
+      }
+    }
+    # Move to the inner declarator (could be another pointer_declarator or the final identifier)
+    inner <- treesitter::node_child_by_field_name(current, "declarator")
+    current <- inner
+  }
+  count
+}
+
+#' Get struct type name from a struct_specifier node
+#'
+#' Extracts just the struct name (e.g., "struct Foo") from a struct_specifier
+#' node, without including the full body definition if present.
+#' For anonymous structs, returns "struct" only.
+#'
+#' @param struct_node A struct_specifier node
+#' @return Character string with the struct type name
+#' @keywords internal
+ts_get_struct_type_name <- function(struct_node) {
+  # Look for type_identifier child which contains the struct name
+  child_count <- treesitter::node_child_count(struct_node)
+  for (i in seq_len(child_count)) {
+    child <- treesitter::node_child(struct_node, i)
+    if (treesitter::node_type(child) == "type_identifier") {
+      return(paste0("struct ", treesitter::node_text(child)))
+    }
+  }
+  # Anonymous struct - no name
+  "struct"
 }
 
 #' Get array dimensions from an array declarator
@@ -947,6 +1004,27 @@ ts_extract_typedefs <- function(root_node, source_text) {
           ) {
             type_node <- captures$node[[i]]
             declarator_node <- captures$node[[i + 1]]
+
+            # Skip typedef'd anonymous structs/unions/enums - these are handled
+            # by ts_extract_structs/unions/enums instead
+            type_node_type <- treesitter::node_type(type_node)
+            if (type_node_type %in% c("struct_specifier", "union_specifier", "enum_specifier")) {
+              # Check if this is an anonymous definition (has a body)
+              has_body <- FALSE
+              child_count <- treesitter::node_child_count(type_node)
+              for (j in seq_len(child_count)) {
+                child <- treesitter::node_child(type_node, j)
+                child_type <- treesitter::node_type(child)
+                if (child_type %in% c("field_declaration_list", "enumerator_list")) {
+                  has_body <- TRUE
+                  break
+                }
+              }
+              if (has_body) {
+                i <- i + 2
+                next
+              }
+            }
 
             base_type <- treesitter::node_text(type_node)
             typedef_info <- ts_get_typedef_info(declarator_node, source_text)
