@@ -4,12 +4,14 @@
 \alias{ffi_parse_header}
 \title{Parse C header file and create structured result}
 \usage{
-ffi_parse_header(header_file, includes = NULL)
+ffi_parse_header(header_file, includes = NULL, use_treesitter = TRUE)
 }
 \arguments{
 \item{header_file}{Path to C header file}
 
 \item{includes}{Additional include directories}
+
+\item{use_treesitter}{If TRUE (default), use tree-sitter parser when available. If FALSE, use regex parser.}
 }
 \value{
 List with parsed components (file, defines, structs, unions, enums, functions, typedefs)

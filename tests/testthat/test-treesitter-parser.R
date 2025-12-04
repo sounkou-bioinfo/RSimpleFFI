@@ -24,12 +24,15 @@ test_that("tree-sitter parser can parse simple struct", {
   
   # After TCC preprocessing, MAX_SIZE should be expanded to 100
   point_fields <- result$structs$Point
-  expect_true("x" %in% names(point_fields))
-  expect_true("y" %in% names(point_fields))
+  field_names <- sapply(point_fields, function(f) f$name)
+  expect_true("x" %in% field_names)
+  expect_true("y" %in% field_names)
   
   # Check that x is an array (should be "int[100]" after preprocessing)
-  expect_match(point_fields$x, "int\\[100\\]")
-  expect_equal(point_fields$y, "int")
+  x_field <- point_fields[[which(field_names == "x")]]
+  y_field <- point_fields[[which(field_names == "y")]]
+  expect_match(x_field$type, "int\\[100\\]")
+  expect_equal(y_field$type, "int")
 })
 
 test_that("tree-sitter parser falls back gracefully", {
@@ -67,7 +70,9 @@ test_that("tree-sitter handles multi-dimensional arrays", {
   
   expect_true("Matrix" %in% names(result$structs))
   matrix_fields <- result$structs$Matrix
+  field_names <- sapply(matrix_fields, function(f) f$name)
   
-  expect_true("data" %in% names(matrix_fields))
-  expect_match(matrix_fields$data, "int\\[3\\]\\[4\\]")
+  expect_true("data" %in% field_names)
+  data_field <- matrix_fields[[which(field_names == "data")]]
+  expect_match(data_field$type, "int\\[3\\]\\[4\\]")
 })

@@ -2,6 +2,13 @@
 
 ## New Features
 
+* **Tree-sitter parser integration**:
+  - Added `ffi_parse_header_ts()` for robust AST-based C header parsing
+  - `ffi_parse_header()` now uses tree-sitter by default when available (with fallback to regex)
+  - Correctly parses complex array declarations and nested structs
+  - Depends on `treesitter` (CRAN) and `treesitter.c` packages
+  - TCC preprocessor still used first to expand macros before tree-sitter parsing
+
 * Struct allocation helpers are now auto-generated in R bindings:
   - `new_StructName()` - allocate and optionally initialize struct instances
   - `StructName_to_list()` - convert struct pointer to R list

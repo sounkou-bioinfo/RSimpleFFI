@@ -12,7 +12,7 @@ test_that("ffi_parse_header works on simple header", {
   result <- ffi_parse_header(header)
 
   expect_s3_class(result, "parsed_header")
-  expect_named(result, c("file", "defines", "structs", "unions", "enums", "functions", "typedefs"))
+  expect_named(result, c("file", "defines", "structs", "unions", "enums", "functions", "typedefs", "parser"))
 
   # Check defines
   expect_type(result$defines, "list")
@@ -23,8 +23,8 @@ test_that("ffi_parse_header works on simple header", {
   expect_type(result$structs, "list")
   expect_true("Point" %in% names(result$structs))
 
-  # Check typedefs
-  expect_type(result$typedefs, "character")
+  # Check typedefs (can be character vector or list depending on parser)
+  expect_true(is.character(result$typedefs) || is.list(result$typedefs))
 
   # Check functions
   expect_s3_class(result$functions, "data.frame")
