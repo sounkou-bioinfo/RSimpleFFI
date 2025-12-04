@@ -97,11 +97,11 @@ generate_bindings_with_debug <- function(parsed, header_path) {
       stop(e)
     }
   )
-  
+
   if (!warning_caught) {
     dump_parse_debug_info(parsed, header_path)
   }
-  
+
   list(code = code, warning_caught = warning_caught)
 }
 
@@ -114,27 +114,10 @@ test_that("FILE* and opaque pointers generate valid code", {
   parsed <- ffi_parse_header(header)
 
   # Try to get warning, dump debug info if not found
-  warning_caught <- FALSE
-  code <- tryCatch(
-    withCallingHandlers(
-      generate_r_bindings(parsed),
-      warning = function(w) {
-        if (grepl("bit-?field", conditionMessage(w), ignore.case = TRUE)) {
-          warning_caught <<- TRUE
-        }
-        invokeRestart("muffleWarning")
-      }
-    ),
-    error = function(e) {
-      dump_parse_debug_info(parsed, header)
-      stop(e)
-    }
-  )
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
 
-  if (!warning_caught) {
-    dump_parse_debug_info(parsed, header)
-  }
-  expect_true(warning_caught,
+  expect_true(result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -180,9 +163,10 @@ test_that("recursive structs generate valid definitions", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   tmpfile <- tempfile(fileext = ".R")
@@ -210,9 +194,10 @@ test_that("nested structs generate complete definitions", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   tmpfile <- tempfile(fileext = ".R")
@@ -242,9 +227,10 @@ test_that("function pointer types are handled", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   # Should not have syntax errors even with function pointers
@@ -262,9 +248,10 @@ test_that("structs with arrays generate correctly", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   tmpfile <- tempfile(fileext = ".R")
@@ -287,9 +274,10 @@ test_that("typedef structs are handled", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   tmpfile <- tempfile(fileext = ".R")
@@ -311,9 +299,10 @@ test_that("complex function signatures generate valid wrappers", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   tmpfile <- tempfile(fileext = ".R")
@@ -339,9 +328,10 @@ test_that("all generated code from difficult_structs.h is valid", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   # Write and check
@@ -368,9 +358,10 @@ test_that("no incomplete struct definitions in difficult cases", {
 
   header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
   parsed <- ffi_parse_header(header)
-  expect_warning(
-    code <- generate_r_bindings(parsed),
-    "bit-fields"
+  result <- generate_bindings_with_debug(parsed, header)
+  code <- result$code
+  expect_true(result$warning_caught,
+    info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
   lines <- strsplit(code, "\n")[[1]]
