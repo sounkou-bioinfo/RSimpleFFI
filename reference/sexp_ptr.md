@@ -23,7 +23,7 @@ External pointer to the SEXP, with finalizer to release protection
 
 ``` r
 if (FALSE) { # \dontrun{
-x <- 1:10
+x <- c(1L, 2L, 3L) # Use c() not 1:3 to avoid ALTREP
 ptr <- sexp_ptr(x)
 # ptr is now safe to pass to C functions expecting SEXP
 # When ptr is garbage collected, the protection is released

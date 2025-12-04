@@ -2,8 +2,9 @@
 
 Like
 [`data_ptr()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/data_ptr.md)
-but returns a const pointer (for ALTREP support). Use this when you only
-need to read the data, not modify it.
+but attempts read-only access first (for ALTREP support). If the ALTREP
+implementation doesn't provide direct access, falls back to
+materializing the data (which may allocate memory).
 
 ## Usage
 
@@ -19,4 +20,4 @@ data_ptr_ro(x)
 
 ## Value
 
-External pointer to the const data
+External pointer to the data

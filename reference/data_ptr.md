@@ -19,11 +19,17 @@ data_ptr(x)
 
 External pointer to the data, with finalizer to release protection
 
+## Details
+
+Note: For ALTREP objects (like `1:10`), use
+[`data_ptr_ro()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/data_ptr_ro.md)
+instead, which properly handles deferred materialization.
+
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-x <- as.double(1:10)
+x <- c(1.0, 2.0, 3.0) # Regular vector, not ALTREP
 ptr <- data_ptr(x)
 # ptr points to the double* array
 # Safe to pass to C functions expecting double*
