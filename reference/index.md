@@ -139,6 +139,8 @@
   : Pack bit-fields into a 64-bit value
 - [`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md)
   : Parse C header file and create structured result
+- [`ffi_parse_header_ts()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header_ts.md)
+  : Parse C header using tree-sitter (if available)
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
   : pointer FFI type
 - [`ffi_print_struct()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_print_struct.md)
