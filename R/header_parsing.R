@@ -382,39 +382,6 @@ get_resolvable_types <- function() {
   names(get_ffi_type_map())
 }
 
-#' Get C type keywords for parameter name detection
-#'
-#' Returns a character vector of C type keywords used to detect when a
-#' function parameter declaration has no variable name (just a type).
-#' This is derived from the master type map plus C keywords.
-#'
-#' @return Character vector of C type keywords
-#' @keywords internal
-get_c_type_keywords <- function() {
-  # Start with all known type names from the master map
-  type_names <- names(get_ffi_type_map())
-
-  # Add C keywords that aren't types but appear in type declarations
-  c_keywords <- c(
-    "signed", "unsigned", "const", "volatile", "restrict",
-    "struct", "union", "enum", "typedef",
-    "static", "extern", "inline", "register",
-    "_Atomic", "__restrict", "__restrict__",
-    "__inline", "__inline__", "__attribute__"
-  )
-
-  # Add common opaque types not in the FFI map
-  opaque_types <- c(
-    "FILE", "DIR", "va_list", "__gnuc_va_list", "__builtin_va_list",
-    "pthread_t", "pthread_mutex_t", "pthread_cond_t", "pthread_key_t",
-    "jmp_buf", "sigjmp_buf", "sig_t", "sighandler_t",
-    "mbstate_t", "locale_t", "fpos_t", "div_t", "ldiv_t", "lldiv_t",
-    "regex_t", "regmatch_t"
-  )
-
-  unique(c(type_names, c_keywords, opaque_types))
-}
-
 #' Generate bit-field accessor code
 #' @param struct_name Name of the struct
 #' @param bitfield_specs Character vector of "'name : width'" strings
