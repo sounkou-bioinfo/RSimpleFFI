@@ -140,6 +140,14 @@ SEXP R_ffi_extract_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
 SEXP R_ffi_extract_signed_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
 SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width);
 
+/* SEXP pointer helpers */
+SEXP R_sexp_ptr(SEXP x);
+SEXP R_data_ptr(SEXP x);
+SEXP R_data_ptr_ro(SEXP x);
+SEXP R_is_protected_ptr(SEXP ptr);
+SEXP R_release_protected_ptr(SEXP ptr);
+SEXP R_ptr_to_sexp(SEXP ptr);
+
 /* Registration table */
 static const R_CallMethodDef CallEntries[] = {
     {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
@@ -195,6 +203,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_ffi_extract_bits64",      (DL_FUNC) &R_ffi_extract_bits64,      3},
     {"R_ffi_extract_signed_bits64",(DL_FUNC) &R_ffi_extract_signed_bits64, 3},
     {"R_ffi_set_bits64",          (DL_FUNC) &R_ffi_set_bits64,          4},
+    /* SEXP pointer helpers */
+    {"R_sexp_ptr",                (DL_FUNC) &R_sexp_ptr,                1},
+    {"R_data_ptr",                (DL_FUNC) &R_data_ptr,                1},
+    {"R_data_ptr_ro",             (DL_FUNC) &R_data_ptr_ro,             1},
+    {"R_is_protected_ptr",        (DL_FUNC) &R_is_protected_ptr,        1},
+    {"R_release_protected_ptr",   (DL_FUNC) &R_release_protected_ptr,   1},
+    {"R_ptr_to_sexp",             (DL_FUNC) &R_ptr_to_sexp,             1},
     {NULL, NULL, 0}
 };
 
