@@ -19,15 +19,17 @@ dump_parse_debug_info <- function(parsed, header_path) {
     }
   }
 
-  # Show parsed structs
-  message("\n--- Parsed structs (", nrow(parsed$structs), " total) ---")
-  if (!is.null(parsed$structs) && nrow(parsed$structs) > 0) {
-    for (i in seq_len(min(nrow(parsed$structs), 20))) {
-      s <- parsed$structs[i, ]
-      message(sprintf("  Struct[%d]: %s", i, s$name))
-      if (!is.null(s$fields) && length(s$fields[[1]]) > 0) {
-        for (j in seq_along(s$fields[[1]])) {
-          f <- s$fields[[1]][[j]]
+  # Show parsed structs (structs is a named list, not a data frame)
+  struct_names <- names(parsed$structs)
+  message("\n--- Parsed structs (", length(struct_names), " total) ---")
+  if (length(struct_names) > 0) {
+    for (i in seq_len(min(length(struct_names), 20))) {
+      struct_name <- struct_names[i]
+      fields <- parsed$structs[[struct_name]]
+      message(sprintf("  Struct[%d]: %s", i, struct_name))
+      if (length(fields) > 0) {
+        for (j in seq_along(fields)) {
+          f <- fields[[j]]
           bitfield_info <- if (
             !is.null(f$bitfield_width) && !is.na(f$bitfield_width)
           ) {
@@ -47,10 +49,10 @@ dump_parse_debug_info <- function(parsed, header_path) {
     }
   }
 
-  # Show parsed functions
-  message("\n--- Parsed functions (", nrow(parsed$functions), " total) ---")
-  if (!is.null(parsed$functions) && nrow(parsed$functions) > 0) {
-    for (i in seq_len(min(nrow(parsed$functions), 20))) {
+  # Show parsed functions (functions IS a data frame)
+  message("\n--- Parsed functions (", NROW(parsed$functions), " total) ---")
+  if (NROW(parsed$functions) > 0) {
+    for (i in seq_len(min(NROW(parsed$functions), 20))) {
       fn <- parsed$functions[i, ]
       message(sprintf("  Function[%d]: %s %s(...)", i, fn$return_type, fn$name))
     }
@@ -69,17 +71,17 @@ dump_parse_debug_info <- function(parsed, header_path) {
 
   # Look for any struct fields that might be bitfields
   message("\n--- Searching for bitfield candidates in structs ---")
-  if (!is.null(parsed$structs) && nrow(parsed$structs) > 0) {
+  if (length(struct_names) > 0) {
     found_any <- FALSE
-    for (i in seq_len(nrow(parsed$structs))) {
-      s <- parsed$structs[i, ]
-      if (!is.null(s$fields) && length(s$fields[[1]]) > 0) {
-        for (j in seq_along(s$fields[[1]])) {
-          f <- s$fields[[1]][[j]]
+    for (struct_name in struct_names) {
+      fields <- parsed$structs[[struct_name]]
+      if (length(fields) > 0) {
+        for (j in seq_along(fields)) {
+          f <- fields[[j]]
           if (!is.null(f$bitfield_width) && !is.na(f$bitfield_width)) {
             message(sprintf(
               "  FOUND BITFIELD: %s.%s : %s",
-              s$name,
+              struct_name,
               f$name,
               f$bitfield_width
             ))

@@ -19,7 +19,14 @@ ffi_parse_header_ts <- function(header_file, includes = NULL) {
     stop("TinyCC not available. Package may not be installed correctly.")
   }
 
+
   preprocessed <- tcc_preprocess(header_file, includes = includes)
+  if (length(preprocessed) < 10) {
+    warning(sprintf(
+      "TCC preprocessing returned very little output (%d lines) for %s. System headers may be missing or not found. Parsed structs may be empty.",
+      length(preprocessed), header_file
+    ))
+  }
   preprocessed_text <- paste(preprocessed, collapse = "\n")
 
   # Parse with tree-sitter
