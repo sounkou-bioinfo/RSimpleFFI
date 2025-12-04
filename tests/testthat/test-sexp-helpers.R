@@ -136,6 +136,16 @@ test_that("ptr_to_sexp errors on non-protected pointer", {
 })
 
 test_that("sexp_ptr works with Rf_length via FFI", {
+    # On Windows, we need to explicitly load R.dll to access Rf_length
+    r_lib_handle <- NULL
+    if (.Platform$OS.type == "windows") {
+        r_lib_handle <- dll_load_r()
+        if (is.null(r_lib_handle)) {
+            skip("Could not load R library")
+        }
+        on.exit(dll_unload(r_lib_handle), add = TRUE)
+    }
+    
     x <- c(1L, 2L, 3L, 4L, 5L)
     ptr <- sexp_ptr(x)
 
