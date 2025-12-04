@@ -1,9 +1,11 @@
-test_that("tcc_extract_enums finds simple enum", {
+test_that("ffi_parse_header extracts simple enum", {
   skip_if_not(tcc_available(), "TinyCC not available")
+  skip_if_not_installed("treesitter")
+  skip_if_not_installed("treesitter.c")
   
   header <- system.file("extdata", "enums_unions.h", package = "RSimpleFFI")
-  preprocessed <- tcc_preprocess(header)
-  enums <- tcc_extract_enums(preprocessed)
+  parsed <- ffi_parse_header(header)
+  enums <- parsed$enums
   
   expect_true("Color" %in% names(enums))
   expect_equal(enums$Color["RED"], c(RED = 0L))
@@ -11,12 +13,14 @@ test_that("tcc_extract_enums finds simple enum", {
   expect_equal(enums$Color["BLUE"], c(BLUE = 2L))
 })
 
-test_that("tcc_extract_enums finds typedef enum", {
+test_that("ffi_parse_header extracts typedef enum", {
   skip_if_not(tcc_available(), "TinyCC not available")
+  skip_if_not_installed("treesitter")
+  skip_if_not_installed("treesitter.c")
   
   header <- system.file("extdata", "enums_unions.h", package = "RSimpleFFI")
-  preprocessed <- tcc_preprocess(header)
-  enums <- tcc_extract_enums(preprocessed)
+  parsed <- ffi_parse_header(header)
+  enums <- parsed$enums
   
   expect_true("Status" %in% names(enums))
   expect_equal(enums$Status["STATUS_OK"], c(STATUS_OK = 0L))
@@ -25,12 +29,14 @@ test_that("tcc_extract_enums finds typedef enum", {
   expect_equal(enums$Status["STATUS_CANCELLED"], c(STATUS_CANCELLED = 3L))
 })
 
-test_that("tcc_extract_enums handles explicit values", {
+test_that("ffi_parse_header handles explicit enum values", {
   skip_if_not(tcc_available(), "TinyCC not available")
+  skip_if_not_installed("treesitter")
+  skip_if_not_installed("treesitter.c")
   
   header <- system.file("extdata", "enums_unions.h", package = "RSimpleFFI")
-  preprocessed <- tcc_preprocess(header)
-  enums <- tcc_extract_enums(preprocessed)
+  parsed <- ffi_parse_header(header)
+  enums <- parsed$enums
   
   expect_true("Flags" %in% names(enums))
   expect_equal(enums$Flags["FLAG_NONE"], c(FLAG_NONE = 0L))
@@ -40,12 +46,14 @@ test_that("tcc_extract_enums handles explicit values", {
   expect_equal(enums$Flags["FLAG_ALL"], c(FLAG_ALL = 7L))
 })
 
-test_that("tcc_extract_enums handles gaps in values", {
+test_that("ffi_parse_header handles gaps in enum values", {
   skip_if_not(tcc_available(), "TinyCC not available")
+  skip_if_not_installed("treesitter")
+  skip_if_not_installed("treesitter.c")
   
   header <- system.file("extdata", "enums_unions.h", package = "RSimpleFFI")
-  preprocessed <- tcc_preprocess(header)
-  enums <- tcc_extract_enums(preprocessed)
+  parsed <- ffi_parse_header(header)
+  enums <- parsed$enums
   
   expect_true("Priority" %in% names(enums))
   expect_equal(enums$Priority["PRIORITY_LOW"], c(PRIORITY_LOW = 0L))
@@ -87,12 +95,14 @@ test_that("tinycc extracts unions correctly", {
   expect_true("qword" %in% field_names)
 })
 
-test_that("tcc_extract_unions finds typedef union", {
+test_that("ffi_parse_header extracts typedef union", {
   skip_if_not(tcc_available(), "TinyCC not available")
+  skip_if_not_installed("treesitter")
+  skip_if_not_installed("treesitter.c")
   
   header <- system.file("extdata", "enums_unions.h", package = "RSimpleFFI")
-  preprocessed <- tcc_preprocess(header)
-  unions <- tcc_extract_unions(preprocessed)
+  parsed <- ffi_parse_header(header)
+  unions <- parsed$unions
   
   expect_true("Data" %in% names(unions))
   expect_equal(length(unions$Data), 3)
@@ -102,12 +112,14 @@ test_that("tcc_extract_unions finds typedef union", {
   expect_equal(unions$Data[[2]]$type, "float")
 })
 
-test_that("tcc_extract_unions handles complex types", {
+test_that("ffi_parse_header handles complex union types", {
   skip_if_not(tcc_available(), "TinyCC not available")
+  skip_if_not_installed("treesitter")
+  skip_if_not_installed("treesitter.c")
   
   header <- system.file("extdata", "enums_unions.h", package = "RSimpleFFI")
-  preprocessed <- tcc_preprocess(header)
-  unions <- tcc_extract_unions(preprocessed)
+  parsed <- ffi_parse_header(header)
+  unions <- parsed$unions
   
   expect_true("IntUnion" %in% names(unions))
   expect_equal(length(unions$IntUnion), 4)

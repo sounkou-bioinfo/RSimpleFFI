@@ -16,7 +16,7 @@ test_that("tree-sitter parser can parse simple struct", {
   ), tmp_header)
   
   # Parse with tree-sitter
-  result <- ffi_parse_header_ts(tmp_header, use_treesitter = TRUE)
+  result <- ffi_parse_header(tmp_header)
   
   expect_s3_class(result, "parsed_header")
   expect_equal(result$parser, "treesitter")
@@ -66,7 +66,7 @@ test_that("tree-sitter handles multi-dimensional arrays", {
     "};"
   ), tmp_header)
   
-  result <- ffi_parse_header_ts(tmp_header, use_treesitter = TRUE)
+  result <- ffi_parse_header(tmp_header)
   
   expect_true("Matrix" %in% names(result$structs))
   matrix_fields <- result$structs$Matrix
