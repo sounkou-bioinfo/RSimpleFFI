@@ -185,9 +185,7 @@ ts_parse_field_declaration <- function(field_node, source_text) {
     
     if (node_type %in% c("primitive_type", "type_identifier", "struct_specifier", "sized_type_specifier")) {
       type_node <- child
-    } else if (node_type == "field_identifier") {
-      declarator_node <- child
-    } else if (node_type == "array_declarator") {
+    } else if (node_type %in% c("field_identifier", "array_declarator", "pointer_declarator")) {
       declarator_node <- child
     } else if (node_type == "bitfield_clause") {
       # Extract bitfield size from bitfield_clause
@@ -214,6 +212,14 @@ ts_parse_field_declaration <- function(field_node, source_text) {
     "int"  # default
   }
   
+  # Handle pointer declarators - include * in type
+  if (treesitter::node_type(declarator_node) == "pointer_declarator") {
+    # Count asterisks and add to type
+    decl_text <- treesitter::node_text(declarator_node)
+    ptr_count <- nchar(gsub("[^*]", "", decl_text))
+    base_type <- paste0(base_type, strrep("*", ptr_count))
+  }
+  
   # Check if it's an array
   if (treesitter::node_type(declarator_node) == "array_declarator") {
     dimensions <- ts_get_array_dimensions(declarator_node, source_text)
@@ -233,22 +239,25 @@ ts_parse_field_declaration <- function(field_node, source_text) {
 #' Get the name from a declarator node
 #' @keywords internal
 ts_get_declarator_name <- function(declarator_node, source_text) {
-  if (treesitter::node_type(declarator_node) == "field_identifier") {
+  node_type <- treesitter::node_type(declarator_node)
+  
+  if (node_type == "field_identifier") {
     return(treesitter::node_text(declarator_node))
   }
   
-  # For array declarators, find the field_identifier child
+  # For array_declarator, pointer_declarator, or other complex types, find the field_identifier child
   child_count <- treesitter::node_child_count(declarator_node)
   
   for (i in seq_len(child_count)) {
     child <- treesitter::node_child(declarator_node, i)
+    child_type <- treesitter::node_type(child)
     
-    if (treesitter::node_type(child) == "field_identifier") {
+    if (child_type == "field_identifier") {
       return(treesitter::node_text(child))
     }
     
     # Recursively check nested declarators
-    if (treesitter::node_type(child) == "array_declarator") {
+    if (child_type %in% c("array_declarator", "pointer_declarator")) {
       result <- ts_get_declarator_name(child, source_text)
       if (!is.null(result)) return(result)
     }
