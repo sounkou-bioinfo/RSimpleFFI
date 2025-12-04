@@ -363,20 +363,19 @@ SEXP R_create_struct_ffi_type(SEXP r_field_types, SEXP r_pack) {
     
     // Store byval_type in the external pointer's tag (or NULL if not packed)
     SEXP byval_extPtr = R_NilValue;
+    int nprotect = 0;
+    
     if (byval_type) {
         byval_extPtr = PROTECT(R_MakeExternalPtr(byval_type, R_NilValue, R_NilValue));
+        nprotect++;
         R_RegisterCFinalizerEx(byval_extPtr, struct_type_finalizer, TRUE);
     }
     
-    SEXP extPtr = R_MakeExternalPtr(struct_type, byval_extPtr, R_NilValue);
-    PROTECT(extPtr);
+    SEXP extPtr = PROTECT(R_MakeExternalPtr(struct_type, byval_extPtr, R_NilValue));
+    nprotect++;
     R_RegisterCFinalizerEx(extPtr, struct_type_finalizer, TRUE);
     
-    if (byval_type) {
-        UNPROTECT(2);  // extPtr and byval_extPtr
-    } else {
-        UNPROTECT(1);  // just extPtr
-    }
+    UNPROTECT(nprotect);
     return extPtr;
 }
 

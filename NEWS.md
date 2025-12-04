@@ -98,7 +98,7 @@
 
 * Added `strip_type_qualifiers()` for handling const/volatile in type resolution
 
-* Added `get_resolvable_types()` and `get_c_type_keywords()` helper functions
+* Added `get_resolvable_types()` helper function
 
 
 # RSimpleFFI 1.0.1
