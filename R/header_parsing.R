@@ -488,7 +488,8 @@ ffi_parse_header <- function(header_file, includes = NULL, use_treesitter = TRUE
       unions = unions,
       enums = enums,
       functions = functions,
-      typedefs = typedefs
+      typedefs = typedefs,
+      parser = "regex"
     ),
     class = "parsed_header"
   )
