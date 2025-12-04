@@ -45,8 +45,8 @@ test_that("tree-sitter parser falls back gracefully", {
     "};"
   ), tmp_header)
   
-  # Should work whether or not tree-sitter is available
-  result <- ffi_parse_header_ts(tmp_header, use_treesitter = FALSE)
+  # Parse with tree-sitter
+  result <- ffi_parse_header(tmp_header)
   
   expect_s3_class(result, "parsed_header")
   expect_true("Simple" %in% names(result$structs))

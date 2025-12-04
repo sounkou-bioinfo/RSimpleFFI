@@ -1,22 +1,15 @@
-#' Parse C header using tree-sitter (if available)
+#' Parse C header using tree-sitter
+#' 
+#' Internal function that performs tree-sitter-based parsing.
+#' Use ffi_parse_header() instead which handles dependency checks.
+#' 
 #' @param header_file Path to C header file
 #' @param includes Additional include directories (used for TCC preprocessing)
-#' @param use_treesitter If TRUE, use tree-sitter parser. If FALSE or if treesitter unavailable, fall back to regex.
 #' @return List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
-#' @export
-ffi_parse_header_ts <- function(header_file, includes = NULL, use_treesitter = TRUE) {
+#' @keywords internal
+ffi_parse_header_ts <- function(header_file, includes = NULL) {
   if (!file.exists(header_file)) {
     stop("Header file not found: ", header_file)
-  }
-  
-  # Check if tree-sitter is available
-  ts_available <- use_treesitter && 
-    requireNamespace("treesitter", quietly = TRUE) && 
-    requireNamespace("treesitter.c", quietly = TRUE)
-  
-  if (!ts_available) {
-    message("Tree-sitter not available, falling back to regex parser")
-    return(ffi_parse_header(header_file, includes))
   }
   
   # Preprocess with TCC first (this expands macros!)

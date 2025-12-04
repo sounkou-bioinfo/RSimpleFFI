@@ -443,56 +443,23 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
 }
 
 #' Parse C header file and create structured result
+#' 
+#' Uses tree-sitter for robust AST-based parsing of C headers.
+#' 
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
-#' @param use_treesitter If TRUE (default), use tree-sitter parser when available. If FALSE, use regex parser.
 #' @return List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
 #' @export
-ffi_parse_header <- function(header_file, includes = NULL, use_treesitter = TRUE) {
-  # Try tree-sitter first if requested
-  if (use_treesitter && 
-      requireNamespace("treesitter", quietly = TRUE) && 
-      requireNamespace("treesitter.c", quietly = TRUE)) {
-    return(ffi_parse_header_ts(header_file, includes, use_treesitter = TRUE))
+ffi_parse_header <- function(header_file, includes = NULL) {
+  if (!requireNamespace("treesitter", quietly = TRUE)) {
+    stop("Package 'treesitter' is required but not installed.")
   }
   
-  # Fall back to regex parser
-  if (!tcc_available()) {
-    stop("TinyCC not available. Package may not be installed correctly.")
+  if (!requireNamespace("treesitter.c", quietly = TRUE)) {
+    stop("Package 'treesitter.c' is required but not installed.")
   }
-
-  if (!file.exists(header_file)) {
-    stop("Header file not found: ", header_file)
-  }
-
-  # Use TCC to parse header
-  preprocessed <- tcc_preprocess(header_file, includes = includes)
-
-  # Extract components
-  defines <- tcc_extract_defines(
-    header_file = header_file,
-    preprocessed_lines = preprocessed
-  )
-  structs <- tcc_extract_structs(preprocessed)
-  unions <- tcc_extract_unions(preprocessed)
-  enums <- tcc_extract_enums(preprocessed)
-  functions <- tcc_extract_functions(preprocessed)
-  typedefs <- tcc_extract_typedefs(preprocessed)
-
-  # Create structured result
-  structure(
-    list(
-      file = header_file,
-      defines = defines,
-      structs = structs,
-      unions = unions,
-      enums = enums,
-      functions = functions,
-      typedefs = typedefs,
-      parser = "regex"
-    ),
-    class = "parsed_header"
-  )
+  
+  ffi_parse_header_ts(header_file, includes)
 }
 
 #' Generate R struct definition from parsed struct

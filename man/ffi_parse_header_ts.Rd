@@ -2,20 +2,20 @@
 % Please edit documentation in R/treesitter_parser.R
 \name{ffi_parse_header_ts}
 \alias{ffi_parse_header_ts}
-\title{Parse C header using tree-sitter (if available)}
+\title{Parse C header using tree-sitter}
 \usage{
-ffi_parse_header_ts(header_file, includes = NULL, use_treesitter = TRUE)
+ffi_parse_header_ts(header_file, includes = NULL)
 }
 \arguments{
 \item{header_file}{Path to C header file}
 
 \item{includes}{Additional include directories (used for TCC preprocessing)}
-
-\item{use_treesitter}{If TRUE, use tree-sitter parser. If FALSE or if treesitter unavailable, fall back to regex.}
 }
 \value{
 List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
 }
 \description{
-Parse C header using tree-sitter (if available)
+Internal function that performs tree-sitter-based parsing.
+Use ffi_parse_header() instead which handles dependency checks.
 }
+\keyword{internal}
