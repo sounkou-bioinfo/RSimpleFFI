@@ -1133,6 +1133,31 @@ ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 
 Struct/union passing by value may be unreliable across platforms. Packed structs cannot be passed by value (libffi limitation). Prefer pointers.
 
+## Miscellaneous Utils
+
+### SEXP Pointer Helpers
+
+When calling R's internal C API via FFI, you need pointers to R objects (SEXP). The `sexp_ptr()` and `data_ptr()` helpers extract pointers while preventing garbage collection via `R_PreserveObject`. Protection is automatically released when the pointer is garbage collected.
+
+```{r}
+x <- c(1L, 2L, 3L, 4L, 5L)
+ptr <- sexp_ptr(x)
+ptr
+
+# Call Rf_length via FFI
+rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
+rf_length(ptr)
+```
+
+### Binding Generation
+
+The `bindgen_r_api()` function parses R's C headers and generates wrapper functions automatically. This is for testing the parser mostly, using this is discourage !
+
+```{r, eval=FALSE}
+# Generate bindings for all R headers
+bindgen_r_api(output_file = "r_bindings.R", verbose = TRUE)
+```
+
 ## License
 
 This project is licensed under the GPL-3 License.
