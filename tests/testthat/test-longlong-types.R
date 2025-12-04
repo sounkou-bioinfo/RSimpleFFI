@@ -46,6 +46,12 @@ test_that("header parser maps long long correctly", {
         params = "long long x",
         stringsAsFactors = FALSE
     )
+    # Add param_list structure (required by tree-sitter based parser)
+    func_def$param_list <- list(
+        test_func = list(
+            list(type = "long long", name = "x", is_variadic = FALSE)
+        )
+    )
 
     wrapper <- generate_function_wrapper(func_def)
     expect_true(any(grepl("ffi_longlong", wrapper)))
@@ -57,6 +63,12 @@ test_that("header parser maps unsigned long long correctly", {
         return_type = "unsigned long long",
         params = "unsigned long long x",
         stringsAsFactors = FALSE
+    )
+    # Add param_list structure (required by tree-sitter based parser)
+    func_def$param_list <- list(
+        test_func = list(
+            list(type = "unsigned long long", name = "x", is_variadic = FALSE)
+        )
     )
 
     wrapper <- generate_function_wrapper(func_def)

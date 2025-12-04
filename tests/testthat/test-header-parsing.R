@@ -109,6 +109,13 @@ test_that("generate_function_wrapper creates valid R code", {
     full_declaration = "int add(int a, int b);",
     stringsAsFactors = FALSE
   )
+  # Add param_list structure (required by tree-sitter based parser)
+  func_def$param_list <- list(
+    add = list(
+      list(type = "int", name = "a", is_variadic = FALSE),
+      list(type = "int", name = "b", is_variadic = FALSE)
+    )
+  )
 
   code <- generate_function_wrapper(func_def)
 

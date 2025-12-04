@@ -627,21 +627,24 @@ ts_extract_functions <- function(root_node, source_text) {
   
   # Convert to data.frame format like regex parser
   if (length(functions) > 0) {
-    do.call(rbind.data.frame, c(lapply(functions, function(f) {
-      data.frame(
-        name = f$name,
-        return_type = f$return_type,
-        params = f$params,
-        full_declaration = f$full_declaration,
-        stringsAsFactors = FALSE
-      )
-    }), stringsAsFactors = FALSE))
+    # Create data.frame with list column for param_list
+    df <- data.frame(
+      name = sapply(functions, function(f) f$name),
+      return_type = sapply(functions, function(f) f$return_type),
+      params = sapply(functions, function(f) f$params),
+      full_declaration = sapply(functions, function(f) f$full_declaration),
+      stringsAsFactors = FALSE
+    )
+    # Add param_list as a list column
+    df$param_list <- lapply(functions, function(f) f$param_list)
+    df
   } else {
     data.frame(
       name = character(),
       return_type = character(),
       params = character(),
       full_declaration = character(),
+      param_list = list(),
       stringsAsFactors = FALSE
     )
   }
@@ -652,6 +655,7 @@ ts_extract_functions <- function(root_node, source_text) {
 ts_parse_function_declarator <- function(declarator_node, source_text, return_type) {
   name <- NULL
   params <- ""
+  param_list <- list()
   
   child_count <- treesitter::node_child_count(declarator_node)
   
@@ -662,6 +666,9 @@ ts_parse_function_declarator <- function(declarator_node, source_text, return_ty
     if (node_type == "identifier") {
       name <- treesitter::node_text(child)
     } else if (node_type == "parameter_list") {
+      # Parse parameter list using tree-sitter AST
+      param_list <- ts_parse_parameter_list(child, source_text)
+      # Also keep raw text for backward compatibility
       params <- treesitter::node_text(child)
       # Remove outer parentheses
       params <- gsub("^\\((.*)\\)$", "\\1", params)
@@ -674,11 +681,159 @@ ts_parse_function_declarator <- function(declarator_node, source_text, return_ty
       name = name,
       return_type = return_type,
       params = params,
+      param_list = param_list,  # Structured parameter info
       full_declaration = full_decl
     )
   } else {
     NULL
   }
+}
+
+#' Parse parameter list node to extract structured parameter information
+#' @keywords internal
+ts_parse_parameter_list <- function(param_list_node, source_text) {
+  params <- list()
+  
+  child_count <- treesitter::node_child_count(param_list_node)
+  
+  for (i in seq_len(child_count)) {
+    child <- treesitter::node_child(param_list_node, i)
+    node_type <- treesitter::node_type(child)
+    
+    if (node_type == "parameter_declaration") {
+      param_info <- ts_parse_parameter_declaration(child, source_text)
+      if (!is.null(param_info)) {
+        params[[length(params) + 1]] <- param_info
+      }
+    } else if (node_type == "variadic_parameter") {
+      # Handle ... parameter
+      params[[length(params) + 1]] <- list(
+        type = "...",
+        name = "...",
+        is_variadic = TRUE
+      )
+    }
+  }
+  
+  params
+}
+
+#' Parse a single parameter declaration
+#' @keywords internal
+ts_parse_parameter_declaration <- function(param_node, source_text) {
+  type_text <- ""
+  param_name <- NULL
+  
+  child_count <- treesitter::node_child_count(param_node)
+  
+  # Collect all children to build type and find identifier
+  for (i in seq_len(child_count)) {
+    child <- treesitter::node_child(param_node, i)
+    node_type <- treesitter::node_type(child)
+    
+    if (node_type == "identifier") {
+      # This is the parameter name
+      param_name <- treesitter::node_text(child)
+    } else if (node_type %in% c("primitive_type", "type_identifier", "sized_type_specifier",
+                                  "struct_specifier", "union_specifier", "enum_specifier")) {
+      # Type specifier
+      type_text <- paste(type_text, treesitter::node_text(child))
+    } else if (node_type == "pointer_declarator") {
+      # Handle pointer types
+      ptr_info <- ts_parse_pointer_declarator(child, source_text)
+      if (!is.null(ptr_info$name)) {
+        param_name <- ptr_info$name
+      }
+      type_text <- paste(type_text, ptr_info$pointer_prefix)
+    } else if (node_type == "array_declarator") {
+      # Handle array types
+      array_info <- ts_parse_array_declarator(child, source_text)
+      if (!is.null(array_info$name)) {
+        param_name <- array_info$name
+      }
+      type_text <- paste(type_text, array_info$array_suffix)
+    } else if (node_type %in% c("type_qualifier", "storage_class_specifier")) {
+      # const, volatile, restrict, etc.
+      type_text <- paste(type_text, treesitter::node_text(child))
+    }
+    # Ignore attribute_specifier nodes - these are __attribute__(...)
+  }
+  
+  type_text <- trimws(type_text)
+  
+  list(
+    type = type_text,
+    name = param_name,
+    is_variadic = FALSE
+  )
+}
+
+#' Parse pointer declarator to extract pointer prefix and identifier
+#' @keywords internal
+ts_parse_pointer_declarator <- function(ptr_node, source_text) {
+  pointer_prefix <- ""
+  param_name <- NULL
+  
+  child_count <- treesitter::node_child_count(ptr_node)
+  
+  for (i in seq_len(child_count)) {
+    child <- treesitter::node_child(ptr_node, i)
+    node_type <- treesitter::node_type(child)
+    
+    if (node_type == "*") {
+      pointer_prefix <- paste0(pointer_prefix, "*")
+    } else if (node_type == "identifier") {
+      param_name <- treesitter::node_text(child)
+    } else if (node_type == "pointer_declarator") {
+      # Nested pointers
+      nested <- ts_parse_pointer_declarator(child, source_text)
+      pointer_prefix <- paste0(pointer_prefix, nested$pointer_prefix)
+      if (!is.null(nested$name)) {
+        param_name <- nested$name
+      }
+    } else if (node_type == "array_declarator") {
+      # Pointer to array
+      array_info <- ts_parse_array_declarator(child, source_text)
+      if (!is.null(array_info$name)) {
+        param_name <- array_info$name
+      }
+    }
+  }
+  
+  list(
+    pointer_prefix = pointer_prefix,
+    name = param_name
+  )
+}
+
+#' Parse array declarator to extract array suffix and identifier
+#' @keywords internal
+ts_parse_array_declarator <- function(array_node, source_text) {
+  array_suffix <- ""
+  param_name <- NULL
+  
+  child_count <- treesitter::node_child_count(array_node)
+  
+  for (i in seq_len(child_count)) {
+    child <- treesitter::node_child(array_node, i)
+    node_type <- treesitter::node_type(child)
+    
+    if (node_type == "identifier") {
+      param_name <- treesitter::node_text(child)
+    } else if (node_type == "[") {
+      array_suffix <- paste0(array_suffix, "[")
+    } else if (node_type == "]") {
+      array_suffix <- paste0(array_suffix, "]")
+    } else if (node_type %in% c("number_literal", "identifier")) {
+      # Array size
+      array_suffix <- paste0(array_suffix, treesitter::node_text(child))
+    }
+  }
+  
+  list(
+    array_suffix = array_suffix,
+    name = param_name
+  )
 }
 
 #' Extract typedef declarations from tree-sitter AST

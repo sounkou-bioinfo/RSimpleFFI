@@ -955,7 +955,6 @@ escape_r_name <- function(name) {
 generate_function_wrapper <- function(func_def, typedefs = NULL) {
   func_name <- func_def$name
   return_type <- func_def$return_type
-  params <- func_def$params
 
   # Get centralized type map
   type_map <- get_ffi_type_map()
@@ -972,109 +971,98 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
       } else if (grepl("\\*", base_type)) {
         typedef_ffi_map[[td_name]] <- "ffi_pointer()"
       }
-      # Could recursively resolve typedef chains here if needed
     }
   }
 
-  # Function to map a C type to FFI type (handles both "type name" and "type")
-  # For return types, char* should be ffi_pointer() (could be buffer, not string)
-  map_type_from_string <- function(type_string, is_return_type = FALSE) {
-    type_string <- strip_type_qualifiers(trimws(type_string))
-
-    # Check for other pointer types (treat as ffi_pointer())
-    if (grepl("\\*", type_string)) {
-      return("ffi_pointer()")
-    }
-    # Check exact match in type_map (built-in types)
-    if (type_string %in% names(type_map)) {
-      return(type_map[[type_string]])
-    }
-    # Check if it's a resolved typedef
-    if (type_string %in% names(typedef_ffi_map)) {
-      return(typedef_ffi_map[[type_string]])
-    }
-    # Default to pointer for unknown types (likely structs)
-    return("ffi_pointer()")
+  # Verify we have structured parameter list from tree-sitter
+  if (!("param_list" %in% names(func_def)) || is.null(func_def$param_list)) {
+    stop("Function definition must include param_list from tree-sitter parser")
   }
-
-  # Function to extract type from "type varname" parameter
-  extract_type <- function(param_decl) {
-    param_decl <- trimws(param_decl)
-    tokens <- strsplit(param_decl, "\\s+")[[1]]
-    if (length(tokens) < 2) {
-      return(strip_type_qualifiers(param_decl)) # No variable name, just type
-    }
-    # Type is all tokens except the last (which is the variable name)
-    type_part <- paste(tokens[-length(tokens)], collapse = " ")
-    return(strip_type_qualifiers(trimws(type_part)))
-  }
-
-  # Parse parameters
-  param_parts <- strsplit(params, ",")[[1]]
+  
+  # Use tree-sitter parsed parameters (clean, no attributes, no regex parsing)
   param_names <- character()
   param_types_c <- character()
   param_types_ffi <- character()
-
-  # Check if this is a variadic function (has ... in parameters)
-  is_variadic <- any(grepl("^\\s*\\.\\.\\.\\s*$", param_parts))
-
-  # Get C type keywords (to detect unnamed parameters)
-  c_types <- get_c_type_keywords()
-
-  for (part in param_parts) {
-    part <- trimws(part)
-    if (part == "" || part == "void") next
-
-    # Skip the ... parameter - we'll handle variadic functions specially
-    if (part == "...") next
-
-    # Extract parameter name (last word, remove * and [])
-    tokens <- strsplit(part, "\\s+")[[1]]
-    if (length(tokens) > 0) {
-      param_name <- tokens[length(tokens)]
-      # Remove pointers, arrays, and clean up
-      param_name <- gsub("\\*+", "", param_name) # Remove *
-      param_name <- gsub("\\[.*?\\]", "", param_name) # Remove []
-      param_name <- trimws(param_name)
-
-      # Check if param_name is actually a C type (meaning no variable name was provided)
-      is_type_keyword <- param_name %in% c_types
-
-      if (param_name != "" && !grepl("^[0-9]", param_name) && !is_type_keyword) {
-        # Check for duplicate names and make unique
-        if (param_name %in% param_names) {
-          # Generate unique name if duplicate
-          param_name <- paste0("arg", length(param_names) + 1)
-        } else {
-          # Escape invalid R names (underscore, reserved words, etc.)
-          param_name <- escape_r_name(param_name)
-        }
-        param_names <- c(param_names, param_name)
-      } else {
-        # Generate a name for unnamed parameters or type keywords
-        param_names <- c(param_names, paste0("arg", length(param_names) + 1))
-      }
-
-      # Type is everything except last token
-      param_type_c <- extract_type(part)
-      param_types_c <- c(param_types_c, param_type_c)
-      param_types_ffi <- c(param_types_ffi, map_type_from_string(param_type_c, is_return_type = FALSE))
+  is_variadic <- FALSE
+  
+  # Extract the actual parameter list (it's a named list keyed by function name)
+  params <- func_def$param_list[[1]]
+  
+  # Process each parameter from AST
+  for (param in params) {
+    if (isTRUE(param$is_variadic)) {
+      is_variadic <- TRUE
+      next
     }
+    
+    param_type <- strip_type_qualifiers(param$type)
+    param_name <- param$name
+    
+    # Generate name if missing
+    if (is.null(param_name) || param_name == "") {
+      param_name <- paste0("arg", length(param_names) + 1)
+    } else {
+      # Check for duplicates
+      if (param_name %in% param_names) {
+        param_name <- paste0("arg", length(param_names) + 1)
+      } else {
+        param_name <- escape_r_name(param_name)
+      }
+    }
+    
+    param_names <- c(param_names, param_name)
+    param_types_c <- c(param_types_c, param_type)
+    
+    # Map to FFI type
+    ffi_type <- map_type_to_ffi(param_type, type_map, typedef_ffi_map)
+    param_types_ffi <- c(param_types_ffi, ffi_type)
   }
+  
+  # Generate wrapper code
+  return_type_clean <- strip_type_qualifiers(return_type)
+  return_type_ffi <- map_type_to_ffi(return_type_clean, type_map, typedef_ffi_map, is_return = TRUE)
+  
+  generate_wrapper_code(func_name, return_type_ffi, param_names, param_types_c, 
+                       param_types_ffi, is_variadic)
+}
 
-  # Map return type (it's just a type, no variable name)
-  return_ffi <- map_type_from_string(return_type, is_return_type = TRUE)
+#' Map C type to FFI type string
+#' @keywords internal
+map_type_to_ffi <- function(type_string, type_map, typedef_ffi_map, is_return = FALSE) {
+  type_string <- strip_type_qualifiers(trimws(type_string))
+  
+  # Handle empty or NULL type
+  if (is.null(type_string) || length(type_string) == 0 || type_string == "") {
+    return("ffi_pointer()")  # Default to pointer for unknown/empty types
+  }
+  
+  # Check for pointer types
+  if (grepl("\\*", type_string)) {
+    return("ffi_pointer()")
+  }
+  # Check exact match in type_map (built-in types)
+  if (type_string %in% names(type_map)) {
+    return(type_map[[type_string]])
+  }
+  # Check if it's a resolved typedef
+  if (type_string %in% names(typedef_ffi_map)) {
+    return(typedef_ffi_map[[type_string]])
+  }
+  # Default to pointer for unknown types (likely structs)
+  return("ffi_pointer()")
+}
 
-  # Generate R function
+#' Generate wrapper code from parameter information
+#' @keywords internal
+generate_wrapper_code <- function(func_name, return_type_ffi, param_names, 
+                                   param_types_c, param_types_ffi, is_variadic) {
   r_func_name <- paste0("r_", func_name)
-
-  # Handle variadic functions specially - generate a comment instead of broken wrapper
+  
+  # Handle variadic functions specially
   if (is_variadic) {
     n_fixed <- length(param_names)
-    # Collapse whitespace/newlines in params for cleaner output
-    params_collapsed <- gsub("\\s+", " ", params)
     code <- c(
-      sprintf("# Variadic function: %s %s(%s)", return_type, func_name, params_collapsed),
+      sprintf("# Variadic function: %s(%s, ...)", func_name, paste(param_types_c, collapse = ", ")),
       sprintf("# This function has variable arguments (...) which require ffi_cif_var()."),
       sprintf("# Fixed args: %d, then variadic arguments follow.", n_fixed),
       "#",
@@ -1085,7 +1073,7 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
           sprintf("# # With %d fixed arg(s) + variadic args:", n_fixed),
           sprintf(
             "# cif <- ffi_cif_var(%s, %dL, %s, <variadic_arg_types...>)",
-            return_ffi, n_fixed, paste(param_types_ffi, collapse = ", ")
+            return_type_ffi, n_fixed, paste(param_types_ffi, collapse = ", ")
           ),
           sprintf(
             "# ffi_call(cif, sym, %s, <variadic_args...>)",
@@ -1095,7 +1083,7 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
       } else {
         c(
           "# # With only variadic args:",
-          sprintf("# cif <- ffi_cif_var(%s, 0L, <variadic_arg_types...>)", return_ffi),
+          sprintf("# cif <- ffi_cif_var(%s, 0L, <variadic_arg_types...>)", return_type_ffi),
           "# ffi_call(cif, sym, <variadic_args...>)"
         )
       },
@@ -1103,24 +1091,24 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
     )
     return(paste(code, collapse = "\n"))
   }
-
+  
   # Build ffi_function call for non-variadic functions
   if (length(param_types_ffi) == 0) {
-    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s)', func_name, return_ffi)
+    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s)', func_name, return_type_ffi)
     signature <- paste0(r_func_name, " <- function()")
     call_line <- "  .fn()"
   } else {
     ffi_params <- paste(param_types_ffi, collapse = ", ")
-    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s, %s)', func_name, return_ffi, ffi_params)
-    signature <- paste0(
-      r_func_name, " <- function(",
-      paste(param_names, collapse = ", "),
-      ")"
+    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s, %s)', func_name, return_type_ffi, ffi_params)
+    signature <- sprintf(
+      "%s <- function(%s)",
+      r_func_name,
+      paste(param_names, collapse = ", ")
     )
     call_line <- sprintf("  .fn(%s)", paste(param_names, collapse = ", "))
   }
-
-  # Add parameter documentation with C types and FFI types
+  
+  # Generate parameter documentation
   param_docs <- character()
   if (length(param_names) > 0) {
     for (i in seq_along(param_names)) {
@@ -1130,28 +1118,21 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
       )
     }
   }
-
-  # Create function signature for roxygen, truncate if too long to avoid line wrapping issues
-  # Also collapse any newlines that might have been introduced by preprocessor
-  func_signature <- sprintf("%s %s(%s)", return_type, func_name, params)
-  func_signature <- gsub("\\s+", " ", func_signature)  # Collapse whitespace/newlines to single space
-  if (nchar(func_signature) > 80) {
-    func_signature <- paste0(substr(func_signature, 1, 77), "...")
-  }
   
+  # Full function code
   code <- c(
-    sprintf("#' Wrapper for C function: %s", func_signature),
-    "#'",
-    param_docs,
-    sprintf("#' @return (%s) %s", return_ffi, return_type),
-    sprintf("#' @export"),
+    sprintf("#' Wrapper for C function: %s", func_name),
+    if (length(param_docs) > 0) param_docs else NULL,
+    sprintf("#' @return (%s)", return_type_ffi),
+    "#' @export",
     signature,
-    "{",
+    " {",
     ffi_call,
     call_line,
-    "}"
+    "}",
+    ""
   )
-
+  
   paste(code, collapse = "\n")
 }
 
