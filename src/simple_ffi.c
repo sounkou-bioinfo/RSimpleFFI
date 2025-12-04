@@ -1242,7 +1242,7 @@ static SEXP do_ffi_call_internal(void* data) {
     // Set up cleanup context
     ffi_call_context_t ctx = {0};
     
-    // PROTECT r_args first
+    // PROTECT r_args - this protects all elements accessible via VECTOR_ELT
     PROTECT(r_args);
     ctx.protected_count = 1;
     
@@ -1259,15 +1259,13 @@ static SEXP do_ffi_call_internal(void* data) {
         // Use R_alloc for automatic cleanup - freed when .Call() returns
         arg_values = (void**)R_alloc(num_args, sizeof(void*));
         
-        // Protect each individual argument and convert - with error safety
+        // Convert each argument - no need to PROTECT individual elements
+        // since they are reachable from the already-protected r_args
         for (int i = 0; i < num_args; i++) {
             SEXP arg = VECTOR_ELT(r_args, i);
-            PROTECT(arg);  
-            ctx.protected_count++;  // Track protections for cleanup
-            
-            // This can error - but cleanup will handle unprotecting
+            // convert_r_to_native uses R_alloc internally, which is safe
+            // even if it triggers GC, r_args (and thus arg) remains protected
             arg_values[i] = convert_r_to_native(arg, cif->arg_types[i]);
-           // Rprintf("Converted argument %d to native value at %p\n", i, arg_values[i]);
         }
     }
     
