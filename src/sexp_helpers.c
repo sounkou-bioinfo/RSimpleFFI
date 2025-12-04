@@ -111,6 +111,10 @@ SEXP R_data_ptr(SEXP x) {
 
 /*
  * R_data_ptr_ro - Get read-only data pointer (ALTREP-safe)
+ * 
+ * Note: For ALTREP objects, the *_RO functions may return NULL if the
+ * implementation doesn't provide direct access (e.g., compact sequences).
+ * In that case, we fall back to the regular accessors which will materialize.
  */
 SEXP R_data_ptr_ro(SEXP x) {
     init_tags();
@@ -121,15 +125,28 @@ SEXP R_data_ptr_ro(SEXP x) {
         case INTSXP:
         case LGLSXP:
             data = INTEGER_RO(x);
+            /* ALTREP may return NULL - fall back to materializing */
+            if (data == NULL) {
+                data = INTEGER(x);
+            }
             break;
         case REALSXP:
             data = REAL_RO(x);
+            if (data == NULL) {
+                data = REAL(x);
+            }
             break;
         case CPLXSXP:
             data = COMPLEX_RO(x);
+            if (data == NULL) {
+                data = COMPLEX(x);
+            }
             break;
         case RAWSXP:
             data = RAW_RO(x);
+            if (data == NULL) {
+                data = RAW(x);
+            }
             break;
         case VECSXP:
             data = VECTOR_PTR_RO(x);
@@ -139,6 +156,10 @@ SEXP R_data_ptr_ro(SEXP x) {
             break;
         default:
             Rf_error("Cannot get data pointer for type %s", Rf_type2char(TYPEOF(x)));
+    }
+    
+    if (data == NULL) {
+        Rf_error("Cannot get data pointer: ALTREP object does not provide access");
     }
     
     /* Protect the object from GC */

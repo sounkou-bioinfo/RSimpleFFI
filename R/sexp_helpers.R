@@ -58,11 +58,12 @@ data_ptr <- function(x) {
 
 #' Get read-only data pointer from R vector with GC protection
 #'
-#' Like `data_ptr()` but returns a const pointer (for ALTREP support).
-#' Use this when you only need to read the data, not modify it.
+#' Like `data_ptr()` but attempts read-only access first (for ALTREP support).
+#' If the ALTREP implementation doesn't provide direct access, falls back to
+#' materializing the data (which may allocate memory).
 #'
 #' @param x An R vector
-#' @return External pointer to the const data
+#' @return External pointer to the data
 #' @export
 data_ptr_ro <- function(x) {
     .Call("R_data_ptr_ro", x)
