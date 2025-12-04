@@ -1,6 +1,6 @@
-# Get typedef name from declarator
+# Get typedef name from declarator (legacy wrapper)
 
-Get typedef name from declarator
+Get typedef name from declarator (legacy wrapper)
 
 ## Usage
 

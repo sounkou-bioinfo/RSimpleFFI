@@ -5,7 +5,7 @@ Generate R struct definition from parsed struct
 ## Usage
 
 ``` r
-generate_struct_definition(struct_name, struct_def)
+generate_struct_definition(struct_name, struct_def, typedefs = NULL)
 ```
 
 ## Arguments
