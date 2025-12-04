@@ -549,6 +549,7 @@ ts_extract_functions <- function(root_node, source_text) {
   functions <- list()
   
   # Query for function declarations (not definitions - those have compound_statement bodies)
+  # Note: This matches both direct function_declarator and pointer_declarator (for pointer returns)
   query_text <- '(declaration type: (_) @return_type declarator: (function_declarator) @declarator)'
   
   tryCatch({
@@ -576,6 +577,59 @@ ts_extract_functions <- function(root_node, source_text) {
     }
   }, error = function(e) {
     message("Warning: tree-sitter function extraction failed: ", e$message)
+  })
+  
+  # Also handle pointer return types (FILE* foo(...))
+  # These have pointer_declarator as the declarator instead of function_declarator
+  query_text2 <- '(declaration type: (_) @return_type declarator: (pointer_declarator) @ptr_declarator)'
+  
+  tryCatch({
+    query2 <- treesitter::query(treesitter.c::language(), query_text2)
+    captures2 <- treesitter::query_captures(query2, root_node)
+    
+    if (length(captures2$name) > 0) {
+      i <- 1
+      while (i <= length(captures2$name)) {
+        if (captures2$name[i] == "return_type" && i < length(captures2$name) && captures2$name[i+1] == "ptr_declarator") {
+          base_return_type <- treesitter::node_text(captures2$node[[i]])
+          ptr_declarator <- captures2$node[[i+1]]
+          
+          # Find function_declarator inside pointer_declarator
+          func_declarator <- NULL
+          child_count <- treesitter::node_child_count(ptr_declarator)
+          ptr_count <- 0
+          
+          for (j in seq_len(child_count)) {
+            child <- treesitter::node_child(ptr_declarator, j)
+            node_type <- treesitter::node_type(child)
+            
+            if (node_type == "*") {
+              ptr_count <- ptr_count + 1
+            } else if (node_type == "function_declarator") {
+              func_declarator <- child
+              break
+            }
+          }
+          
+          if (!is.null(func_declarator)) {
+            # Build full return type with pointers
+            return_type <- paste0(base_return_type, strrep("*", ptr_count))
+            
+            func_info <- ts_parse_function_declarator(func_declarator, source_text, return_type)
+            
+            if (!is.null(func_info)) {
+              functions[[func_info$name]] <- func_info
+            }
+          }
+          
+          i <- i + 2
+        } else {
+          i <- i + 1
+        }
+      }
+    }
+  }, error = function(e) {
+    message("Warning: tree-sitter pointer function extraction failed: ", e$message)
   })
   
   # Convert to data.frame format like regex parser
