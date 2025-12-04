@@ -1112,8 +1112,10 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
   # Handle variadic functions specially - generate a comment instead of broken wrapper
   if (is_variadic) {
     n_fixed <- length(param_names)
+    # Collapse whitespace/newlines in params for cleaner output
+    params_collapsed <- gsub("\\s+", " ", params)
     code <- c(
-      sprintf("# Variadic function: %s %s(%s)", return_type, func_name, params),
+      sprintf("# Variadic function: %s %s(%s)", return_type, func_name, params_collapsed),
       sprintf("# This function has variable arguments (...) which require ffi_cif_var()."),
       sprintf("# Fixed args: %d, then variadic arguments follow.", n_fixed),
       "#",
@@ -1171,7 +1173,9 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
   }
 
   # Create function signature for roxygen, truncate if too long to avoid line wrapping issues
+  # Also collapse any newlines that might have been introduced by preprocessor
   func_signature <- sprintf("%s %s(%s)", return_type, func_name, params)
+  func_signature <- gsub("\\s+", " ", func_signature)  # Collapse whitespace/newlines to single space
   if (nchar(func_signature) > 80) {
     func_signature <- paste0(substr(func_signature, 1, 77), "...")
   }
