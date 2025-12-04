@@ -33,7 +33,7 @@ ffi_all_offsets(Point)
 # 0 8
 
 # Packed struct
-Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), pack = 1)
+Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), .pack = 1)
 ffi_all_offsets(Packed)
 # a b
 # 0 1

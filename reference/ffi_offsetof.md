@@ -44,7 +44,7 @@ ffi_offsetof(Point, "x") # 0
 ffi_offsetof(Point, "y") # 8 (aligned to 8-byte boundary)
 
 # Packed struct example
-Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), pack = 1)
-ffi_offsetof(Packed, "b") # 1 (no padding with pack=1)
+Packed <- ffi_struct(a = ffi_uint8(), b = ffi_int32(), .pack = 1)
+ffi_offsetof(Packed, "b") # 1 (no padding with .pack=1)
 } # }
 ```
