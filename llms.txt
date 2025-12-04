@@ -1441,6 +1441,10 @@ This project is licensed under the GPL-3 License.
   : Get summary of R API bindings
 - [`create_builtin_type()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/create_builtin_type.md)
   : Create built-in FFI type
+- [`data_ptr()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/data_ptr.md)
+  : Get data pointer from R vector with GC protection
+- [`data_ptr_ro()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/data_ptr_ro.md)
+  : Get read-only data pointer from R vector with GC protection
 - [`dll_ffi_symbol()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_ffi_symbol.md)
   : Create FFI function from dynamically loaded function
 - [`dll_info()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_info.md)
@@ -1636,6 +1640,8 @@ This project is licensed under the GPL-3 License.
   : Get pointer type tag
 - [`is_null_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/is_null_pointer.md)
   : Check if pointer is NULL
+- [`is_protected_ptr()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/is_protected_ptr.md)
+  : Check if an object is a protected SEXP pointer
 - [`libffi_version()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/libffi_version.md)
   : Get libffi version string
 - [`make_typed_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/make_typed_pointer.md)
@@ -1644,6 +1650,14 @@ This project is licensed under the GPL-3 License.
   : Convert pointer to string safely
 - [`pointer_to_string_safe()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/pointer_to_string_safe.md)
   : Convert pointer to string safely
+- [`ptr_to_sexp()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ptr_to_sexp.md)
+  : Get the R object from a protected SEXP pointer
+- [`release_ptr()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/release_ptr.md)
+  : Manually release a protected pointer
+- [`sexp_helpers`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/sexp_helpers.md)
+  : SEXP Pointer Helpers for Safe FFI Usage
+- [`sexp_ptr()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/sexp_ptr.md)
+  : Get SEXP pointer from R object with GC protection
 - [`tcc_available()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_available.md)
   : Check if TCC is available
 - [`tcc_binary_path()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_binary_path.md)

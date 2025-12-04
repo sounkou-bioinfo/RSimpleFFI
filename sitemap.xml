@@ -19,6 +19,8 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/bindgen_r_api_summary.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/can_resolve_typedef.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/create_builtin_type.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/data_ptr.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/data_ptr_ro.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_ffi_symbol.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_info.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/dll_is_loaded.html</loc></url>
@@ -124,10 +126,15 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/get_resolvable_types.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/index.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/is_null_pointer.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/is_protected_ptr.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/libffi_version.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/make_typed_pointer.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/pointer_to_string.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/pointer_to_string_safe.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ptr_to_sexp.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/release_ptr.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/sexp_helpers.html</loc></url>
+<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/sexp_ptr.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/sort_typedefs_by_dependency.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/strip_type_qualifiers.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_available.html</loc></url>
