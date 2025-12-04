@@ -33,6 +33,30 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.1.9001" id="rsimpleffi-1019001-development">RSimpleFFI 1.0.1.9001 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1019001-development"></a></h2>
+<div class="section level3">
+<h3 id="new-features-1-0-1-9001">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1-9001"></a></h3>
+<ul><li>Struct allocation helpers are now auto-generated in R bindings:
+<ul><li>
+<code>new_StructName()</code> - allocate and optionally initialize struct instances</li>
+<li>
+<code>StructName_to_list()</code> - convert struct pointer to R list</li>
+</ul></li>
+<li>Typedef resolution in function wrappers:
+<ul><li>Function parameters now correctly use typedef’d FFI types (e.g., <code>SEXPTYPE</code> → <code><a href="../reference/ffi_uint.html">ffi_uint()</a></code>)</li>
+<li>FFI types shown in <code>@param</code> documentation for better IDE support</li>
+</ul></li>
+<li>Improved variadic function handling:
+<ul><li>Functions with <code>...</code> now generate usage examples using <code><a href="../reference/ffi_cif_var.html">ffi_cif_var()</a></code> instead of broken wrappers</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-1-0-1-9001">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-1-9001"></a></h3>
+<ul><li>Fixed multi-line C comment removal in header parsing</li>
+<li>Fixed R name escaping for reserved words (<code><a href="https://rdrr.io/r/base/Control.html" class="external-link">next</a></code>, <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">break</a></code>, etc.) and underscore-prefixed identifiers</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.1.9000" id="rsimpleffi-1019000-development">RSimpleFFI 1.0.1.9000 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1019000-development"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-0-1-9000">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1-9000"></a></h3>

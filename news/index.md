@@ -1,5 +1,31 @@
 # Changelog
 
+## RSimpleFFI 1.0.1.9001 (Development)
+
+### New Features
+
+- Struct allocation helpers are now auto-generated in R bindings:
+  - `new_StructName()` - allocate and optionally initialize struct
+    instances
+  - `StructName_to_list()` - convert struct pointer to R list
+- Typedef resolution in function wrappers:
+  - Function parameters now correctly use typedef’d FFI types (e.g.,
+    `SEXPTYPE` →
+    [`ffi_uint()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_uint.md))
+  - FFI types shown in `@param` documentation for better IDE support
+- Improved variadic function handling:
+  - Functions with `...` now generate usage examples using
+    [`ffi_cif_var()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_cif_var.md)
+    instead of broken wrappers
+
+### Bug Fixes
+
+- Fixed multi-line C comment removal in header parsing
+- Fixed R name escaping for reserved words
+  ([`next`](https://rdrr.io/r/base/Control.html),
+  [`break`](https://rdrr.io/r/base/Control.html), etc.) and
+  underscore-prefixed identifiers
+
 ## RSimpleFFI 1.0.1.9000 (Development)
 
 ### New Features
