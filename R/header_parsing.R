@@ -86,10 +86,10 @@ get_ffi_type_map <- function() {
     "bool" = "ffi_bool()",
     "_Bool" = "ffi_bool()",
     "wchar_t" = "ffi_wchar_t()",
-    "char*" = "ffi_string()",
-    "char *" = "ffi_string()",
-    "const char*" = "ffi_string()",
-    "const char *" = "ffi_string()",
+    "char*" = "ffi_pointer()",
+    "char *" = "ffi_pointer()",
+    "const char*" = "ffi_pointer()",
+    "const char *" = "ffi_pointer()",
 
     # ============================================
     # C99/C11 fixed-width integer types
@@ -207,7 +207,7 @@ get_ffi_type_map <- function() {
     "__darwin_blkcnt_t" = "ffi_int64()",
     "__darwin_blksize_t" = "ffi_int()",
     "__darwin_uuid_t" = "ffi_pointer()",
-    "__darwin_uuid_string_t" = "ffi_string()",
+    "__darwin_uuid_string_t" = "ffi_pointer()",
     "__darwin_natural_t" = "ffi_uint()",
     "__darwin_mach_port_t" = "ffi_uint()",
     "__darwin_mach_port_name_t" = "ffi_uint()",
@@ -319,8 +319,8 @@ get_ffi_type_map <- function() {
     "PVOID" = "ffi_pointer()",
     "LPVOID" = "ffi_pointer()",
     "LPCVOID" = "ffi_pointer()",
-    "LPSTR" = "ffi_string()",
-    "LPCSTR" = "ffi_string()",
+    "LPSTR" = "ffi_pointer()",
+    "LPCSTR" = "ffi_pointer()",
     "LPWSTR" = "ffi_pointer()",
     "LPCWSTR" = "ffi_pointer()",
     "LPTSTR" = "ffi_pointer()",
@@ -973,19 +973,8 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
 
   # Function to map a C type to FFI type (handles both "type name" and "type")
   # For return types, char* should be ffi_pointer() (could be buffer, not string)
-  # For parameters, char* should be ffi_string() (convenient for passing R strings)
   map_type_from_string <- function(type_string, is_return_type = FALSE) {
     type_string <- strip_type_qualifiers(trimws(type_string))
-
-    # For return types, treat char* as pointer (safer - could be buffer not string)
-    # For parameters, treat char* as string (convenient for R string passing)
-    if (grepl("char\\s*\\*", type_string)) {
-      if (is_return_type) {
-        return("ffi_pointer()")
-      } else {
-        return("ffi_string()")
-      }
-    }
 
     # Check for other pointer types (treat as ffi_pointer())
     if (grepl("\\*", type_string)) {
@@ -1069,7 +1058,6 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
   }
 
   # Map return type (it's just a type, no variable name)
-  # Use is_return_type = TRUE so char* returns ffi_pointer() not ffi_string()
   return_ffi <- map_type_from_string(return_type, is_return_type = TRUE)
 
   # Generate R function
@@ -1226,17 +1214,24 @@ sort_typedefs_by_dependency <- function(typedefs) {
 generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FALSE) {
   code_sections <- list()
 
-  # Header comment
+  # Header comment with source file hash
+  source_hash <- if (file.exists(parsed_header$file)) {
+    tools::md5sum(parsed_header$file)
+  } else {
+    "unknown"
+  }
+  
   code_sections$header <- c(
     sprintf("# Auto-generated R bindings for %s", basename(parsed_header$file)),
     sprintf("# Generated on: %s", Sys.time()),
+    sprintf("# Source hash: %s", source_hash),
     "#",
     "# NOTE: These functions expect symbols to be available in the current process.",
     "# For external libraries, load them first with dll_load() or use dll_ffi_symbol().",
     "#",
     "# Type handling:",
     "#  - Primitives (int, double, etc.): passed by value, auto-converted",
-    "#  - char*: use ffi_string(), automatically converts to/from R character",
+    "#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string",
     "#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()",
     "#  - Struct fields: access with ffi_get_field() and ffi_set_field()",
     "#  - Union fields: same as structs, all fields share memory at offset 0",
