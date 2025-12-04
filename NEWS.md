@@ -1,14 +1,29 @@
 # RSimpleFFI 1.0.1.9001 (Development)
 
+## Major Milestones
+
+* **Completed migration to treesitter.c**: Full transition from regex-based parsing to AST-based parsing
+  - All legacy parsing code removed
+  - Tree-sitter now handles 100% of C header parsing
+  - More robust, accurate, and maintainable codebase
+  - Better support for complex C syntax patterns
+
+## Breaking Changes
+
+* **Removed regex-based header parser**: The package now exclusively uses tree-sitter for C header parsing
+  - Removed functions: `tcc_extract_structs()`, `tcc_extract_unions()`, `tcc_extract_enums()`, `tcc_extract_functions()`, `tcc_extract_typedefs()`, `tcc_parse_header()`
+  - `ffi_parse_header()` now always uses tree-sitter (no `use_treesitter` parameter)
+  - Packages `treesitter` and `treesitter.c` are now required dependencies (not optional)
+  - Migration: Simply remove `use_treesitter = FALSE` from any code - tree-sitter handles all valid C syntax
+
 ## New Features
 
-* **Tree-sitter parser integration**:
-  - Added `ffi_parse_header_ts()` for robust AST-based C header parsing
-  - `ffi_parse_header()` now uses tree-sitter by default when available (with fallback to regex)
+* **Tree-sitter parser is now the only parser**:
+  - Robust AST-based parsing handles all valid C syntax
+  - Correctly parses pointer return types (e.g., `FILE* open_file(...)`)
   - Correctly parses complex array declarations and nested structs
-  - **Now detects `__attribute__((packed))` and sets `packed` attribute on structs/unions**
+  - **Detects `__attribute__((packed))` and sets `packed` attribute on structs/unions**
   - Generates code with `pack=1` for packed structs automatically
-  - Depends on `treesitter` (CRAN) and `treesitter.c` packages
   - TCC preprocessor still used first to expand macros before tree-sitter parsing
 
 * Struct allocation helpers are now auto-generated in R bindings:
@@ -24,6 +39,7 @@
 
 ## Bug Fixes
  
+* Fixed pointer return type extraction in tree-sitter parser (was missing functions like `FILE* open_file(...)`)
 * Fixed multi-line C comment removal in header parsing
 * Fixed R name escaping for reserved words (`next`, `break`, etc.) and underscore-prefixed identifiers
 

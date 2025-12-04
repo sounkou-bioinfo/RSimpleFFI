@@ -451,14 +451,6 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
 #' @return List with parsed components (file, defines, structs, unions, enums, functions, typedefs)
 #' @export
 ffi_parse_header <- function(header_file, includes = NULL) {
-  if (!requireNamespace("treesitter", quietly = TRUE)) {
-    stop("Package 'treesitter' is required but not installed.")
-  }
-  
-  if (!requireNamespace("treesitter.c", quietly = TRUE)) {
-    stop("Package 'treesitter.c' is required but not installed.")
-  }
-  
   ffi_parse_header_ts(header_file, includes)
 }
 
