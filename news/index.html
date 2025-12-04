@@ -35,12 +35,28 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.1.9002" id="rsimpleffi-1019002-development">RSimpleFFI 1.0.1.9002 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1019002-development"></a></h2>
 <div class="section level3">
+<h3 id="new-features-1-0-1-9002">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-1-9002"></a></h3>
+<ul><li>
+<strong>Added <code>generate_htslib_package.R</code> tool</strong>: Script to generate FFI bindings for htslib (SAM/BAM/VCF/BCF library) demonstrating package generation capabilities.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="breaking-changes-1-0-1-9002">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-1-9002"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/ffi_struct.html">ffi_struct()</a></code> and <code><a href="../reference/ffi_union.html">ffi_union()</a></code> parameter renamed</strong>: <code>pack</code> → <code>.pack</code>
+<ul><li>The dot prefix prevents collision with C struct field names like <code>pack</code>
+</li>
+<li>Old code using <code>pack = 1</code> should change to <code>.pack = 1</code>
+</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
 <h3 id="internal-changes-1-0-1-9002">Internal Changes<a class="anchor" aria-label="anchor" href="#internal-changes-1-0-1-9002"></a></h3>
 <ul><li>Removed <code>strip_type_qualifiers()</code> - tree-sitter AST parsing handles type qualifier stripping directly via node type filtering, making the regex-based approach unnecessary.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-0-1-9002">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-1-9002"></a></h3>
-<ul><li><p>Fixed inline/nested struct definitions generating invalid R code by extracting just the struct name from <code>struct_specifier</code> nodes instead of the full body text.</p></li>
+<ul><li><p>Fixed anonymous bitfields (e.g., <code>: 30</code> for padding) causing empty field names in generated code by checking for <code>node_is_missing()</code> in tree-sitter parsing.</p></li>
+<li><p>Fixed inline/nested struct definitions generating invalid R code by extracting just the struct name from <code>struct_specifier</code> nodes instead of the full body text.</p></li>
 <li><p>Fixed typedef’d anonymous structs/unions/enums being duplicated in typedefs (they are already extracted as structs/unions/enums).</p></li>
 <li>
 <p>Fixed missing <code>treesitter</code> package import declaration (<a href="https://github.com/sounkou-bioinfo/RSimpleFFI/issues/2" class="external-link">#2</a>)</p>

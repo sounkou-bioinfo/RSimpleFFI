@@ -42,7 +42,7 @@ The union's size is the size of its largest member.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ffi_union</span><span class="op">(</span><span class="va">...</span>, pack <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ffi_union</span><span class="op">(</span><span class="va">...</span>, .pack <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -53,9 +53,9 @@ The union's size is the size of its largest member.</p>
 <dd><p>Named FFIType objects representing union fields</p></dd>
 
 
-<dt id="arg-pack">pack<a class="anchor" aria-label="anchor" href="#arg-pack"></a></dt>
+<dt id="arg--pack">.pack<a class="anchor" aria-label="anchor" href="#arg--pack"></a></dt>
 <dd><p>Integer packing alignment (1, 2, 4, 8, or 16). When specified,
-the union's alignment is reduced to min(natural_alignment, pack).
+the union's alignment is reduced to min(natural_alignment, .pack).
 This affects placement when the union is used as a struct member.
 Default NULL uses natural alignment.</p></dd>
 
@@ -71,7 +71,7 @@ Default NULL uses natural alignment.</p></dd>
 <span class="r-in"><span><span class="va">U</span> <span class="op">&lt;-</span> <span class="fu">ffi_union</span><span class="op">(</span>c <span class="op">=</span> <span class="fu"><a href="ffi_char.html">ffi_char</a></span><span class="op">(</span><span class="op">)</span>, i <span class="op">=</span> <span class="fu"><a href="ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Packed union (alignment = 1)</span></span></span>
-<span class="r-in"><span><span class="va">PackedU</span> <span class="op">&lt;-</span> <span class="fu">ffi_union</span><span class="op">(</span>c <span class="op">=</span> <span class="fu"><a href="ffi_char.html">ffi_char</a></span><span class="op">(</span><span class="op">)</span>, i <span class="op">=</span> <span class="fu"><a href="ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, pack <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">PackedU</span> <span class="op">&lt;-</span> <span class="fu">ffi_union</span><span class="op">(</span>c <span class="op">=</span> <span class="fu"><a href="ffi_char.html">ffi_char</a></span><span class="op">(</span><span class="op">)</span>, i <span class="op">=</span> <span class="fu"><a href="ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, .pack <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Packed union in a struct - offset of next field is affected</span></span></span>
 <span class="r-in"><span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="ffi_struct.html">ffi_struct</a></span><span class="op">(</span>u <span class="op">=</span> <span class="va">PackedU</span>, after <span class="op">=</span> <span class="fu"><a href="ffi_char.html">ffi_char</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
