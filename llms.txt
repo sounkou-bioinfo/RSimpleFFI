@@ -678,10 +678,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1625941846
+#> [1] 1803935610
 rand_value <- rand_func()
 rand_value
-#> [1] 1482963689
+#> [1] 911287413
 dll_unload(libc_path)
 ```
 
@@ -703,7 +703,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x650756254060>
+#> <pointer: 0x5f1dffd35430>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -794,8 +794,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r       13µs   28.1µs    36838.    78.2KB        0
-#> 2 ffi_call     93.8µs   97.5µs     9876.    78.7KB        0
+#> 1 native_r       13µs   28.4µs    36045.    78.2KB        0
+#> 2 ffi_call     93.6µs   97.8µs     9841.    78.7KB        0
 dll_unload(lib_path)
 ```
 
@@ -877,7 +877,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x65075a2c5240>
+#> <pointer: 0x5f1e03cf4240>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -909,8 +909,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r             2.5ms   2.66ms      365.    78.2KB     19.2
-#> 2 c_ffi       116.8µs 129.17µs     7494.    78.7KB      0
+#> 1 r            2.45ms   2.63ms      370.    78.2KB     19.5
+#> 2 c_ffi      108.62µs 123.05µs     7703.    78.7KB      0
 
 dll_unload(lib_path)
 ```
@@ -994,7 +994,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764804044
+#> [1] 1764806445
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1036,7 +1036,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-04 00:20:43.776975\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-04 01:00:45.167364\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_string(), automatically converts to/from R character\n#  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()\n#  - St"
 
 # The generated code includes:
 # - Constants from #define
@@ -1093,8 +1093,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file489481c25d3da.h
-#> # Generated on: 2025-12-04 00:20:43.800657
+#> # Auto-generated R bindings for file4e1ca45b6531a.h
+#> # Generated on: 2025-12-04 01:00:45.189835
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
 #> # For external libraries, load them first with dll_load() or use dll_ffi_symbol().
@@ -1158,7 +1158,7 @@ Generate bindings and call statistical distribution functions directly:
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> Generated R bindings written to: /tmp/RtmpauxF3Q/file4894832348262.R
+#> Generated R bindings written to: /tmp/RtmpZWFRBv/file4e1ca77e6b82c.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
