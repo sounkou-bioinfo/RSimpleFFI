@@ -42,7 +42,7 @@ cat("Loaded library:", lib, "\n\n")
 PackedSimple <- ffi_struct(
   a = ffi_char(),
   b = ffi_int32(),
-  pack = 1L
+  .pack = 1L
 )
 
 # Normal struct for comparison
@@ -55,7 +55,7 @@ NormalSimple <- ffi_struct(
 PackedNested <- ffi_struct(
   inner = PackedSimple,
   c = ffi_char(),
-  pack = 1L
+  .pack = 1L
 )
 
 # Multi-field packed struct
@@ -64,7 +64,7 @@ PackedMulti <- ffi_struct(
   value = ffi_uint32(),
   count = ffi_uint16(),
   status = ffi_uint8(),
-  pack = 1L
+  .pack = 1L
 )
 
 # ============ Test 1: Size verification ============

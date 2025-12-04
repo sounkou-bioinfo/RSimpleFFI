@@ -58,7 +58,7 @@ ComplexPacked <- ffi_struct(
   id = ffi_uint32(),
   value = ffi_uint16(),
   data = ffi_double(),
-  pack = 1
+  .pack = 1
 )
 
 r_natural_size <- ffi_sizeof(NaturalStruct)
