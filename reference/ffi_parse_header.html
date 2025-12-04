@@ -39,7 +39,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ffi_parse_header</span><span class="op">(</span><span class="va">header_file</span>, includes <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ffi_parse_header</span><span class="op">(</span><span class="va">header_file</span>, includes <span class="op">=</span> <span class="cn">NULL</span>, use_treesitter <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -52,6 +52,10 @@
 
 <dt id="arg-includes">includes<a class="anchor" aria-label="anchor" href="#arg-includes"></a></dt>
 <dd><p>Additional include directories</p></dd>
+
+
+<dt id="arg-use-treesitter">use_treesitter<a class="anchor" aria-label="anchor" href="#arg-use-treesitter"></a></dt>
+<dd><p>If TRUE (default), use tree-sitter parser when available. If FALSE, use regex parser.</p></dd>
 
 </dl></div>
     <div class="section level2">

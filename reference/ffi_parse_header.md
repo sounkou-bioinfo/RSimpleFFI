@@ -5,7 +5,7 @@ Parse C header file and create structured result
 ## Usage
 
 ``` r
-ffi_parse_header(header_file, includes = NULL)
+ffi_parse_header(header_file, includes = NULL, use_treesitter = TRUE)
 ```
 
 ## Arguments
@@ -17,6 +17,11 @@ ffi_parse_header(header_file, includes = NULL)
 - includes:
 
   Additional include directories
+
+- use_treesitter:
+
+  If TRUE (default), use tree-sitter parser when available. If FALSE,
+  use regex parser.
 
 ## Value
 
