@@ -1,11 +1,11 @@
 # Parse C header file and create structured result
 
-Parse C header file and create structured result
+Uses tree-sitter for robust AST-based parsing of C headers.
 
 ## Usage
 
 ``` r
-ffi_parse_header(header_file, includes = NULL, use_treesitter = TRUE)
+ffi_parse_header(header_file, includes = NULL)
 ```
 
 ## Arguments
@@ -17,11 +17,6 @@ ffi_parse_header(header_file, includes = NULL, use_treesitter = TRUE)
 - includes:
 
   Additional include directories
-
-- use_treesitter:
-
-  If TRUE (default), use tree-sitter parser when available. If FALSE,
-  use regex parser.
 
 ## Value
 

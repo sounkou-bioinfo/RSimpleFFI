@@ -141,12 +141,6 @@
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_available.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_binary_path.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_defines.html</loc></url>
-<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_enums.html</loc></url>
-<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_functions.html</loc></url>
-<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_structs.html</loc></url>
-<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_typedefs.html</loc></url>
-<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_unions.html</loc></url>
-<url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_parse_header.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_preprocess.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_run.html</loc></url>
 <url><loc>https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ts_check_packed_attribute.html</loc></url>

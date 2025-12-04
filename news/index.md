@@ -96,8 +96,7 @@
 
 - Added typedef extraction from C headers:
 
-  - [`tcc_extract_typedefs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_typedefs.md)
-    parses typedef definitions
+  - `tcc_extract_typedefs()` parses typedef definitions
   - [`generate_typedef_definition()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_typedef_definition.md)
     generates R code for typedefs
   - Dependency-aware ordering via

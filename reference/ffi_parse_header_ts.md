@@ -1,11 +1,12 @@
-# Parse C header using tree-sitter (if available)
+# Parse C header using tree-sitter
 
-Parse C header using tree-sitter (if available)
+Internal function that performs tree-sitter-based parsing. Use
+ffi_parse_header() instead which handles dependency checks.
 
 ## Usage
 
 ``` r
-ffi_parse_header_ts(header_file, includes = NULL, use_treesitter = TRUE)
+ffi_parse_header_ts(header_file, includes = NULL)
 ```
 
 ## Arguments
@@ -17,11 +18,6 @@ ffi_parse_header_ts(header_file, includes = NULL, use_treesitter = TRUE)
 - includes:
 
   Additional include directories (used for TCC preprocessing)
-
-- use_treesitter:
-
-  If TRUE, use tree-sitter parser. If FALSE or if treesitter
-  unavailable, fall back to regex.
 
 ## Value
 

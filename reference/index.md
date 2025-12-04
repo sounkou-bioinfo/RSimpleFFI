@@ -139,8 +139,6 @@
   : Pack bit-fields into a 64-bit value
 - [`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md)
   : Parse C header file and create structured result
-- [`ffi_parse_header_ts()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header_ts.md)
-  : Parse C header using tree-sitter (if available)
 - [`ffi_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_pointer.md)
   : pointer FFI type
 - [`ffi_print_struct()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_print_struct.md)
@@ -253,18 +251,6 @@
   : Get path to embedded TCC binary
 - [`tcc_extract_defines()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_defines.md)
   : Extract \#define macros from C header file or preprocessed lines
-- [`tcc_extract_enums()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_enums.md)
-  : Extract enum definitions from preprocessed C code
-- [`tcc_extract_functions()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_functions.md)
-  : Extract function declarations from preprocessed C code
-- [`tcc_extract_structs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_structs.md)
-  : Extract struct definitions from preprocessed C code
-- [`tcc_extract_typedefs()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_typedefs.md)
-  : Extract simple typedef aliases from preprocessed C code
-- [`tcc_extract_unions()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_extract_unions.md)
-  : Extract union definitions from preprocessed C code
-- [`tcc_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_parse_header.md)
-  : Parse C header file and extract all declarations
 - [`tcc_preprocess()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_preprocess.md)
   : Preprocess C header file using embedded TCC
 - [`tcc_run()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/tcc_run.md)
