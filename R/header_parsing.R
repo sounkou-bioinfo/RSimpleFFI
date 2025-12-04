@@ -1,4 +1,4 @@
-# Header Parsing and Code Generation (Functional Style)
+# Header Parsing and Code Generation
 
 #' Strip C type qualifiers from a type string
 #'

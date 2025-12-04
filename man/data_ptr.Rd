@@ -16,9 +16,13 @@ External pointer to the data, with finalizer to release protection
 Returns an external pointer to the underlying data (INTEGER, REAL, etc.)
 while ensuring the object won't be garbage collected.
 }
+\details{
+Note: For ALTREP objects (like \code{1:10}), use \code{data_ptr_ro()} instead,
+which properly handles deferred materialization.
+}
 \examples{
 \dontrun{
-x <- as.double(1:10)
+x <- c(1.0, 2.0, 3.0) # Regular vector, not ALTREP
 ptr <- data_ptr(x)
 # ptr points to the double* array
 # Safe to pass to C functions expecting double*

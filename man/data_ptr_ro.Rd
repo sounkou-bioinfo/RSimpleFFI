@@ -10,9 +10,10 @@ data_ptr_ro(x)
 \item{x}{An R vector}
 }
 \value{
-External pointer to the const data
+External pointer to the data
 }
 \description{
-Like \code{data_ptr()} but returns a const pointer (for ALTREP support).
-Use this when you only need to read the data, not modify it.
+Like \code{data_ptr()} but attempts read-only access first (for ALTREP support).
+If the ALTREP implementation doesn't provide direct access, falls back to
+materializing the data (which may allocate memory).
 }
