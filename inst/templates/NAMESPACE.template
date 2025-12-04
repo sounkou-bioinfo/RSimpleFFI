@@ -4,3 +4,8 @@ import(RSimpleFFI)
 # Export all generated functions
 exportPattern("^r_")
 exportPattern("^{{LIBRARY_NAME}}_")
+
+# Export struct/union types and helpers
+exportPattern("_t$")
+exportPattern("^new_")
+exportPattern("_to_list$")
