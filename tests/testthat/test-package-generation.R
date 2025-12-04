@@ -4,7 +4,11 @@ library(testthat)
 library(RSimpleFFI)
 
 test_that("generate_package_init creates valid R code", {
-  init_code <- generate_package_init("mylib", "MyPackage", use_system_lib = TRUE)
+  init_code <- generate_package_init(
+    "mylib",
+    "MyPackage",
+    use_system_lib = TRUE
+  )
 
   expect_type(init_code, "character")
   expect_true(nchar(init_code) > 0)
@@ -15,14 +19,20 @@ test_that("generate_package_init creates valid R code", {
 })
 
 test_that("generate_package_init handles bundled libraries", {
-  init_code <- generate_package_init("mylib", "MyPackage", use_system_lib = FALSE)
+  init_code <- generate_package_init(
+    "mylib",
+    "MyPackage",
+    use_system_lib = FALSE
+  )
 
   expect_true(grepl("system.file", init_code))
   expect_false(grepl("dll_load_system", init_code))
 })
 
 test_that("generate_package_init handles custom library path", {
-  init_code <- generate_package_init("mylib", "MyPackage",
+  init_code <- generate_package_init(
+    "mylib",
+    "MyPackage",
     use_system_lib = FALSE,
     library_path = "/custom/path/libmylib.so"
   )

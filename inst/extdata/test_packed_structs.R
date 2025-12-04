@@ -16,17 +16,17 @@ cat("=== Testing Packed Struct Support ===\n\n")
 # Compile the test C code
 c_file <- system.file("extdata", "packed_structs.c", package = "RSimpleFFI")
 if (c_file == "") {
-    c_file <- "inst/extdata/packed_structs.c"
+  c_file <- "inst/extdata/packed_structs.c"
 }
 
 if (!file.exists(c_file)) {
-    stop("Cannot find packed_structs.c")
+  stop("Cannot find packed_structs.c")
 }
 
 cat("Compiling packed_structs.c...\n")
 lib_path <- dll_compile_and_load(
-    readLines(c_file) |> paste(collapse = "\n"),
-    "packed_structs_test"
+  readLines(c_file) |> paste(collapse = "\n"),
+  "packed_structs_test"
 )
 cat("Compiled successfully!\n\n")
 
@@ -54,11 +54,11 @@ NaturalStruct <- ffi_struct(a = ffi_int32(), b = ffi_double())
 PackedStruct1 <- ffi_struct(a = ffi_int32(), b = ffi_double(), pack = 1)
 PackedStruct2 <- ffi_struct(a = ffi_int32(), b = ffi_double(), pack = 2)
 ComplexPacked <- ffi_struct(
-    flags = ffi_uint8(),
-    id = ffi_uint32(),
-    value = ffi_uint16(),
-    data = ffi_double(),
-    pack = 1
+  flags = ffi_uint8(),
+  id = ffi_uint32(),
+  value = ffi_uint16(),
+  data = ffi_double(),
+  pack = 1
 )
 
 r_natural_size <- ffi_sizeof(NaturalStruct)
@@ -98,22 +98,32 @@ stopifnot(c_packed1_offset_a == r_packed1_offsets["a"])
 stopifnot(c_packed1_offset_b == r_packed1_offsets["b"])
 
 # Complex struct offsets
-c_complex_offset_flags <- dll_ffi_symbol("get_complex_offset_flags", ffi_int())()
+c_complex_offset_flags <- dll_ffi_symbol(
+  "get_complex_offset_flags",
+  ffi_int()
+)()
 c_complex_offset_id <- dll_ffi_symbol("get_complex_offset_id", ffi_int())()
-c_complex_offset_value <- dll_ffi_symbol("get_complex_offset_value", ffi_int())()
+c_complex_offset_value <- dll_ffi_symbol(
+  "get_complex_offset_value",
+  ffi_int()
+)()
 c_complex_offset_data <- dll_ffi_symbol("get_complex_offset_data", ffi_int())()
 
 cat(sprintf(
-    "\nC ComplexPacked offsets: flags=%d, id=%d, value=%d, data=%d\n",
-    c_complex_offset_flags, c_complex_offset_id,
-    c_complex_offset_value, c_complex_offset_data
+  "\nC ComplexPacked offsets: flags=%d, id=%d, value=%d, data=%d\n",
+  c_complex_offset_flags,
+  c_complex_offset_id,
+  c_complex_offset_value,
+  c_complex_offset_data
 ))
 
 r_complex_offsets <- ffi_all_offsets(ComplexPacked)
 cat(sprintf(
-    "R ComplexPacked offsets: flags=%d, id=%d, value=%d, data=%d\n",
-    r_complex_offsets["flags"], r_complex_offsets["id"],
-    r_complex_offsets["value"], r_complex_offsets["data"]
+  "R ComplexPacked offsets: flags=%d, id=%d, value=%d, data=%d\n",
+  r_complex_offsets["flags"],
+  r_complex_offsets["id"],
+  r_complex_offsets["value"],
+  r_complex_offsets["data"]
 ))
 
 stopifnot(c_complex_offset_flags == r_complex_offsets["flags"])
@@ -158,8 +168,11 @@ cat("\n✓ Packed struct passed correctly to C!\n\n")
 cat("--- Test 4: C Writes to Packed Struct ---\n")
 
 set_fn <- dll_ffi_symbol(
-    "set_packed1", ffi_void(),
-    ffi_pointer(), ffi_int32(), ffi_double()
+  "set_packed1",
+  ffi_void(),
+  ffi_pointer(),
+  ffi_int32(),
+  ffi_double()
 )
 
 # Have C set values
@@ -186,9 +199,13 @@ complex_ptr <- ffi_alloc(ComplexPacked)
 
 # Set from C
 set_complex <- dll_ffi_symbol(
-    "set_complex", ffi_void(),
-    ffi_pointer(), ffi_uint8(), ffi_uint32(),
-    ffi_uint16(), ffi_double()
+  "set_complex",
+  ffi_void(),
+  ffi_pointer(),
+  ffi_uint8(),
+  ffi_uint32(),
+  ffi_uint16(),
+  ffi_double()
 )
 set_complex(complex_ptr, 0xFF, 12345678L, 9999L, 2.71828)
 
@@ -199,12 +216,18 @@ r_value <- ffi_get_field(complex_ptr, "value", ComplexPacked)
 r_data <- ffi_get_field(complex_ptr, "data", ComplexPacked)
 
 cat(sprintf(
-    "C set:   flags=0x%02X, id=%d, value=%d, data=%.5f\n",
-    0xFF, 12345678L, 9999L, 2.71828
+  "C set:   flags=0x%02X, id=%d, value=%d, data=%.5f\n",
+  0xFF,
+  12345678L,
+  9999L,
+  2.71828
 ))
 cat(sprintf(
-    "R reads: flags=0x%02X, id=%d, value=%d, data=%.5f\n",
-    r_flags, r_id, r_value, r_data
+  "R reads: flags=0x%02X, id=%d, value=%d, data=%.5f\n",
+  r_flags,
+  r_id,
+  r_value,
+  r_data
 ))
 
 stopifnot(r_flags == 255L)
@@ -230,12 +253,18 @@ c_value <- get_value(complex_ptr)
 c_data <- get_data(complex_ptr)
 
 cat(sprintf(
-    "\nR set:   flags=0x%02X, id=%d, value=%d, data=%.5f\n",
-    0x42L, 87654321L, 1234L, 1.41421
+  "\nR set:   flags=0x%02X, id=%d, value=%d, data=%.5f\n",
+  0x42L,
+  87654321L,
+  1234L,
+  1.41421
 ))
 cat(sprintf(
-    "C reads: flags=0x%02X, id=%d, value=%d, data=%.5f\n",
-    c_flags, c_id, c_value, c_data
+  "C reads: flags=0x%02X, id=%d, value=%d, data=%.5f\n",
+  c_flags,
+  c_id,
+  c_value,
+  c_data
 ))
 
 stopifnot(c_flags == 0x42L)
@@ -257,8 +286,10 @@ ffi_set_field(in_ptr, "a", 50L, PackedStruct1)
 ffi_set_field(in_ptr, "b", 25.0, PackedStruct1)
 
 modify_fn <- dll_ffi_symbol(
-    "modify_packed1", ffi_void(),
-    ffi_pointer(), ffi_pointer()
+  "modify_packed1",
+  ffi_void(),
+  ffi_pointer(),
+  ffi_pointer()
 )
 modify_fn(in_ptr, out_ptr)
 
@@ -281,8 +312,10 @@ cat("ALL PACKED STRUCT TESTS PASSED!\n")
 cat("=" |> rep(50) |> paste(collapse = ""), "\n\n")
 
 cat("Summary:\n")
-cat("- ffi_struct(..., pack=N) correctly computes struct sizes\
-")
+cat(
+  "- ffi_struct(..., pack=N) correctly computes struct sizes\
+"
+)
 cat("- Field offsets match C's #pragma pack behavior\n")
 cat("- Packed structs can be passed to C functions by pointer\n")
 cat("- C can read/write fields in packed structs allocated by R\n")

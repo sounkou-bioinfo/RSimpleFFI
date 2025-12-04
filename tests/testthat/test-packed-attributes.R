@@ -35,14 +35,23 @@ test_that("packed attribute is preserved in generated code", {
 
   # Generate code for each struct (packed structs will generate warnings)
   expect_warning(
-    packed_struct_code <- generate_struct_definition("PackedStruct", result$structs$PackedStruct),
+    packed_struct_code <- generate_struct_definition(
+      "PackedStruct",
+      result$structs$PackedStruct
+    ),
     "packed"
   )
   expect_warning(
-    packed_typedef_code <- generate_struct_definition("PackedTypedef", result$structs$PackedTypedef),
+    packed_typedef_code <- generate_struct_definition(
+      "PackedTypedef",
+      result$structs$PackedTypedef
+    ),
     "packed"
   )
-  normal_struct_code <- generate_struct_definition("NormalStruct", result$structs$NormalStruct)
+  normal_struct_code <- generate_struct_definition(
+    "NormalStruct",
+    result$structs$NormalStruct
+  )
 
   # Check that generated code includes pack=1 for packed structs
   expect_match(packed_struct_code, "pack\\s*=\\s*1", perl = TRUE)

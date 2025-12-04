@@ -80,7 +80,11 @@ tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
         parts <- strsplit(trimws(content_part), "\\s+")[[1]]
         if (length(parts) >= 1) {
           name <- parts[1]
-          value <- if (length(parts) > 1) paste(parts[-1], collapse = " ") else ""
+          value <- if (length(parts) > 1) {
+            paste(parts[-1], collapse = " ")
+          } else {
+            ""
+          }
           result[[name]] <- trimws(value)
         }
       }
@@ -89,7 +93,10 @@ tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
   }
 
   if (!is.null(preprocessed_lines)) {
-    file_markers <- preprocessed_lines[grepl("^#\\s+\\d+\\s+\"", preprocessed_lines)]
+    file_markers <- preprocessed_lines[grepl(
+      "^#\\s+\\d+\\s+\"",
+      preprocessed_lines
+    )]
     file_pattern <- '^#\\s+\\d+\\s+"([^"]+)"'
 
     files_to_scan <- unique(unlist(lapply(file_markers, function(marker) {
@@ -98,7 +105,10 @@ tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
       if (length(parts) >= 2) parts[2] else NULL
     })))
 
-    files_to_scan <- Filter(function(f) !is.null(f) && file.exists(f), files_to_scan)
+    files_to_scan <- Filter(
+      function(f) !is.null(f) && file.exists(f),
+      files_to_scan
+    )
 
     for (f in files_to_scan) {
       content <- tryCatch(

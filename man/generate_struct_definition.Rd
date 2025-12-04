@@ -10,6 +10,8 @@ generate_struct_definition(struct_name, struct_def, typedefs = NULL)
 \item{struct_name}{Name of the struct}
 
 \item{struct_def}{Struct definition from parsed header}
+
+\item{typedefs}{Optional data frame of typedefs to resolve type aliases}
 }
 \value{
 Character vector with R code

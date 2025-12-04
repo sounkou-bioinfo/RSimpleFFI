@@ -31,16 +31,16 @@ test_that("closure can be called via test_callback", {
   # Call test_callback(func, value) which returns func(value)
   test_callback_fn <- ffi_function(
     "test_callback",
-    ffi_int(),           # return type
-    ffi_pointer(),       # callback function pointer
-    ffi_int()            # value to pass to callback
+    ffi_int(), # return type
+    ffi_pointer(), # callback function pointer
+    ffi_int() # value to pass to callback
   )
 
   result <- test_callback_fn(callback_ptr, 5L)
-  expect_equal(result, 15L)  # 5 + 10 = 15
+  expect_equal(result, 15L) # 5 + 10 = 15
 
   result2 <- test_callback_fn(callback_ptr, 100L)
-  expect_equal(result2, 110L)  # 100 + 10 = 110
+  expect_equal(result2, 110L) # 100 + 10 = 110
 })
 
 test_that("double callback works", {
@@ -71,7 +71,7 @@ test_that("double callback works", {
 test_that("closure with multiple arguments works", {
   # Comparison function for finding max
   compare <- function(a, b) {
-    as.integer(a - b)  # positive if a > b
+    as.integer(a - b) # positive if a > b
   }
 
   # Create closure: int (*)(int, int)
@@ -121,7 +121,7 @@ test_that("transform_sum with closure works", {
   )
 
   result <- transform_sum_fn(arr_ptr, length(arr), transform_ptr)
-  expect_equal(result, 15.0)  # |−1| + |2| + |−3| + |4| + |−5| = 15
+  expect_equal(result, 15.0) # |−1| + |2| + |−3| + |4| + |−5| = 15
 })
 
 test_that("void callback works", {
@@ -160,7 +160,7 @@ test_that("closure keeps R function alive", {
   }
 
   closure <- create_closure()
-  gc()  # Try to trigger GC
+  gc() # Try to trigger GC
 
   # Closure should still work
   callback_ptr <- ffi_closure_pointer(closure)

@@ -84,7 +84,12 @@ ffi_get_element <- function(ptr, index, struct_type) {
     stop("index must be a positive integer (1-based)")
   }
   # Convert 1-based R index to 0-based C index
-  .Call("R_get_struct_array_element", ptr, as.integer(index - 1L), struct_type@ref)
+  .Call(
+    "R_get_struct_array_element",
+    ptr,
+    as.integer(index - 1L),
+    struct_type@ref
+  )
 }
 
 #' @export

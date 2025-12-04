@@ -11,7 +11,11 @@
 fill_template <- function(template_name, replacements) {
   # Try installed package location first, then source package
 
-  template_path <- system.file("templates", template_name, package = "RSimpleFFI")
+  template_path <- system.file(
+    "templates",
+    template_name,
+    package = "RSimpleFFI"
+  )
 
   if (template_path == "" || !file.exists(template_path)) {
     # Try source package location (for development)
@@ -51,10 +55,12 @@ fill_template <- function(template_name, replacements) {
 #' # Generate for bundled library
 #' code <- generate_package_init("mylib", "MyRPackage", use_system_lib = FALSE)
 #' }
-generate_package_init <- function(library_name,
-                                  package_name,
-                                  library_path = NULL,
-                                  use_system_lib = TRUE) {
+generate_package_init <- function(
+  library_name,
+  package_name,
+  library_path = NULL,
+  use_system_lib = TRUE
+) {
   if (use_system_lib) {
     load_code <- sprintf(
       '  .%s_lib <<- dll_load_system("%s%s")',
@@ -79,14 +85,18 @@ generate_package_init <- function(library_name,
   } else {
     warning("Library file not found: ", lib_file)
   }',
-      library_name, library_name
+      library_name,
+      library_name
     )
   }
 
-  fill_template("zzz.R.template", list(
-    LIBRARY_NAME = library_name,
-    LOAD_CODE = load_code
-  ))
+  fill_template(
+    "zzz.R.template",
+    list(
+      LIBRARY_NAME = library_name,
+      LOAD_CODE = load_code
+    )
+  )
 }
 
 #' Generate complete package from header files
@@ -118,15 +128,17 @@ generate_package_init <- function(library_name,
 #'   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 #' )
 #' }
-generate_package_from_headers <- function(header_files,
-                                          package_name,
-                                          library_name,
-                                          output_dir = package_name,
-                                          use_system_lib = TRUE,
-                                          include_helpers = TRUE,
-                                          authors_r = NULL,
-                                          title = NULL,
-                                          description = NULL) {
+generate_package_from_headers <- function(
+  header_files,
+  package_name,
+  library_name,
+  output_dir = package_name,
+  use_system_lib = TRUE,
+  include_helpers = TRUE,
+  authors_r = NULL,
+  title = NULL,
+  description = NULL
+) {
   # Create package root directory
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
@@ -145,33 +157,46 @@ generate_package_from_headers <- function(header_files,
     title <- sprintf("R Bindings for %s Library", library_name)
   }
   if (is.null(description)) {
-    description <- sprintf("Auto-generated R bindings for the %s C library using RSimpleFFI.", library_name)
+    description <- sprintf(
+      "Auto-generated R bindings for the %s C library using RSimpleFFI.",
+      library_name
+    )
   }
   if (is.null(authors_r)) {
     authors_r <- 'person("Package", "Author", email = "author@example.com", role = c("aut", "cre"))'
   }
 
   # 1. Generate DESCRIPTION file from template
-  description_content <- fill_template("DESCRIPTION.template", list(
-    PACKAGE_NAME = package_name,
-    TITLE = title,
-    AUTHORS_R = authors_r,
-    DESCRIPTION = description
-  ))
+  description_content <- fill_template(
+    "DESCRIPTION.template",
+    list(
+      PACKAGE_NAME = package_name,
+      TITLE = title,
+      AUTHORS_R = authors_r,
+      DESCRIPTION = description
+    )
+  )
   description_file <- file.path(output_dir, "DESCRIPTION")
   writeLines(description_content, description_file)
   generated_files <- c(generated_files, description_file)
 
   # 2. Generate NAMESPACE file from template
-  namespace_content <- fill_template("NAMESPACE.template", list(
-    LIBRARY_NAME = library_name
-  ))
+  namespace_content <- fill_template(
+    "NAMESPACE.template",
+    list(
+      LIBRARY_NAME = library_name
+    )
+  )
   namespace_file <- file.path(output_dir, "NAMESPACE")
   writeLines(namespace_content, namespace_file)
   generated_files <- c(generated_files, namespace_file)
 
   # 3. Generate zzz.R for library loading (in R/ subfolder)
-  zzz_code <- generate_package_init(library_name, package_name, use_system_lib = use_system_lib)
+  zzz_code <- generate_package_init(
+    library_name,
+    package_name,
+    use_system_lib = use_system_lib
+  )
   zzz_file <- file.path(r_dir, "zzz.R")
   writeLines(zzz_code, zzz_file)
   generated_files <- c(generated_files, zzz_file)
@@ -206,23 +231,32 @@ generate_package_from_headers <- function(header_files,
 
   # 5. Generate helper functions if requested (in R/ subfolder)
   if (include_helpers) {
-    helpers_content <- fill_template("helpers.R.template", list(
-      PACKAGE_NAME = package_name
-    ))
+    helpers_content <- fill_template(
+      "helpers.R.template",
+      list(
+        PACKAGE_NAME = package_name
+      )
+    )
     helpers_file <- file.path(r_dir, "helpers.R")
     writeLines(helpers_content, helpers_file)
     generated_files <- c(generated_files, helpers_file)
 
     # Add helper exports to NAMESPACE
-    namespace_content <- paste0(namespace_content, "\nexport(create_struct_from_list)\nexport(struct_to_list)\n")
+    namespace_content <- paste0(
+      namespace_content,
+      "\nexport(create_struct_from_list)\nexport(struct_to_list)\n"
+    )
     writeLines(namespace_content, namespace_file)
   }
 
   # 6. Create LICENSE file from template
-  license_content <- fill_template("LICENSE.template", list(
-    YEAR = format(Sys.Date(), "%Y"),
-    COPYRIGHT_HOLDER = "Package Author"
-  ))
+  license_content <- fill_template(
+    "LICENSE.template",
+    list(
+      YEAR = format(Sys.Date(), "%Y"),
+      COPYRIGHT_HOLDER = "Package Author"
+    )
+  )
   license_file <- file.path(output_dir, "LICENSE")
   writeLines(license_content, license_file)
   generated_files <- c(generated_files, license_file)

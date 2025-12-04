@@ -99,7 +99,12 @@ ffi_struct_array_from_list <- function(struct_type, values) {
     elem_ptr <- ffi_get_element(ptr, i, struct_type)
     for (field_name in names(values[[i]])) {
       if (field_name %in% struct_type@fields) {
-        ffi_set_field(elem_ptr, field_name, values[[i]][[field_name]], struct_type)
+        ffi_set_field(
+          elem_ptr,
+          field_name,
+          values[[i]][[field_name]],
+          struct_type
+        )
       }
     }
   }
@@ -150,8 +155,11 @@ ffi_print_struct <- function(ptr, struct_type) {
     } else if (length(value) == 1) {
       cat(value, "\n")
     } else {
-      cat("[", paste(utils::head(value, 5), collapse = ", "),
-        if (length(value) > 5) "..." else "", "]\n",
+      cat(
+        "[",
+        paste(utils::head(value, 5), collapse = ", "),
+        if (length(value) > 5) "..." else "",
+        "]\n",
         sep = ""
       )
     }
@@ -184,7 +192,9 @@ ffi_enum_to_int <- function(enum_type, name) {
   value <- enum_type@values[name]
   if (is.na(value)) {
     stop(
-      "No such enum constant '", name, "'. Available: ",
+      "No such enum constant '",
+      name,
+      "'. Available: ",
       paste(names(enum_type@values), collapse = ", ")
     )
   }
@@ -277,7 +287,10 @@ ffi_validate_call <- function(cif, symbol, args = list(), verbose = FALSE) {
     errors <- c(errors, "cif must be a CIF object")
   } else {
     if (ffi_is_null(cif@ref)) {
-      errors <- c(errors, "CIF internal pointer is NULL (object may be corrupted)")
+      errors <- c(
+        errors,
+        "CIF internal pointer is NULL (object may be corrupted)"
+      )
     }
   }
 
@@ -286,10 +299,13 @@ ffi_validate_call <- function(cif, symbol, args = list(), verbose = FALSE) {
     errors <- c(errors, "symbol must be a NativeSymbol object")
   } else {
     if (ffi_is_null(symbol@address)) {
-      errors <- c(errors, sprintf(
-        "Symbol '%s' address is NULL (function may not exist or library unloaded)",
-        symbol@name
-      ))
+      errors <- c(
+        errors,
+        sprintf(
+          "Symbol '%s' address is NULL (function may not exist or library unloaded)",
+          symbol@name
+        )
+      )
     }
   }
 
@@ -298,10 +314,14 @@ ffi_validate_call <- function(cif, symbol, args = list(), verbose = FALSE) {
     expected_args <- length(cif@arg_types)
     actual_args <- length(args)
     if (actual_args != expected_args) {
-      errors <- c(errors, sprintf(
-        "Argument count mismatch: CIF expects %d, got %d",
-        expected_args, actual_args
-      ))
+      errors <- c(
+        errors,
+        sprintf(
+          "Argument count mismatch: CIF expects %d, got %d",
+          expected_args,
+          actual_args
+        )
+      )
     }
   }
 
@@ -310,10 +330,13 @@ ffi_validate_call <- function(cif, symbol, args = list(), verbose = FALSE) {
     for (i in seq_along(args)) {
       arg <- args[[i]]
       if (is.atomic(arg) && any(is.na(arg))) {
-        warnings <- c(warnings, sprintf(
-          "Argument %d contains NA values",
-          i
-        ))
+        warnings <- c(
+          warnings,
+          sprintf(
+            "Argument %d contains NA values",
+            i
+          )
+        )
       }
     }
   }
@@ -325,13 +348,18 @@ ffi_validate_call <- function(cif, symbol, args = list(), verbose = FALSE) {
       arg_type <- cif@arg_types[[i]]
 
       # Check if argument is expected to be a pointer
-      if (S7::S7_inherits(arg_type, FFIType) &&
-        arg_type@name == "pointer") {
+      if (
+        S7::S7_inherits(arg_type, FFIType) &&
+          arg_type@name == "pointer"
+      ) {
         if (inherits(arg, "externalptr") && ffi_is_null(arg)) {
-          warnings <- c(warnings, sprintf(
-            "Argument %d is a NULL pointer",
-            i
-          ))
+          warnings <- c(
+            warnings,
+            sprintf(
+              "Argument %d is a NULL pointer",
+              i
+            )
+          )
         }
       }
     }

@@ -11,11 +11,15 @@ get_cif_type_ref <- function(type) {
   # Check for packed structs/unions with layout changes - these can't be passed by value
   if (S7::S7_inherits(type, StructType) || S7::S7_inherits(type, UnionType)) {
     if (isTRUE(type@has_packed_change)) {
-      stop(sprintf(
-        "Packed %s '%s' cannot be passed by value to a C function ",
-        if (S7::S7_inherits(type, StructType)) "struct" else "union",
-        type@name %||% "(anonymous)"
-      ), "(libffi limitation). Use a pointer instead.", call. = FALSE)
+      stop(
+        sprintf(
+          "Packed %s '%s' cannot be passed by value to a C function ",
+          if (S7::S7_inherits(type, StructType)) "struct" else "union",
+          type@name %||% "(anonymous)"
+        ),
+        "(libffi limitation). Use a pointer instead.",
+        call. = FALSE
+      )
     }
   }
   type@ref
@@ -100,8 +104,10 @@ ffi_cif_var <- function(return_type, nfixedargs, ...) {
 
   arg_types <- list(...)
 
-  if (length(arg_types) > 0 &&
-    !all(sapply(arg_types, function(x) S7::S7_inherits(x, FFIType)))) {
+  if (
+    length(arg_types) > 0 &&
+      !all(sapply(arg_types, function(x) S7::S7_inherits(x, FFIType)))
+  ) {
     stop("All argument types must be FFIType objects")
   }
 
@@ -118,7 +124,9 @@ ffi_cif_var <- function(return_type, nfixedargs, ...) {
   }
 
   cif_ref <- .Call(
-    "R_prep_ffi_cif_var", return_ref, arg_refs,
+    "R_prep_ffi_cif_var",
+    return_ref,
+    arg_refs,
     as.integer(nfixedargs)
   )
 
@@ -252,10 +260,11 @@ ffi_call <- S7::new_generic("ffi_call", c("cif", "symbol"))
 
 # NativeSymbol variant
 S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(
-    cif,
-    symbol,
-    ...,
-    na_check = TRUE) {
+  cif,
+  symbol,
+  ...,
+  na_check = TRUE
+) {
   args <- list(...)
   expected_args <- length(cif@arg_types)
 
@@ -268,15 +277,14 @@ S7::method(ffi_call, list(CIF, NativeSymbol)) <- function(
 
 # symbol as character name variant
 S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
-    cif,
-    symbol,
-    ...,
-    na_check = TRUE) {
+  cif,
+  symbol,
+  ...,
+  na_check = TRUE
+) {
   sym <- ffi_symbol(symbol)
   ffi_call(cif, sym, ..., na_check = na_check)
 }
-
-
 
 
 #####################################
@@ -293,7 +301,13 @@ S7::method(ffi_call, list(CIF, S7::class_character)) <- function(
 #' @param na_check Logical; if TRUE (default), check for NA values and error if found.
 #'   Set to FALSE to skip NA checking for better performance (at your own risk).
 #' @export
-ffi_function <- function(name, return_type, ..., library = NULL, na_check = TRUE) {
+ffi_function <- function(
+  name,
+  return_type,
+  ...,
+  library = NULL,
+  na_check = TRUE
+) {
   # Create CIF and symbol
   cif <- ffi_cif(return_type, ...)
   symbol <- ffi_symbol(name, library)

@@ -70,11 +70,17 @@ ffi_unpack_bits64 <- function(packed_value, widths) {
 #'
 #' @export
 ffi_extract_bits64 <- function(packed_value, bit_offset, bit_width) {
-  if (bit_width <= 0) stop("bit_width must be positive")
-  if (bit_offset < 0) stop("bit_offset must be non-negative")
+  if (bit_width <= 0) {
+    stop("bit_width must be positive")
+  }
+  if (bit_offset < 0) {
+    stop("bit_offset must be non-negative")
+  }
   .Call(
-    "R_ffi_extract_bits64", as.double(packed_value),
-    as.integer(bit_offset), as.integer(bit_width)
+    "R_ffi_extract_bits64",
+    as.double(packed_value),
+    as.integer(bit_offset),
+    as.integer(bit_width)
   )
 }
 
@@ -95,11 +101,17 @@ ffi_extract_bits64 <- function(packed_value, bit_offset, bit_width) {
 #'
 #' @export
 ffi_extract_signed_bits64 <- function(packed_value, bit_offset, bit_width) {
-  if (bit_width <= 0) stop("bit_width must be positive")
-  if (bit_offset < 0) stop("bit_offset must be non-negative")
+  if (bit_width <= 0) {
+    stop("bit_width must be positive")
+  }
+  if (bit_offset < 0) {
+    stop("bit_offset must be non-negative")
+  }
   .Call(
-    "R_ffi_extract_signed_bits64", as.double(packed_value),
-    as.integer(bit_offset), as.integer(bit_width)
+    "R_ffi_extract_signed_bits64",
+    as.double(packed_value),
+    as.integer(bit_offset),
+    as.integer(bit_width)
   )
 }
 
@@ -118,11 +130,18 @@ ffi_extract_signed_bits64 <- function(packed_value, bit_offset, bit_width) {
 #'
 #' @export
 ffi_set_bits64 <- function(packed_value, new_value, bit_offset, bit_width) {
-  if (bit_width <= 0) stop("bit_width must be positive")
-  if (bit_offset < 0) stop("bit_offset must be non-negative")
+  if (bit_width <= 0) {
+    stop("bit_width must be positive")
+  }
+  if (bit_offset < 0) {
+    stop("bit_offset must be non-negative")
+  }
   .Call(
-    "R_ffi_set_bits64", as.double(packed_value), as.double(new_value),
-    as.integer(bit_offset), as.integer(bit_width)
+    "R_ffi_set_bits64",
+    as.double(packed_value),
+    as.double(new_value),
+    as.integer(bit_offset),
+    as.integer(bit_width)
   )
 }
 
@@ -168,7 +187,8 @@ ffi_pack_bits <- function(values, widths, base_type = ffi_uint32()) {
   if (total_bits > max_bits) {
     stop(sprintf(
       "Total bit width (%d) exceeds base type size (%d bits)",
-      total_bits, max_bits
+      total_bits,
+      max_bits
     ))
   }
 
@@ -313,12 +333,13 @@ ffi_extract_signed_bit_field <- function(packed_value, bit_offset, bit_width) {
     stop("bit_offset must be non-negative")
   }
   if (bit_width > 31) {
-    stop("bit_width must be <= 31 for 32-bit signed extraction; use ffi_extract_signed_bits64 for larger")
+    stop(
+      "bit_width must be <= 31 for 32-bit signed extraction; use ffi_extract_signed_bits64 for larger"
+    )
   }
 
   # Extract unsigned value first
   unsigned_val <- ffi_extract_bit_field(packed_value, bit_offset, bit_width)
-
 
   # Sign extend if the high bit is set
   sign_bit <- bitwShiftL(1L, bit_width - 1L)
@@ -422,7 +443,10 @@ ffi_set_bit_field <- function(packed_value, new_value, bit_offset, bit_width) {
 #' flags_accessors$get(new_packed, "mode") # 7
 #'
 #' @export
-ffi_create_bitfield_accessors <- function(field_specs, base_type = ffi_uint32()) {
+ffi_create_bitfield_accessors <- function(
+  field_specs,
+  base_type = ffi_uint32()
+) {
   # Validate input
   if (!is.list(field_specs) || is.null(names(field_specs))) {
     stop("field_specs must be a named list")
@@ -494,7 +518,12 @@ ffi_create_bitfield_accessors <- function(field_specs, base_type = ffi_uint32())
         stop(sprintf("Unknown field: %s", field_name))
       }
       idx <- field_index[[field_name]]
-      ffi_set_bit_field(packed_value, new_value, field_offsets[idx], field_widths[idx])
+      ffi_set_bit_field(
+        packed_value,
+        new_value,
+        field_offsets[idx],
+        field_widths[idx]
+      )
     }
   )
 }

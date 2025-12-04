@@ -24,7 +24,11 @@ double test_add_double_dll(double a, double b) {
 }
 "
   expect_no_error({
-    lib_handle <- dll_compile_and_load(test_c_code, "test_dll", compilation_directory = comp_dir)
+    lib_handle <- dll_compile_and_load(
+      test_c_code,
+      "test_dll",
+      compilation_directory = comp_dir
+    )
   })
 
   # Test dll_info

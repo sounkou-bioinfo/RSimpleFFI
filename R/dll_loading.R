@@ -130,7 +130,13 @@ dll_is_loaded <- function(symbol_name, package = NULL) {
 #'   Set to FALSE to skip NA checking for better performance (at your own risk).
 #' @return FFI function object that can be called directly
 #' @export
-dll_ffi_symbol <- function(symbol_name, return_type, ..., package = NULL, na_check = TRUE) {
+dll_ffi_symbol <- function(
+  symbol_name,
+  return_type,
+  ...,
+  package = NULL,
+  na_check = TRUE
+) {
   # Get symbol info using R's facilities (like Rffi does)
   symbol_info <- dll_symbol(symbol_name, package)
 
@@ -214,13 +220,14 @@ dll_info <- function(handle) {
 #' @rdname dynamic_library_management
 #' @export
 dll_compile_and_load <- function(
-    code,
-    name = "temp_dll",
-    includes = NULL,
-    libs = NULL,
-    verbose = FALSE,
-    cflags = NULL,
-    compilation_directory = tempfile("dll_compile_")) {
+  code,
+  name = "temp_dll",
+  includes = NULL,
+  libs = NULL,
+  verbose = FALSE,
+  cflags = NULL,
+  compilation_directory = tempfile("dll_compile_")
+) {
   # Create temporary directory and files
   if (!dir.exists(compilation_directory)) {
     dir.create(compilation_directory, recursive = TRUE)
@@ -230,7 +237,10 @@ dll_compile_and_load <- function(
   setwd(compilation_directory)
   on.exit(setwd(old_wd), add = TRUE)
   c_file <- file.path(compilation_directory, paste0(name, ".c"))
-  so_file <- file.path(compilation_directory, paste0(name, .Platform$dynlib.ext))
+  so_file <- file.path(
+    compilation_directory,
+    paste0(name, .Platform$dynlib.ext)
+  )
   # Write C code to file
   writeLines(code, basename(c_file))
   c_file <- normalizePath(c_file, winslash = "/", mustWork = TRUE)
@@ -408,7 +418,7 @@ dll_load_system <- function(lib_name, verbose = FALSE) {
 #' @export
 dll_load_r <- function(verbose = FALSE) {
   r_home <- R.home()
-  
+
   # Determine library name and path based on OS
   if (.Platform$OS.type == "windows") {
     lib_name <- "R.dll"
@@ -420,12 +430,12 @@ dll_load_r <- function(verbose = FALSE) {
     lib_name <- "libR.so"
     lib_path <- file.path(r_home, "lib", lib_name)
   }
-  
+
   if (!file.exists(lib_path)) {
     warning("R library not found at: ", lib_path)
     return(NULL)
   }
-  
+
   tryCatch(
     {
       handle <- dll_load(lib_path, verbose = verbose)

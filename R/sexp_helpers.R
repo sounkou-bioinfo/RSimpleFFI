@@ -31,7 +31,7 @@ NULL
 #' # When ptr is garbage collected, the protection is released
 #' }
 sexp_ptr <- function(x) {
-    .Call("R_sexp_ptr", x)
+  .Call("R_sexp_ptr", x)
 }
 
 #' Get data pointer from R vector with GC protection
@@ -53,7 +53,7 @@ sexp_ptr <- function(x) {
 #' # Safe to pass to C functions expecting double*
 #' }
 data_ptr <- function(x) {
-    .Call("R_data_ptr", x)
+  .Call("R_data_ptr", x)
 }
 
 #' Get read-only data pointer from R vector with GC protection
@@ -66,7 +66,7 @@ data_ptr <- function(x) {
 #' @return External pointer to the data
 #' @export
 data_ptr_ro <- function(x) {
-    .Call("R_data_ptr_ro", x)
+  .Call("R_data_ptr_ro", x)
 }
 
 #' Check if an object is a protected SEXP pointer
@@ -75,10 +75,10 @@ data_ptr_ro <- function(x) {
 #' @return TRUE if ptr was created by sexp_ptr() or data_ptr()
 #' @export
 is_protected_ptr <- function(ptr) {
-    if (!inherits(ptr, "externalptr")) {
-        return(FALSE)
-    }
-    .Call("R_is_protected_ptr", ptr)
+  if (!inherits(ptr, "externalptr")) {
+    return(FALSE)
+  }
+  .Call("R_is_protected_ptr", ptr)
 }
 
 #' Manually release a protected pointer
@@ -90,8 +90,8 @@ is_protected_ptr <- function(ptr) {
 #' @return NULL invisibly
 #' @export
 release_ptr <- function(ptr) {
-    .Call("R_release_protected_ptr", ptr)
-    invisible(NULL)
+  .Call("R_release_protected_ptr", ptr)
+  invisible(NULL)
 }
 
 #' Get the R object from a protected SEXP pointer
@@ -102,5 +102,5 @@ release_ptr <- function(ptr) {
 #' @return The original R object
 #' @export
 ptr_to_sexp <- function(ptr) {
-    .Call("R_ptr_to_sexp", ptr)
+  .Call("R_ptr_to_sexp", ptr)
 }

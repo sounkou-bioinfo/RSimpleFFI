@@ -1,12 +1,15 @@
 test_that("bit-field detection in parsed headers", {
   header <- tempfile(fileext = ".h")
-  writeLines(c(
-    "typedef struct {",
-    "  unsigned int enabled : 1;",
-    "  unsigned int mode : 3;",
-    "  int priority : 4;",
-    "} Config;"
-  ), header)
+  writeLines(
+    c(
+      "typedef struct {",
+      "  unsigned int enabled : 1;",
+      "  unsigned int mode : 3;",
+      "  int priority : 4;",
+      "} Config;"
+    ),
+    header
+  )
   on.exit(unlink(header), add = TRUE)
 
   parsed <- ffi_parse_header(header)
@@ -27,13 +30,16 @@ test_that("bit-field detection in parsed headers", {
 
 test_that("full header parse generates accessor code", {
   header <- tempfile(fileext = ".h")
-  writeLines(c(
-    "typedef struct {",
-    "  unsigned int enabled : 1;",
-    "  unsigned int mode : 3;",
-    "  unsigned int priority : 4;",
-    "} Config;"
-  ), header)
+  writeLines(
+    c(
+      "typedef struct {",
+      "  unsigned int enabled : 1;",
+      "  unsigned int mode : 3;",
+      "  unsigned int priority : 4;",
+      "} Config;"
+    ),
+    header
+  )
   on.exit(unlink(header), add = TRUE)
 
   parsed <- ffi_parse_header(header)
@@ -44,7 +50,11 @@ test_that("full header parse generates accessor code", {
     "bit-fields"
   )
 
-  expect_true(grepl("Config <- ffi_create_bitfield_accessors", code, fixed = TRUE))
+  expect_true(grepl(
+    "Config <- ffi_create_bitfield_accessors",
+    code,
+    fixed = TRUE
+  ))
   expect_true(grepl("enabled = 1L", code, fixed = TRUE))
   expect_true(grepl("mode = 3L", code, fixed = TRUE))
   expect_true(grepl("priority = 4L", code, fixed = TRUE))
@@ -55,12 +65,15 @@ test_that("full header parse generates accessor code", {
 
 test_that("generated accessor code is valid R and works", {
   header <- tempfile(fileext = ".h")
-  writeLines(c(
-    "typedef struct {",
-    "  unsigned int flag : 1;",
-    "  unsigned int level : 4;",
-    "} Status;"
-  ), header)
+  writeLines(
+    c(
+      "typedef struct {",
+      "  unsigned int flag : 1;",
+      "  unsigned int level : 4;",
+      "} Status;"
+    ),
+    header
+  )
   on.exit(unlink(header), add = TRUE)
 
   parsed <- ffi_parse_header(header)
@@ -101,21 +114,24 @@ test_that("generated accessor code is valid R and works", {
 test_that("auto-generated accessor works with C test functions", {
   # Generate accessor for SettingsFlags from test_functions.c
   header <- tempfile(fileext = ".h")
-  writeLines(c(
-    "typedef struct {",
-    "  unsigned int enabled : 1;",
-    "  unsigned int mode : 3;",
-    "  unsigned int priority : 4;",
-    "  unsigned int reserved : 24;",
-    "} SettingsFlags;",
-    "",
-    "int test_bitfield_get_enabled(uint32_t packed);",
-    "int test_bitfield_get_mode(uint32_t packed);",
-    "int test_bitfield_get_priority(uint32_t packed);",
-    "uint32_t test_bitfield_pack(int enabled, int mode, int priority);",
-    "int test_bitfield_verify(uint32_t packed, int e, int m, int p);",
-    "uint32_t test_bitfield_increment_priority(uint32_t packed);"
-  ), header)
+  writeLines(
+    c(
+      "typedef struct {",
+      "  unsigned int enabled : 1;",
+      "  unsigned int mode : 3;",
+      "  unsigned int priority : 4;",
+      "  unsigned int reserved : 24;",
+      "} SettingsFlags;",
+      "",
+      "int test_bitfield_get_enabled(uint32_t packed);",
+      "int test_bitfield_get_mode(uint32_t packed);",
+      "int test_bitfield_get_priority(uint32_t packed);",
+      "uint32_t test_bitfield_pack(int enabled, int mode, int priority);",
+      "int test_bitfield_verify(uint32_t packed, int e, int m, int p);",
+      "uint32_t test_bitfield_increment_priority(uint32_t packed);"
+    ),
+    header
+  )
   on.exit(unlink(header), add = TRUE)
 
   parsed <- ffi_parse_header(header)
@@ -125,7 +141,10 @@ test_that("auto-generated accessor works with C test functions", {
   )
 
   # Extract and evaluate accessor
-  accessor_start <- regexpr("SettingsFlags <- ffi_create_bitfield_accessors", code)
+  accessor_start <- regexpr(
+    "SettingsFlags <- ffi_create_bitfield_accessors",
+    code
+  )
   accessor_end <- regexpr("# Usage:", code)
   accessor_code <- substr(code, accessor_start, accessor_end - 1)
   eval(parse(text = accessor_code))
@@ -134,9 +153,17 @@ test_that("auto-generated accessor works with C test functions", {
   packed <- SettingsFlags$pack(list(enabled = 1L, mode = 5L, priority = 10L))
 
   # Verify with C
-  get_enabled <- ffi_function("test_bitfield_get_enabled", ffi_int(), ffi_uint32())
+  get_enabled <- ffi_function(
+    "test_bitfield_get_enabled",
+    ffi_int(),
+    ffi_uint32()
+  )
   get_mode <- ffi_function("test_bitfield_get_mode", ffi_int(), ffi_uint32())
-  get_priority <- ffi_function("test_bitfield_get_priority", ffi_int(), ffi_uint32())
+  get_priority <- ffi_function(
+    "test_bitfield_get_priority",
+    ffi_int(),
+    ffi_uint32()
+  )
 
   expect_equal(get_enabled(packed), 1L)
   expect_equal(get_mode(packed), 5L)
@@ -144,13 +171,21 @@ test_that("auto-generated accessor works with C test functions", {
 
   # Verify with C verification function
   verify <- ffi_function(
-    "test_bitfield_verify", ffi_int(),
-    ffi_uint32(), ffi_int(), ffi_int(), ffi_int()
+    "test_bitfield_verify",
+    ffi_int(),
+    ffi_uint32(),
+    ffi_int(),
+    ffi_int(),
+    ffi_int()
   )
   expect_equal(verify(packed, 1L, 5L, 10L), 1L)
 
   # Modify in C, read in R
-  increment <- ffi_function("test_bitfield_increment_priority", ffi_uint32(), ffi_uint32())
+  increment <- ffi_function(
+    "test_bitfield_increment_priority",
+    ffi_uint32(),
+    ffi_uint32()
+  )
   packed2 <- increment(packed)
 
   expect_equal(SettingsFlags$get(packed2, "priority"), 11L)
@@ -160,19 +195,22 @@ test_that("auto-generated accessor works with C test functions", {
 test_that("auto-generated accessor handles PacketFlags from test_functions.c", {
   # Generate accessor for 8-bit PacketFlags
   header <- tempfile(fileext = ".h")
-  writeLines(c(
-    "typedef struct {",
-    "  unsigned int syn : 1;",
-    "  unsigned int ack : 1;",
-    "  unsigned int fin : 1;",
-    "  unsigned int rst : 1;",
-    "  unsigned int reserved : 4;",
-    "} PacketFlags;",
-    "",
-    "int test_packet_has_ack(uint8_t packed);",
-    "uint8_t test_packet_create_synack(void);",
-    "int test_packet_count_flags(uint8_t packed);"
-  ), header)
+  writeLines(
+    c(
+      "typedef struct {",
+      "  unsigned int syn : 1;",
+      "  unsigned int ack : 1;",
+      "  unsigned int fin : 1;",
+      "  unsigned int rst : 1;",
+      "  unsigned int reserved : 4;",
+      "} PacketFlags;",
+      "",
+      "int test_packet_has_ack(uint8_t packed);",
+      "uint8_t test_packet_create_synack(void);",
+      "int test_packet_count_flags(uint8_t packed);"
+    ),
+    header
+  )
   on.exit(unlink(header), add = TRUE)
 
   parsed <- ffi_parse_header(header)
@@ -182,7 +220,10 @@ test_that("auto-generated accessor handles PacketFlags from test_functions.c", {
   )
 
   # Extract and evaluate accessor
-  accessor_start <- regexpr("PacketFlags <- ffi_create_bitfield_accessors", code)
+  accessor_start <- regexpr(
+    "PacketFlags <- ffi_create_bitfield_accessors",
+    code
+  )
   accessor_end <- regexpr("# Usage:", code)
   accessor_code <- substr(code, accessor_start, accessor_end - 1)
   eval(parse(text = accessor_code))
@@ -212,12 +253,15 @@ test_that("auto-generated accessor handles PacketFlags from test_functions.c", {
 
 test_that("no accessor generated for structs without bit-fields", {
   header <- tempfile(fileext = ".h")
-  writeLines(c(
-    "typedef struct {",
-    "  int x;",
-    "  int y;",
-    "} Point;"
-  ), header)
+  writeLines(
+    c(
+      "typedef struct {",
+      "  int x;",
+      "  int y;",
+      "} Point;"
+    ),
+    header
+  )
   on.exit(unlink(header), add = TRUE)
 
   parsed <- ffi_parse_header(header)
@@ -230,14 +274,17 @@ test_that("no accessor generated for structs without bit-fields", {
 test_that("mixed struct with bit-fields and normal fields generates accessor only", {
   # Note: libffi can't handle mixed structs, so we only generate accessor
   header <- tempfile(fileext = ".h")
-  writeLines(c(
-    "typedef struct {",
-    "  int id;",
-    "  unsigned int flag : 1;",
-    "  unsigned int level : 4;",
-    "  double value;",
-    "} MixedStruct;"
-  ), header)
+  writeLines(
+    c(
+      "typedef struct {",
+      "  int id;",
+      "  unsigned int flag : 1;",
+      "  unsigned int level : 4;",
+      "  double value;",
+      "} MixedStruct;"
+    ),
+    header
+  )
   on.exit(unlink(header), add = TRUE)
 
   parsed <- ffi_parse_header(header)
@@ -249,7 +296,11 @@ test_that("mixed struct with bit-fields and normal fields generates accessor onl
   )
 
   # Should generate accessor for bit-fields
-  expect_true(grepl("MixedStruct <- ffi_create_bitfield_accessors", code, fixed = TRUE))
+  expect_true(grepl(
+    "MixedStruct <- ffi_create_bitfield_accessors",
+    code,
+    fixed = TRUE
+  ))
   expect_true(grepl("flag = 1L", code, fixed = TRUE))
   expect_true(grepl("level = 4L", code, fixed = TRUE))
 })

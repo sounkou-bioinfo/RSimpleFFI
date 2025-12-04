@@ -70,7 +70,10 @@ StructType <- S7::new_class(
       !all(sapply(self@field_types, function(x) S7::S7_inherits(x, FFIType)))
     ) {
       "All field types must be FFIType objects"
-    } else if (!is.null(self@pack) && (!is.numeric(self@pack) || self@pack < 1 || self@pack > 16)) {
+    } else if (
+      !is.null(self@pack) &&
+        (!is.numeric(self@pack) || self@pack < 1 || self@pack > 16)
+    ) {
       "pack must be NULL or an integer between 1 and 16"
     }
   }
@@ -171,7 +174,10 @@ UnionType <- S7::new_class(
       !all(sapply(self@field_types, function(x) S7::S7_inherits(x, FFIType)))
     ) {
       "All field types must be FFIType objects"
-    } else if (!is.null(self@pack) && (!is.numeric(self@pack) || self@pack < 1 || self@pack > 16)) {
+    } else if (
+      !is.null(self@pack) &&
+        (!is.numeric(self@pack) || self@pack < 1 || self@pack > 16)
+    ) {
       "pack must be NULL or an integer between 1 and 16"
     }
   }
@@ -660,7 +666,9 @@ ffi_struct <- function(..., pack = NULL) {
         break
       }
       # Also check nested structs/unions
-      if (S7::S7_inherits(field, StructType) || S7::S7_inherits(field, UnionType)) {
+      if (
+        S7::S7_inherits(field, StructType) || S7::S7_inherits(field, UnionType)
+      ) {
         if (isTRUE(field@has_packed_change)) {
           has_packed_change <- TRUE
           break
@@ -750,7 +758,9 @@ ffi_union <- function(..., pack = NULL) {
         break
       }
       # Also check nested structs/unions
-      if (S7::S7_inherits(field, StructType) || S7::S7_inherits(field, UnionType)) {
+      if (
+        S7::S7_inherits(field, StructType) || S7::S7_inherits(field, UnionType)
+      ) {
         if (isTRUE(field@has_packed_change)) {
           has_packed_change <- TRUE
           break
@@ -838,7 +848,12 @@ S7::method(
   if (!is.null(struct_type@pack)) {
     offset <- ffi_packed_offset(struct_type, field_index)
     field_type <- struct_type@field_types[[field_index]]
-    return(.Call("R_get_struct_field_at_offset", ptr, as.integer(offset), field_type@ref))
+    return(.Call(
+      "R_get_struct_field_at_offset",
+      ptr,
+      as.integer(offset),
+      field_type@ref
+    ))
   }
 
   .Call("R_get_struct_field", ptr, as.integer(field_index - 1), struct_type@ref)
@@ -863,7 +878,12 @@ S7::method(
   if (!is.null(struct_type@pack)) {
     offset <- ffi_packed_offset(struct_type, field)
     field_type <- struct_type@field_types[[field]]
-    return(.Call("R_get_struct_field_at_offset", ptr, as.integer(offset), field_type@ref))
+    return(.Call(
+      "R_get_struct_field_at_offset",
+      ptr,
+      as.integer(offset),
+      field_type@ref
+    ))
   }
 
   .Call("R_get_struct_field", ptr, as.integer(field - 1), struct_type@ref)
@@ -945,7 +965,13 @@ S7::method(
   if (!is.null(struct_type@pack)) {
     offset <- ffi_packed_offset(struct_type, field_index)
     field_type <- struct_type@field_types[[field_index]]
-    .Call("R_set_struct_field_at_offset", ptr, as.integer(offset), value, field_type@ref)
+    .Call(
+      "R_set_struct_field_at_offset",
+      ptr,
+      as.integer(offset),
+      value,
+      field_type@ref
+    )
     return(invisible(ptr))
   }
 
@@ -978,7 +1004,13 @@ S7::method(
   if (!is.null(struct_type@pack)) {
     offset <- ffi_packed_offset(struct_type, field)
     field_type <- struct_type@field_types[[field]]
-    .Call("R_set_struct_field_at_offset", ptr, as.integer(offset), value, field_type@ref)
+    .Call(
+      "R_set_struct_field_at_offset",
+      ptr,
+      as.integer(offset),
+      value,
+      field_type@ref
+    )
     return(invisible(ptr))
   }
 
@@ -1127,7 +1159,10 @@ FieldInfo <- S7::new_class(
 S7::method(format, FieldInfo) <- function(x, ...) {
   sprintf(
     "FieldInfo('%s' type=%s, offset=%d, size=%d)",
-    x@name, x@type@name, x@offset, x@size
+    x@name,
+    x@type@name,
+    x@offset,
+    x@size
   )
 }
 
@@ -1166,7 +1201,9 @@ ffi_field_info <- function(struct_type, field) {
     field_index <- match(field, struct_type@fields)
     if (is.na(field_index)) {
       stop(
-        "No such field '", field, "' in struct. Available fields: ",
+        "No such field '",
+        field,
+        "' in struct. Available fields: ",
         paste(struct_type@fields, collapse = ", ")
       )
     }
@@ -1178,7 +1215,11 @@ ffi_field_info <- function(struct_type, field) {
   }
 
   # Get info from C (0-based index)
-  info <- .Call("R_get_field_info", struct_type@ref, as.integer(field_index - 1L))
+  info <- .Call(
+    "R_get_field_info",
+    struct_type@ref,
+    as.integer(field_index - 1L)
+  )
 
   FieldInfo(
     name = struct_type@fields[field_index],
@@ -1255,15 +1296,19 @@ ffi_packed_offset <- function(struct_type, field_index) {
   if (is.null(pack)) {
     # No packing - use natural alignment via C
     return(.Call(
-      "R_get_packed_field_offset", struct_type@ref,
-      as.integer(field_index - 1), as.integer(0)
+      "R_get_packed_field_offset",
+      struct_type@ref,
+      as.integer(field_index - 1),
+      as.integer(0)
     ))
   }
 
   # Use C function for packed offset calculation
   .Call(
-    "R_get_packed_field_offset", struct_type@ref,
-    as.integer(field_index - 1), as.integer(pack)
+    "R_get_packed_field_offset",
+    struct_type@ref,
+    as.integer(field_index - 1),
+    as.integer(pack)
   )
 }
 
@@ -1299,7 +1344,8 @@ ffi_all_offsets <- function(struct_type, use_pack = TRUE) {
   # If packed and use_pack, compute packed offsets via C
   if (use_pack && !is.null(struct_type@pack)) {
     offsets <- .Call(
-      "R_get_all_packed_field_offsets", struct_type@ref,
+      "R_get_all_packed_field_offsets",
+      struct_type@ref,
       as.integer(struct_type@pack)
     )
     names(offsets) <- struct_type@fields

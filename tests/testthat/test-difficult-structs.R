@@ -28,12 +28,20 @@ dump_parse_debug_info <- function(parsed, header_path) {
       if (!is.null(s$fields) && length(s$fields[[1]]) > 0) {
         for (j in seq_along(s$fields[[1]])) {
           f <- s$fields[[1]][[j]]
-          bitfield_info <- if (!is.null(f$bitfield_width) && !is.na(f$bitfield_width)) {
+          bitfield_info <- if (
+            !is.null(f$bitfield_width) && !is.na(f$bitfield_width)
+          ) {
             sprintf(" :BITFIELD(%s)", f$bitfield_width)
           } else {
             ""
           }
-          message(sprintf("    field[%d]: %s %s%s", j, f$type, f$name, bitfield_info))
+          message(sprintf(
+            "    field[%d]: %s %s%s",
+            j,
+            f$type,
+            f$name,
+            bitfield_info
+          ))
         }
       }
     }
@@ -52,7 +60,11 @@ dump_parse_debug_info <- function(parsed, header_path) {
   message("\n--- Bitfield detection ---")
   message(
     "bitfield_warning attribute: ",
-    if (!is.null(attr(parsed, "bitfield_warning"))) attr(parsed, "bitfield_warning") else "NULL"
+    if (!is.null(attr(parsed, "bitfield_warning"))) {
+      attr(parsed, "bitfield_warning")
+    } else {
+      "NULL"
+    }
   )
 
   # Look for any struct fields that might be bitfields
@@ -65,7 +77,12 @@ dump_parse_debug_info <- function(parsed, header_path) {
         for (j in seq_along(s$fields[[1]])) {
           f <- s$fields[[1]][[j]]
           if (!is.null(f$bitfield_width) && !is.na(f$bitfield_width)) {
-            message(sprintf("  FOUND BITFIELD: %s.%s : %s", s$name, f$name, f$bitfield_width))
+            message(sprintf(
+              "  FOUND BITFIELD: %s.%s : %s",
+              s$name,
+              f$name,
+              f$bitfield_width
+            ))
             found_any <- TRUE
           }
         }
@@ -108,7 +125,11 @@ generate_bindings_with_debug <- function(parsed, header_path) {
 test_that("FILE* and opaque pointers generate valid code", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   skip_if(header == "", "difficult_structs.h not found")
 
   parsed <- ffi_parse_header(header)
@@ -117,7 +138,8 @@ test_that("FILE* and opaque pointers generate valid code", {
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
 
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -133,24 +155,31 @@ test_that("FILE* and opaque pointers generate valid code", {
 
   # Check that some code was generated
   objects <- ls(env)
-  expect_true(length(objects) > 0, info = "Expected some bindings to be generated")
+  expect_true(
+    length(objects) > 0,
+    info = "Expected some bindings to be generated"
+  )
 
   # Check that our custom FILE* functions are generated if they were parsed
   # (they should be in the parsed functions list)
   parsed_func_names <- parsed$functions$name
   if ("open_file" %in% parsed_func_names) {
-    expect_true("r_open_file" %in% objects,
+    expect_true(
+      "r_open_file" %in% objects,
       info = paste(
         "open_file was parsed but r_open_file was not generated.",
-        "Generated objects:", paste(head(objects, 20), collapse = ", ")
+        "Generated objects:",
+        paste(head(objects, 20), collapse = ", ")
       )
     )
   }
   if ("close_file" %in% parsed_func_names) {
-    expect_true("r_close_file" %in% objects,
+    expect_true(
+      "r_close_file" %in% objects,
       info = paste(
         "close_file was parsed but r_close_file was not generated.",
-        "Generated objects:", paste(head(objects, 20), collapse = ", ")
+        "Generated objects:",
+        paste(head(objects, 20), collapse = ", ")
       )
     )
   }
@@ -161,11 +190,16 @@ test_that("FILE* and opaque pointers generate valid code", {
 test_that("recursive structs generate valid definitions", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -192,11 +226,16 @@ test_that("recursive structs generate valid definitions", {
 test_that("nested structs generate complete definitions", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -225,11 +264,16 @@ test_that("nested structs generate complete definitions", {
 test_that("function pointer types are handled", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -246,11 +290,16 @@ test_that("function pointer types are handled", {
 test_that("structs with arrays generate correctly", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -272,11 +321,16 @@ test_that("structs with arrays generate correctly", {
 test_that("typedef structs are handled", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -297,11 +351,16 @@ test_that("typedef structs are handled", {
 test_that("complex function signatures generate valid wrappers", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -326,11 +385,16 @@ test_that("complex function signatures generate valid wrappers", {
 test_that("all generated code from difficult_structs.h is valid", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -356,11 +420,16 @@ test_that("all generated code from difficult_structs.h is valid", {
 test_that("no incomplete struct definitions in difficult cases", {
   skip_if_not(tcc_available(), "TCC not available")
 
-  header <- system.file("extdata", "difficult_structs.h", package = "RSimpleFFI")
+  header <- system.file(
+    "extdata",
+    "difficult_structs.h",
+    package = "RSimpleFFI"
+  )
   parsed <- ffi_parse_header(header)
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
-  expect_true(result$warning_caught,
+  expect_true(
+    result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
 
@@ -371,12 +440,14 @@ test_that("no incomplete struct definitions in difficult cases", {
     line <- trimws(lines[i])
 
     # No incomplete assignments
-    expect_false(grepl("^\\w+\\s*=$", line),
+    expect_false(
+      grepl("^\\w+\\s*=$", line),
       label = paste("Line", i, "incomplete")
     )
 
     # No lines with just =
-    expect_false(grepl("^\\s*=\\s*$", line),
+    expect_false(
+      grepl("^\\s*=\\s*$", line),
       label = paste("Line", i, "orphan equals")
     )
   }
@@ -389,7 +460,9 @@ test_that("no incomplete struct definitions in difficult cases", {
       paren_count <- 1
       found_close <- FALSE
       for (j in (start + 1):length(lines)) {
-        if (j > length(lines)) break
+        if (j > length(lines)) {
+          break
+        }
         paren_count <- paren_count + nchar(gsub("[^(]", "", lines[j]))
         paren_count <- paren_count - nchar(gsub("[^)]", "", lines[j]))
         if (paren_count == 0) {
@@ -397,7 +470,8 @@ test_that("no incomplete struct definitions in difficult cases", {
           break
         }
       }
-      expect_true(found_close,
+      expect_true(
+        found_close,
         label = paste("Struct at line", start, "must close")
       )
     }

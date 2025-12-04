@@ -402,11 +402,17 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
   }
 
   if (length(fields) == 0) {
-    return(sprintf("# %s - bit-field struct (see ?ffi_create_bitfield_accessors)", struct_name))
+    return(sprintf(
+      "# %s - bit-field struct (see ?ffi_create_bitfield_accessors)",
+      struct_name
+    ))
   }
 
   # Generate code
-  field_list <- paste(sprintf("  %s = %dL", names(fields), unlist(fields)), collapse = ",\n")
+  field_list <- paste(
+    sprintf("  %s = %dL", names(fields), unlist(fields)),
+    collapse = ",\n"
+  )
 
   code <- sprintf(
     "# Bit-field accessor for %s\n# C struct has bit-fields: %s\n%s <- ffi_create_bitfield_accessors(\n  list(\n%s\n  )\n)\n# Usage:\n#  packed <- %s$pack(list(%s))\n#  %s$get(packed, \"%s\")\n#  packed <- %s$set(packed, \"%s\", new_value)",
@@ -415,7 +421,10 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
     struct_name,
     field_list,
     struct_name,
-    paste(sprintf("%s = 0L", names(fields)[1:min(2, length(fields))]), collapse = ", "),
+    paste(
+      sprintf("%s = 0L", names(fields)[1:min(2, length(fields))]),
+      collapse = ", "
+    ),
     struct_name,
     names(fields)[1],
     struct_name,
@@ -438,11 +447,16 @@ ffi_parse_header <- function(header_file, includes = NULL) {
 }
 
 #' Generate R struct definition from parsed struct
-#' @param struct_def Struct definition from parsed header
 #' @param struct_name Name of the struct
+#' @param struct_def Struct definition from parsed header
+#' @param typedefs Optional data frame of typedefs to resolve type aliases
 #' @return Character vector with R code
 #' @export
-generate_struct_definition <- function(struct_name, struct_def, typedefs = NULL) {
+generate_struct_definition <- function(
+  struct_name,
+  struct_def,
+  typedefs = NULL
+) {
   if (length(struct_def) == 0) {
     return(NULL)
   }
@@ -475,7 +489,10 @@ generate_struct_definition <- function(struct_name, struct_def, typedefs = NULL)
     )
 
     # Generate bit-field accessor code instead of struct
-    return(generate_bitfield_accessor_code(struct_name, bitfield_warning$fields))
+    return(generate_bitfield_accessor_code(
+      struct_name,
+      bitfield_warning$fields
+    ))
   }
 
   # Get centralized type map
@@ -494,7 +511,10 @@ generate_struct_definition <- function(struct_name, struct_def, typedefs = NULL)
       base_type_str <- sub("\\[.*", "", field_type)
 
       # Extract all array dimensions from type
-      dimensions <- regmatches(field_type, gregexpr("\\[([0-9]+)\\]", field_type, perl = TRUE))[[1]]
+      dimensions <- regmatches(
+        field_type,
+        gregexpr("\\[([0-9]+)\\]", field_type, perl = TRUE)
+      )[[1]]
       dimensions <- as.integer(gsub("\\[|\\]", "", dimensions))
 
       if (length(dimensions) > 0) {
@@ -519,9 +539,15 @@ generate_struct_definition <- function(struct_name, struct_def, typedefs = NULL)
         # Escape field name if needed
         escaped_field_name <- escape_r_name(field_name)
         if (!is.null(base_comment)) {
-          field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type))
+          field_defs <- c(
+            field_defs,
+            sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type)
+          )
         } else {
-          field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type))
+          field_defs <- c(
+            field_defs,
+            sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_type)
+          )
         }
       }
     } else {
@@ -552,9 +578,20 @@ generate_struct_definition <- function(struct_name, struct_def, typedefs = NULL)
       # Escape field name if needed
       escaped_field_name <- escape_r_name(field_name)
       if (!is.null(field_comment)) {
-        field_defs <- c(field_defs, sprintf("  %s = %s  # %s", escaped_field_name, ffi_type, field_comment))
+        field_defs <- c(
+          field_defs,
+          sprintf(
+            "  %s = %s  # %s",
+            escaped_field_name,
+            ffi_type,
+            field_comment
+          )
+        )
       } else {
-        field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
+        field_defs <- c(
+          field_defs,
+          sprintf("  %s = %s", escaped_field_name, ffi_type)
+        )
       }
     }
   }
@@ -580,7 +617,9 @@ generate_struct_definition <- function(struct_name, struct_def, typedefs = NULL)
   # Generate struct code
   if (is_packed) {
     code <- c(
-      sprintf("# WARNING: Packed struct - cannot be passed by value, use pointers"),
+      sprintf(
+        "# WARNING: Packed struct - cannot be passed by value, use pointers"
+      ),
       sprintf("%s <- ffi_struct(", struct_name),
       paste(field_defs, collapse = "\n"),
       "  pack = 1L",
@@ -618,7 +657,10 @@ generate_enum_definition <- function(enum_name, enum_values) {
 
   # Add commas to all except last
   if (length(value_defs) > 1) {
-    value_defs[-length(value_defs)] <- paste0(value_defs[-length(value_defs)], ",")
+    value_defs[-length(value_defs)] <- paste0(
+      value_defs[-length(value_defs)],
+      ","
+    )
   }
 
   # Generate enum code
@@ -661,7 +703,10 @@ generate_union_definition <- function(union_name, union_def) {
     }
 
     escaped_field_name <- escape_r_name(field_name)
-    field_defs <- c(field_defs, sprintf("  %s = %s", escaped_field_name, ffi_type))
+    field_defs <- c(
+      field_defs,
+      sprintf("  %s = %s", escaped_field_name, ffi_type)
+    )
   }
 
   # Add commas
@@ -719,10 +764,22 @@ generate_struct_helpers <- function(struct_name, field_names) {
 
   # Escape field names using the existing escape_r_name function
   # This handles R reserved words (next, if, else, etc.) and names starting with _
-  escaped_field_names <- vapply(clean_field_names, escape_r_name, character(1), USE.NAMES = FALSE)
+  escaped_field_names <- vapply(
+    clean_field_names,
+    escape_r_name,
+    character(1),
+    USE.NAMES = FALSE
+  )
 
   # Generate parameter documentation (use clean names without backticks for docs)
-  field_params <- paste(sprintf("#' @param %s Value for %s field (optional)", clean_field_names, field_names), collapse = "\n")
+  field_params <- paste(
+    sprintf(
+      "#' @param %s Value for %s field (optional)",
+      clean_field_names,
+      field_names
+    ),
+    collapse = "\n"
+  )
 
   # Build the args list string mapping clean param names to original field names
   args_list_items <- sprintf('"%s" = %s', field_names, escaped_field_names)
@@ -735,8 +792,13 @@ generate_struct_helpers <- function(struct_name, field_names) {
     field_params,
     sprintf("#' @return External pointer to allocated %s struct", clean_name),
     "#' @export",
-    sprintf("%s <- function(%s) {", new_func_name, paste(paste0(escaped_field_names, " = NULL"), collapse = ", ")),
-    sprintf("
+    sprintf(
+      "%s <- function(%s) {",
+      new_func_name,
+      paste(paste0(escaped_field_names, " = NULL"), collapse = ", ")
+    ),
+    sprintf(
+      "
   ptr <- ffi_alloc(%s)
   args <- list(%s)
   args <- args[!vapply(args, is.null, logical(1))]
@@ -746,7 +808,11 @@ generate_struct_helpers <- function(struct_name, field_names) {
     }
   }
   ptr
-}", struct_name, paste(args_list_items, collapse = ", "), struct_name),
+}",
+      struct_name,
+      paste(args_list_items, collapse = ", "),
+      struct_name
+    ),
     "",
     sprintf("#' Convert %s pointer to R list", clean_name),
     "#'",
@@ -774,7 +840,12 @@ generate_struct_helpers <- function(struct_name, field_names) {
 #' @param visited Set of already-visited typedefs (to detect cycles)
 #' @return TRUE if resolvable, FALSE otherwise
 #' @keywords internal
-can_resolve_typedef <- function(base_type, known_typedefs, known_structs = character(), visited = character()) {
+can_resolve_typedef <- function(
+  base_type,
+  known_typedefs,
+  known_structs = character(),
+  visited = character()
+) {
   # Strip qualifiers
   base_type <- strip_type_qualifiers(base_type)
 
@@ -807,7 +878,12 @@ can_resolve_typedef <- function(base_type, known_typedefs, known_structs = chara
   # If it's another typedef, recursively check
   if (base_type %in% names(known_typedefs)) {
     underlying <- known_typedefs[[base_type]]
-    return(can_resolve_typedef(underlying, known_typedefs, known_structs, visited))
+    return(can_resolve_typedef(
+      underlying,
+      known_typedefs,
+      known_structs,
+      visited
+    ))
   }
 
   # Unknown/unresolvable type
@@ -825,7 +901,12 @@ can_resolve_typedef <- function(base_type, known_typedefs, known_structs = chara
 #' @param known_typedefs Named character vector of already-processed typedefs (for chained resolution)
 #' @return Character string with R code, or NULL if type cannot be mapped
 #' @export
-generate_typedef_definition <- function(alias_name, base_type, known_structs = character(), known_typedefs = character()) {
+generate_typedef_definition <- function(
+  alias_name,
+  base_type,
+  known_structs = character(),
+  known_typedefs = character()
+) {
   # Strip qualifiers from base type
   base_type <- strip_type_qualifiers(base_type)
 
@@ -838,15 +919,28 @@ generate_typedef_definition <- function(alias_name, base_type, known_structs = c
   if (grepl("\\*", base_type)) {
     # char* or const char* -> ffi_string()
     if (grepl("char\\s*\\*", base_type)) {
-      return(sprintf("%s <- ffi_string()  # typedef %s", escaped_alias, base_type))
+      return(sprintf(
+        "%s <- ffi_string()  # typedef %s",
+        escaped_alias,
+        base_type
+      ))
     }
     # Other pointers -> ffi_pointer()
-    return(sprintf("%s <- ffi_pointer()  # typedef %s", escaped_alias, base_type))
+    return(sprintf(
+      "%s <- ffi_pointer()  # typedef %s",
+      escaped_alias,
+      base_type
+    ))
   }
 
   # Check exact match in type_map
   if (base_type %in% names(type_map)) {
-    return(sprintf("%s <- %s  # typedef %s", escaped_alias, type_map[[base_type]], base_type))
+    return(sprintf(
+      "%s <- %s  # typedef %s",
+      escaped_alias,
+      type_map[[base_type]],
+      base_type
+    ))
   }
 
   # Check for struct type: "struct Name"
@@ -855,10 +949,19 @@ generate_typedef_definition <- function(alias_name, base_type, known_structs = c
     escaped_struct <- escape_r_name(struct_name)
     if (struct_name %in% known_structs) {
       # Reference to a known struct - alias points to the struct
-      return(sprintf("%s <- %s  # typedef struct %s", escaped_alias, escaped_struct, struct_name))
+      return(sprintf(
+        "%s <- %s  # typedef struct %s",
+        escaped_alias,
+        escaped_struct,
+        struct_name
+      ))
     } else {
       # Forward declaration or unknown struct - comment only
-      return(sprintf("# %s: forward declaration of struct %s (define struct first)", escaped_alias, struct_name))
+      return(sprintf(
+        "# %s: forward declaration of struct %s (define struct first)",
+        escaped_alias,
+        struct_name
+      ))
     }
   }
 
@@ -867,13 +970,22 @@ generate_typedef_definition <- function(alias_name, base_type, known_structs = c
   if (base_type %in% names(known_typedefs)) {
     if (can_resolve_typedef(base_type, known_typedefs, known_structs)) {
       # Chain to the underlying typedef
-      return(sprintf("%s <- %s  # typedef %s", escaped_alias, escape_r_name(base_type), base_type))
+      return(sprintf(
+        "%s <- %s  # typedef %s",
+        escaped_alias,
+        escape_r_name(base_type),
+        base_type
+      ))
     }
     # Otherwise fall through to unknown type handling
   }
 
   # Unknown type - add as comment
-  sprintf("# %s: unknown type '%s' - manual mapping required", escaped_alias, base_type)
+  sprintf(
+    "# %s: unknown type '%s' - manual mapping required",
+    escaped_alias,
+    base_type
+  )
 }
 
 #' Escape R name with backticks if needed
@@ -883,23 +995,41 @@ escape_r_name <- function(name) {
   # R reserved words and special constants that must be escaped
   reserved_words <- c(
     # Control flow keywords
-    "if", "else", "repeat", "while", "function", "for", "in", "next", "break",
+    "if",
+    "else",
+    "repeat",
+    "while",
+    "function",
+    "for",
+    "in",
+    "next",
+    "break",
     # Logical constants
-    "TRUE", "FALSE",
+    "TRUE",
+    "FALSE",
     # Special values
-    "NULL", "Inf", "NaN",
+    "NULL",
+    "Inf",
+    "NaN",
     # NA variants
-    "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_",
+    "NA",
+    "NA_integer_",
+    "NA_real_",
+    "NA_complex_",
+    "NA_character_",
     # Additional R internal names that could conflict
     "..."
   )
 
   # Check if name is a reserved word or invalid R identifier
   # Single underscore or names starting with underscore need backticks
-  if (name %in% reserved_words ||
-    name == "_" ||
-    !grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) ||
-    grepl("^_", name)) {
+  if (
+    name %in%
+      reserved_words ||
+      name == "_" ||
+      !grepl("^[a-zA-Z.][a-zA-Z0-9._]*$", name) ||
+      grepl("^_", name)
+  ) {
     return(paste0("`", name, "`"))
   }
   name
@@ -979,17 +1109,31 @@ generate_function_wrapper <- function(func_def, typedefs = NULL) {
 
   # Generate wrapper code
   return_type_clean <- strip_type_qualifiers(return_type)
-  return_type_ffi <- map_type_to_ffi(return_type_clean, type_map, typedef_ffi_map, is_return = TRUE)
+  return_type_ffi <- map_type_to_ffi(
+    return_type_clean,
+    type_map,
+    typedef_ffi_map,
+    is_return = TRUE
+  )
 
   generate_wrapper_code(
-    func_name, return_type_ffi, param_names, param_types_c,
-    param_types_ffi, is_variadic
+    func_name,
+    return_type_ffi,
+    param_names,
+    param_types_c,
+    param_types_ffi,
+    is_variadic
   )
 }
 
 #' Map C type to FFI type string
 #' @keywords internal
-map_type_to_ffi <- function(type_string, type_map, typedef_ffi_map, is_return = FALSE) {
+map_type_to_ffi <- function(
+  type_string,
+  type_map,
+  typedef_ffi_map,
+  is_return = FALSE
+) {
   type_string <- strip_type_qualifiers(trimws(type_string))
 
   # Handle empty or NULL type
@@ -1015,16 +1159,28 @@ map_type_to_ffi <- function(type_string, type_map, typedef_ffi_map, is_return = 
 
 #' Generate wrapper code from parameter information
 #' @keywords internal
-generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
-                                  param_types_c, param_types_ffi, is_variadic) {
+generate_wrapper_code <- function(
+  func_name,
+  return_type_ffi,
+  param_names,
+  param_types_c,
+  param_types_ffi,
+  is_variadic
+) {
   r_func_name <- paste0("r_", func_name)
 
   # Handle variadic functions specially
   if (is_variadic) {
     n_fixed <- length(param_names)
     code <- c(
-      sprintf("# Variadic function: %s(%s, ...)", func_name, paste(param_types_c, collapse = ", ")),
-      sprintf("# This function has variable arguments (...) which require ffi_cif_var()."),
+      sprintf(
+        "# Variadic function: %s(%s, ...)",
+        func_name,
+        paste(param_types_c, collapse = ", ")
+      ),
+      sprintf(
+        "# This function has variable arguments (...) which require ffi_cif_var()."
+      ),
       sprintf("# Fixed args: %d, then variadic arguments follow.", n_fixed),
       "#",
       "# Example usage:",
@@ -1034,7 +1190,9 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
           sprintf("# # With %d fixed arg(s) + variadic args:", n_fixed),
           sprintf(
             "# cif <- ffi_cif_var(%s, %dL, %s, <variadic_arg_types...>)",
-            return_type_ffi, n_fixed, paste(param_types_ffi, collapse = ", ")
+            return_type_ffi,
+            n_fixed,
+            paste(param_types_ffi, collapse = ", ")
           ),
           sprintf(
             "# ffi_call(cif, sym, %s, <variadic_args...>)",
@@ -1044,7 +1202,10 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
       } else {
         c(
           "# # With only variadic args:",
-          sprintf("# cif <- ffi_cif_var(%s, 0L, <variadic_arg_types...>)", return_type_ffi),
+          sprintf(
+            "# cif <- ffi_cif_var(%s, 0L, <variadic_arg_types...>)",
+            return_type_ffi
+          ),
           "# ffi_call(cif, sym, <variadic_args...>)"
         )
       },
@@ -1055,12 +1216,21 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
 
   # Build ffi_function call for non-variadic functions
   if (length(param_types_ffi) == 0) {
-    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s)', func_name, return_type_ffi)
+    ffi_call <- sprintf(
+      '  .fn <- ffi_function("%s", %s)',
+      func_name,
+      return_type_ffi
+    )
     signature <- paste0(r_func_name, " <- function()")
     call_line <- "  .fn()"
   } else {
     ffi_params <- paste(param_types_ffi, collapse = ", ")
-    ffi_call <- sprintf('  .fn <- ffi_function("%s", %s, %s)', func_name, return_type_ffi, ffi_params)
+    ffi_call <- sprintf(
+      '  .fn <- ffi_function("%s", %s, %s)',
+      func_name,
+      return_type_ffi,
+      ffi_params
+    )
     signature <- sprintf(
       "%s <- function(%s)",
       r_func_name,
@@ -1075,7 +1245,12 @@ generate_wrapper_code <- function(func_name, return_type_ffi, param_names,
     for (i in seq_along(param_names)) {
       param_docs <- c(
         param_docs,
-        sprintf("#' @param %s (%s) %s", param_names[i], param_types_ffi[i], param_types_c[i])
+        sprintf(
+          "#' @param %s (%s) %s",
+          param_names[i],
+          param_types_ffi[i],
+          param_types_c[i]
+        )
       )
     }
   }
@@ -1168,7 +1343,11 @@ sort_typedefs_by_dependency <- function(typedefs) {
 #' @param verbose If TRUE, print progress messages
 #' @return Character vector with all generated R code
 #' @export
-generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FALSE) {
+generate_r_bindings <- function(
+  parsed_header,
+  output_file = NULL,
+  verbose = FALSE
+) {
   code_sections <- list()
 
   # Header comment with source file hash
@@ -1219,7 +1398,11 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
           # Extract all string literals and concatenate
           strings <- regmatches(value, gregexpr('"[^"]*"', value))[[1]]
           # Remove quotes, concatenate, re-quote
-          value <- paste0('"', paste(gsub('"', "", strings), collapse = ""), '"')
+          value <- paste0(
+            '"',
+            paste(gsub('"', "", strings), collapse = ""),
+            '"'
+          )
         }
 
         # 2. Character literals: '\n' -> "\n" (R uses strings not chars)
@@ -1238,7 +1421,10 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
         if (grepl("^0[bB][01]+$", value)) {
           # Convert binary to decimal
           binary_str <- sub("^0[bB]", "", value)
-          decimal_val <- sum(as.integer(strsplit(binary_str, "")[[1]]) * 2^(nchar(binary_str):1 - 1))
+          decimal_val <- sum(
+            as.integer(strsplit(binary_str, "")[[1]]) *
+              2^(nchar(binary_str):1 - 1)
+          )
           value <- as.character(decimal_val)
         }
 
@@ -1253,21 +1439,18 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
         # Handle hex values: 0x123ULL, 0xabcLL, etc. - strip U and L suffixes only
         if (grepl("^0[xX][0-9a-fA-F]+[UuLl]+$", value)) {
           value <- sub("[UuLl]+$", "", value)
-        }
-        # Handle decimal integers: 123LL, 456ULL, etc.
-        else if (grepl("^[0-9]+[LlUu]+$", value)) {
+        } else if (grepl("^[0-9]+[LlUu]+$", value)) {
+          # Handle decimal integers: 123LL, 456ULL, etc.
           value <- sub("[LlUu]+$", "", value)
           # Add single L for R integer (if not too large)
           if (as.numeric(value) <= 2147483647) {
             value <- paste0(value, "L")
           }
-        }
-        # Handle floats: 3.14f, 1.0F (but NOT hex like 0xF)
-        else if (grepl("^[0-9.+-]+[Ff]$", value) && !grepl("^0[xX]", value)) {
+        } else if (grepl("^[0-9.+-]+[Ff]$", value) && !grepl("^0[xX]", value)) {
+          # Handle floats: 3.14f, 1.0F (but NOT hex like 0xF)
           value <- sub("[Ff]$", "", value)
-        }
-        # Handle exponential notation: 1.0e10f
-        else if (grepl("^[0-9.+-]+[eE][+-]?[0-9]+[LlUuFf]*$", value)) {
+        } else if (grepl("^[0-9.+-]+[eE][+-]?[0-9]+[LlUuFf]*$", value)) {
+          # Handle exponential notation: 1.0e10f
           value <- sub("[LlUuFf]+$", "", value)
         }
 
@@ -1275,7 +1458,13 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
         # Skip re-escaping to avoid breaking escape sequences like \n
 
         # Quote value if it's not a number or already quoted
-        if (!grepl("^(0[xX][0-9a-fA-F]+|[0-9.+-]+([eE][+-]?[0-9]+)?L?)$", value) && !grepl("^['\"]", value)) {
+        if (
+          !grepl(
+            "^(0[xX][0-9a-fA-F]+|[0-9.+-]+([eE][+-]?[0-9]+)?L?)$",
+            value
+          ) &&
+            !grepl("^['\"]", value)
+        ) {
           # Escape any internal quotes and backslashes before wrapping
           value <- gsub("\\\\", "\\\\\\\\", value) # Escape backslashes first
           value <- gsub('"', '\\\\"', value) # Escape double quotes
@@ -1304,7 +1493,11 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
     for (struct_name in names(parsed_header$structs)) {
       struct_def <- parsed_header$structs[[struct_name]]
       escaped_name <- escape_r_name(struct_name)
-      struct_code <- generate_struct_definition(escaped_name, struct_def, typedefs = parsed_header$typedefs)
+      struct_code <- generate_struct_definition(
+        escaped_name,
+        struct_def,
+        typedefs = parsed_header$typedefs
+      )
       if (!is.null(struct_code)) {
         code_sections$structs <- c(
           code_sections$structs,
@@ -1412,18 +1605,32 @@ generate_r_bindings <- function(parsed_header, output_file = NULL, verbose = FAL
     # Pre-generate all function wrappers (avoid O(n²) concatenation)
     n_funcs <- nrow(user_funcs)
     if (n_funcs > 0) {
-      if (verbose) message(sprintf("  Generating %d function wrappers...", n_funcs))
-      func_codes <- vapply(seq_len(n_funcs), function(i) {
-        if (verbose && i %% 500 == 0) {
-          message(sprintf("    Progress: %d/%d functions", i, n_funcs))
-        }
-        paste0(generate_function_wrapper(user_funcs[i, ], typedefs = parsed_header$typedefs), "\n")
-      }, character(1))
+      if (verbose) {
+        message(sprintf("  Generating %d function wrappers...", n_funcs))
+      }
+      func_codes <- vapply(
+        seq_len(n_funcs),
+        function(i) {
+          if (verbose && i %% 500 == 0) {
+            message(sprintf("    Progress: %d/%d functions", i, n_funcs))
+          }
+          paste0(
+            generate_function_wrapper(
+              user_funcs[i, ],
+              typedefs = parsed_header$typedefs
+            ),
+            "\n"
+          )
+        },
+        character(1)
+      )
       code_sections$functions <- c(code_sections$functions, func_codes)
     }
   }
 
-  if (verbose) message("  Combining code sections...")
+  if (verbose) {
+    message("  Combining code sections...")
+  }
   all_code <- unlist(code_sections)
 
   # Combine into single string for easier use

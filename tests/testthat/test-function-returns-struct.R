@@ -14,7 +14,12 @@ test_create_point2d_cif <- ffi_cif(Point2D, ffi_int(), ffi_int())
 test_create_point2d_sym <- ffi_symbol("test_create_point2d")
 
 # Call the function with example arguments
-result_ptr <- ffi_call(test_create_point2d_cif, test_create_point2d_sym, 10L, 20L)
+result_ptr <- ffi_call(
+  test_create_point2d_cif,
+  test_create_point2d_sym,
+  10L,
+  20L
+)
 
 # Test the returned struct fields
 x_val <- ffi_get_field(result_ptr, "x", Point2D)

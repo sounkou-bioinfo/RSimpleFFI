@@ -12,7 +12,19 @@ test_that("ffi_parse_header works on simple header", {
   result <- ffi_parse_header(header)
 
   expect_s3_class(result, "parsed_header")
-  expect_named(result, c("file", "defines", "structs", "unions", "enums", "functions", "typedefs", "parser"))
+  expect_named(
+    result,
+    c(
+      "file",
+      "defines",
+      "structs",
+      "unions",
+      "enums",
+      "functions",
+      "typedefs",
+      "parser"
+    )
+  )
 
   # Check defines
   expect_type(result$defines, "list")
@@ -68,8 +80,12 @@ test_that("ffi_parse_header works with includes", {
 
   # Check that at least the typedef structs from included file are found
   # (Event and Buffer are typedefs, EventQueue is a named struct)
-  expect_true("Event" %in% names(result$structs) || "Buffer" %in% names(result$structs),
-    info = paste("Found structs:", paste(names(result$structs), collapse = ", "))
+  expect_true(
+    "Event" %in% names(result$structs) || "Buffer" %in% names(result$structs),
+    info = paste(
+      "Found structs:",
+      paste(names(result$structs), collapse = ", ")
+    )
   )
 })
 

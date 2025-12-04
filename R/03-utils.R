@@ -82,7 +82,13 @@ S7::method(format, UnionType) <- function(x, ...) {
 #' @export
 S7::method(format, EnumType) <- function(x, ...) {
   values_str <- paste(names(x@values), x@values, sep = "=", collapse = ", ")
-  paste0("EnumType(values=[", values_str, "], underlying=", x@underlying_type@name, ")")
+  paste0(
+    "EnumType(values=[",
+    values_str,
+    "], underlying=",
+    x@underlying_type@name,
+    ")"
+  )
 }
 
 #' @export

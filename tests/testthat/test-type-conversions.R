@@ -95,8 +95,8 @@ test_that("Bool conversion works", {
   expect_equal(bool_fn(FALSE), TRUE)
 
   # Integer to bool: 0 = FALSE, non-zero = TRUE
-  expect_equal(bool_fn(0L), TRUE)   # !FALSE
-  expect_equal(bool_fn(1L), FALSE)  # !TRUE
+  expect_equal(bool_fn(0L), TRUE) # !FALSE
+  expect_equal(bool_fn(1L), FALSE) # !TRUE
   expect_equal(bool_fn(42L), FALSE) # !TRUE
 
   # Double to bool: truncated first, then converted
@@ -152,10 +152,10 @@ test_that("Signed/unsigned edge cases work", {
   uint8_fn <- ffi_function("test_uint8_func", uint8_t, uint8_t)
 
   # Boundary values for int8: [-128, 127]
-  expect_equal(int8_fn(127L), -128L)  # 127 + 1 = 128 -> wraps to -128
+  expect_equal(int8_fn(127L), -128L) # 127 + 1 = 128 -> wraps to -128
   expect_equal(int8_fn(-128L), -127L) # -128 + 1 = -127
 
   # Boundary values for uint8: [0, 255]
-  expect_equal(uint8_fn(255L), 0L)  # 255 + 1 = 256 -> wraps to 0
-  expect_equal(uint8_fn(0L), 1L)    # 0 + 1 = 1
+  expect_equal(uint8_fn(255L), 0L) # 255 + 1 = 256 -> wraps to 0
+  expect_equal(uint8_fn(0L), 1L) # 0 + 1 = 1
 })

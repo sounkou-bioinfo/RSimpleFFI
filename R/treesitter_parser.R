@@ -77,7 +77,11 @@ ts_extract_structs <- function(root_node, source_text) {
       if (length(captures1$name) > 0) {
         i <- 1
         while (i <= length(captures1$name)) {
-          if (captures1$name[i] == "name" && i < length(captures1$name) && captures1$name[i + 1] == "body") {
+          if (
+            captures1$name[i] == "name" &&
+              i < length(captures1$name) &&
+              captures1$name[i + 1] == "body"
+          ) {
             struct_name <- treesitter::node_text(captures1$node[[i]])
             struct_body <- captures1$node[[i + 1]]
 
@@ -111,7 +115,11 @@ ts_extract_structs <- function(root_node, source_text) {
       if (length(captures2$name) > 0) {
         i <- 1
         while (i <= length(captures2$name)) {
-          if (captures2$name[i] == "body" && i < length(captures2$name) && captures2$name[i + 1] == "name") {
+          if (
+            captures2$name[i] == "body" &&
+              i < length(captures2$name) &&
+              captures2$name[i + 1] == "name"
+          ) {
             struct_body <- captures2$node[[i]]
             struct_name <- treesitter::node_text(captures2$node[[i + 1]])
 
@@ -226,9 +234,20 @@ ts_parse_field_declaration <- function(field_node, source_text) {
     child <- treesitter::node_child(field_node, i)
     node_type <- treesitter::node_type(child)
 
-    if (node_type %in% c("primitive_type", "type_identifier", "struct_specifier", "sized_type_specifier")) {
+    if (
+      node_type %in%
+        c(
+          "primitive_type",
+          "type_identifier",
+          "struct_specifier",
+          "sized_type_specifier"
+        )
+    ) {
       type_node <- child
-    } else if (node_type %in% c("field_identifier", "array_declarator", "pointer_declarator")) {
+    } else if (
+      node_type %in%
+        c("field_identifier", "array_declarator", "pointer_declarator")
+    ) {
       declarator_node <- child
     } else if (node_type == "bitfield_clause") {
       # Extract bitfield size from bitfield_clause
@@ -365,7 +384,11 @@ ts_extract_unions <- function(root_node, source_text) {
       if (length(captures1$name) > 0) {
         i <- 1
         while (i <= length(captures1$name)) {
-          if (captures1$name[i] == "name" && i < length(captures1$name) && captures1$name[i + 1] == "body") {
+          if (
+            captures1$name[i] == "name" &&
+              i < length(captures1$name) &&
+              captures1$name[i + 1] == "body"
+          ) {
             union_name <- treesitter::node_text(captures1$node[[i]])
             union_body <- captures1$node[[i + 1]]
 
@@ -399,7 +422,11 @@ ts_extract_unions <- function(root_node, source_text) {
       if (length(captures2$name) > 0) {
         i <- 1
         while (i <= length(captures2$name)) {
-          if (captures2$name[i] == "body" && i < length(captures2$name) && captures2$name[i + 1] == "name") {
+          if (
+            captures2$name[i] == "body" &&
+              i < length(captures2$name) &&
+              captures2$name[i + 1] == "name"
+          ) {
             union_body <- captures2$node[[i]]
             union_name <- treesitter::node_text(captures2$node[[i + 1]])
 
@@ -454,7 +481,11 @@ ts_extract_enums <- function(root_node, source_text) {
       if (length(captures1$name) > 0) {
         i <- 1
         while (i <= length(captures1$name)) {
-          if (captures1$name[i] == "name" && i < length(captures1$name) && captures1$name[i + 1] == "body") {
+          if (
+            captures1$name[i] == "name" &&
+              i < length(captures1$name) &&
+              captures1$name[i + 1] == "body"
+          ) {
             enum_name <- treesitter::node_text(captures1$node[[i]])
             enum_body <- captures1$node[[i + 1]]
 
@@ -475,7 +506,11 @@ ts_extract_enums <- function(root_node, source_text) {
       if (length(captures2$name) > 0) {
         i <- 1
         while (i <= length(captures2$name)) {
-          if (captures2$name[i] == "body" && i < length(captures2$name) && captures2$name[i + 1] == "name") {
+          if (
+            captures2$name[i] == "body" &&
+              i < length(captures2$name) &&
+              captures2$name[i + 1] == "name"
+          ) {
             enum_body <- captures2$node[[i]]
             enum_name <- treesitter::node_text(captures2$node[[i + 1]])
 
@@ -568,11 +603,19 @@ ts_extract_functions <- function(root_node, source_text) {
       if (length(captures$name) > 0) {
         i <- 1
         while (i <= length(captures$name)) {
-          if (captures$name[i] == "return_type" && i < length(captures$name) && captures$name[i + 1] == "declarator") {
+          if (
+            captures$name[i] == "return_type" &&
+              i < length(captures$name) &&
+              captures$name[i + 1] == "declarator"
+          ) {
             return_type <- treesitter::node_text(captures$node[[i]])
             declarator <- captures$node[[i + 1]]
 
-            func_info <- ts_parse_function_declarator(declarator, source_text, return_type)
+            func_info <- ts_parse_function_declarator(
+              declarator,
+              source_text,
+              return_type
+            )
 
             if (!is.null(func_info)) {
               functions[[func_info$name]] <- func_info
@@ -602,7 +645,11 @@ ts_extract_functions <- function(root_node, source_text) {
       if (length(captures2$name) > 0) {
         i <- 1
         while (i <= length(captures2$name)) {
-          if (captures2$name[i] == "return_type" && i < length(captures2$name) && captures2$name[i + 1] == "ptr_declarator") {
+          if (
+            captures2$name[i] == "return_type" &&
+              i < length(captures2$name) &&
+              captures2$name[i + 1] == "ptr_declarator"
+          ) {
             base_return_type <- treesitter::node_text(captures2$node[[i]])
             ptr_declarator <- captures2$node[[i + 1]]
 
@@ -627,7 +674,11 @@ ts_extract_functions <- function(root_node, source_text) {
               # Build full return type with pointers
               return_type <- paste0(base_return_type, strrep("*", ptr_count))
 
-              func_info <- ts_parse_function_declarator(func_declarator, source_text, return_type)
+              func_info <- ts_parse_function_declarator(
+                func_declarator,
+                source_text,
+                return_type
+              )
 
               if (!is.null(func_info)) {
                 functions[[func_info$name]] <- func_info
@@ -642,7 +693,10 @@ ts_extract_functions <- function(root_node, source_text) {
       }
     },
     error = function(e) {
-      message("Warning: tree-sitter pointer function extraction failed: ", e$message)
+      message(
+        "Warning: tree-sitter pointer function extraction failed: ",
+        e$message
+      )
     }
   )
 
@@ -673,7 +727,11 @@ ts_extract_functions <- function(root_node, source_text) {
 
 #' Parse function declarator node
 #' @keywords internal
-ts_parse_function_declarator <- function(declarator_node, source_text, return_type) {
+ts_parse_function_declarator <- function(
+  declarator_node,
+  source_text,
+  return_type
+) {
   name <- NULL
   params <- ""
   param_list <- list()
@@ -755,10 +813,17 @@ ts_parse_parameter_declaration <- function(param_node, source_text) {
     if (node_type == "identifier") {
       # This is the parameter name
       param_name <- treesitter::node_text(child)
-    } else if (node_type %in% c(
-      "primitive_type", "type_identifier", "sized_type_specifier",
-      "struct_specifier", "union_specifier", "enum_specifier"
-    )) {
+    } else if (
+      node_type %in%
+        c(
+          "primitive_type",
+          "type_identifier",
+          "sized_type_specifier",
+          "struct_specifier",
+          "union_specifier",
+          "enum_specifier"
+        )
+    ) {
       # Type specifier
       type_text <- paste(type_text, treesitter::node_text(child))
     } else if (node_type == "pointer_declarator") {
@@ -875,7 +940,11 @@ ts_extract_typedefs <- function(root_node, source_text) {
       if (length(captures$name) > 0) {
         i <- 1
         while (i <= length(captures$name)) {
-          if (captures$name[i] == "type" && i < length(captures$name) && captures$name[i + 1] == "declarator") {
+          if (
+            captures$name[i] == "type" &&
+              i < length(captures$name) &&
+              captures$name[i + 1] == "declarator"
+          ) {
             type_node <- captures$node[[i]]
             declarator_node <- captures$node[[i + 1]]
 
@@ -914,7 +983,10 @@ ts_get_typedef_info <- function(declarator_node, source_text) {
 
   # Handle direct type identifier or primitive_type (tree-sitter may classify
   # some typedef names like ssize_t as primitive_type if they're known types)
-  if (node_type %in% c("type_identifier", "primitive_type", "sized_type_specifier")) {
+  if (
+    node_type %in%
+      c("type_identifier", "primitive_type", "sized_type_specifier")
+  ) {
     return(list(name = treesitter::node_text(declarator_node), ptr_count = 0L))
   }
 
@@ -930,7 +1002,10 @@ ts_get_typedef_info <- function(declarator_node, source_text) {
 
       if (child_type == "*") {
         ptr_count <- ptr_count + 1L
-      } else if (child_type %in% c("type_identifier", "primitive_type", "sized_type_specifier")) {
+      } else if (
+        child_type %in%
+          c("type_identifier", "primitive_type", "sized_type_specifier")
+      ) {
         typedef_name <- treesitter::node_text(child)
       } else if (child_type == "pointer_declarator") {
         # Nested pointer (e.g., void**)
@@ -950,7 +1025,10 @@ ts_get_typedef_info <- function(declarator_node, source_text) {
     child <- treesitter::node_child(declarator_node, i)
     child_type <- treesitter::node_type(child)
 
-    if (child_type %in% c("type_identifier", "primitive_type", "sized_type_specifier")) {
+    if (
+      child_type %in%
+        c("type_identifier", "primitive_type", "sized_type_specifier")
+    ) {
       return(list(name = treesitter::node_text(child), ptr_count = 0L))
     }
 
