@@ -35,8 +35,15 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.1.9002" id="rsimpleffi-1019002-development">RSimpleFFI 1.0.1.9002 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1019002-development"></a></h2>
 <div class="section level3">
+<h3 id="internal-changes-1-0-1-9002">Internal Changes<a class="anchor" aria-label="anchor" href="#internal-changes-1-0-1-9002"></a></h3>
+<ul><li>Removed <code>strip_type_qualifiers()</code> - tree-sitter AST parsing handles type qualifier stripping directly via node type filtering, making the regex-based approach unnecessary.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="bug-fixes-1-0-1-9002">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-0-1-9002"></a></h3>
-<ul><li>Fixed missing <code>treesitter</code> package import declaration (<a href="https://github.com/sounkou-bioinfo/RSimpleFFI/issues/2" class="external-link">#2</a>)
+<ul><li><p>Fixed inline/nested struct definitions generating invalid R code by extracting just the struct name from <code>struct_specifier</code> nodes instead of the full body text.</p></li>
+<li><p>Fixed typedef’d anonymous structs/unions/enums being duplicated in typedefs (they are already extracted as structs/unions/enums).</p></li>
+<li>
+<p>Fixed missing <code>treesitter</code> package import declaration (<a href="https://github.com/sounkou-bioinfo/RSimpleFFI/issues/2" class="external-link">#2</a>)</p>
 <ul><li>Added <code>treesitter</code> to DESCRIPTION Imports field</li>
 <li>Added proper <code>@importFrom</code> roxygen2 directives for tree-sitter functions</li>
 <li>Resolves R CMD check warnings on macOS and Ubuntu</li>
@@ -158,7 +165,7 @@
 <li>Support for glibc, musl, macOS/Darwin, BSD, MSYS2/MinGW types</li>
 <li>Clang-specific typedefs and compiler builtins</li>
 </ul></li>
-<li><p>Added <code><a href="../reference/strip_type_qualifiers.html">strip_type_qualifiers()</a></code> for handling const/volatile in type resolution</p></li>
+<li><p>Added <code>strip_type_qualifiers()</code> for handling const/volatile in type resolution</p></li>
 <li><p>Added <code><a href="../reference/get_resolvable_types.html">get_resolvable_types()</a></code> helper function</p></li>
 </ul></div>
 </div>
