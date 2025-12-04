@@ -42,6 +42,8 @@
 <li>
 <code><a href="../reference/ffi_parse_header.html">ffi_parse_header()</a></code> now uses tree-sitter by default when available (with fallback to regex)</li>
 <li>Correctly parses complex array declarations and nested structs</li>
+<li><strong>Now detects <code>__attribute__((packed))</code> and sets <code>packed</code> attribute on structs/unions</strong></li>
+<li>Generates code with <code>pack=1</code> for packed structs automatically</li>
 <li>Depends on <code>treesitter</code> (CRAN) and <code>treesitter.c</code> packages</li>
 <li>TCC preprocessor still used first to expand macros before tree-sitter parsing</li>
 </ul></li>
