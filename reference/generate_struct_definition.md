@@ -18,6 +18,10 @@ generate_struct_definition(struct_name, struct_def, typedefs = NULL)
 
   Struct definition from parsed header
 
+- typedefs:
+
+  Optional data frame of typedefs to resolve type aliases
+
 ## Value
 
 Character vector with R code
