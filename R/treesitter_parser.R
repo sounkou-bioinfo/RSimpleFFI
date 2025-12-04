@@ -365,6 +365,37 @@ ts_count_pointer_stars <- function(declarator_node) {
   count
 }
 
+#' Find function_declarator recursively inside pointer_declarator chain
+#'
+#' For declarations like `int** foo(...)`, the function_declarator is nested
+#' inside multiple pointer_declarator nodes.
+#'
+#' @param node A pointer_declarator node
+#' @return The function_declarator node if found, NULL otherwise
+#' @keywords internal
+ts_find_function_declarator <- function(node) {
+  if (is.null(node)) {
+    return(NULL)
+  }
+
+  child_count <- treesitter::node_child_count(node)
+  for (i in seq_len(child_count)) {
+    child <- treesitter::node_child(node, i)
+    child_type <- treesitter::node_type(child)
+
+    if (child_type == "function_declarator") {
+      return(child)
+    } else if (child_type == "pointer_declarator") {
+      # Recurse into nested pointer_declarator
+      result <- ts_find_function_declarator(child)
+      if (!is.null(result)) {
+        return(result)
+      }
+    }
+  }
+  NULL
+}
+
 #' Get struct type name from a struct_specifier node
 #'
 #' Extracts just the struct name (e.g., "struct Foo") from a struct_specifier
@@ -710,22 +741,11 @@ ts_extract_functions <- function(root_node, source_text) {
             base_return_type <- treesitter::node_text(captures2$node[[i]])
             ptr_declarator <- captures2$node[[i + 1]]
 
-            # Find function_declarator inside pointer_declarator
-            func_declarator <- NULL
-            child_count <- treesitter::node_child_count(ptr_declarator)
-            ptr_count <- 0
+            # Count all pointer stars using AST traversal (handles nested pointers like **)
+            ptr_count <- ts_count_pointer_stars(ptr_declarator)
 
-            for (j in seq_len(child_count)) {
-              child <- treesitter::node_child(ptr_declarator, j)
-              node_type <- treesitter::node_type(child)
-
-              if (node_type == "*") {
-                ptr_count <- ptr_count + 1
-              } else if (node_type == "function_declarator") {
-                func_declarator <- child
-                break
-              }
-            }
+            # Find function_declarator recursively inside pointer_declarator chain
+            func_declarator <- ts_find_function_declarator(ptr_declarator)
 
             if (!is.null(func_declarator)) {
               # Build full return type with pointers
