@@ -5,7 +5,7 @@ Generate R bindings from parsed header
 ## Usage
 
 ``` r
-generate_r_bindings(parsed_header, output_file = NULL)
+generate_r_bindings(parsed_header, output_file = NULL, verbose = FALSE)
 ```
 
 ## Arguments
@@ -17,6 +17,10 @@ generate_r_bindings(parsed_header, output_file = NULL)
 - output_file:
 
   Optional file to write code to
+
+- verbose:
+
+  If TRUE, print progress messages
 
 ## Value
 
