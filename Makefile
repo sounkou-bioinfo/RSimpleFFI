@@ -34,7 +34,7 @@ clean:
 dev-install:
 	R CMD INSTALL --preclean .
 
-dev-test:
+test:
 	R -e 'devtools::test()'
 
 
