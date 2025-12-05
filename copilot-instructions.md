@@ -83,10 +83,31 @@ R -e "rmarkdown::render('README.Rmd')"  # Render README.Rmd to README.md
 R -e "pkgdown::build_site()"     # Build documentation website
 ```
 
-## Code Conventions
+### NEWS.md Updates
 
-### S7 Classes
+### Demos and Examples
 
+- Demos and code examples should be kept succinct and focused. Use the
+  README and vignettes for demonstration code.
+- If a demo requires auxiliary files (headers, data, etc.), place them
+  in `inst/extdata/` or another suitable subfolder under `inst/`.
+- Document any demo-specific requirements in the README or relevant
+  vignette.
+
+### Tests for New Code
+
+- Any new code (functions, features, or API) must have corresponding
+  tests in `tests/testthat/`.
+- If tests require auxiliary files (headers, data, etc.), add them to
+  `inst/extdata/` or another appropriate location under `inst/`.
+- Tests should cover typical usage, edge cases, and error handling for
+  new features.
+
+### Demos
+
+- Demos should be clear, minimal, and reproducible. Use the README and
+  vignettes for demonstration code.
+- Place any required files for demos in `inst/extdata/` or similar.
 - All classes use
   [`S7::new_class()`](https://rconsortium.github.io/S7/reference/new_class.html)
   with `package = "RSimpleFFI"`
@@ -103,6 +124,11 @@ R -e "pkgdown::build_site()"     # Build documentation website
 - Run `devtools::document()` after adding/modifying roxygen comments
 - Use `@export` for public functions, `@keywords internal` for internal
   ones
+
+### NEWS.md
+
+- For any significant feature, bug fix, or API breakage, add a clear
+  entry to `NEWS.md` describing the change and its impact.
 
 ### C Interface
 
@@ -126,6 +152,13 @@ R -e "pkgdown::build_site()"     # Build documentation website
   [`message()`](https://rdrr.io/r/base/message.html) for output** - let
   code results speak for themselves
 - No verbose decorations or formatting in examples
+
+### NEWS.md Style
+
+- Use clear, concise bullet points for each change.
+- Group changes under headings: New Features, Breaking Changes, Bug
+  Fixes, Internal Changes.
+- Always mention API breakages and migration notes if relevant.
 
 ### Output in Package Code
 

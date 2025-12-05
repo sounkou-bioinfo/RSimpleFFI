@@ -106,12 +106,26 @@
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">"rmarkdown::render('README.Rmd')"</span>  <span class="co"># Render README.Rmd to README.md</span></span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">"pkgdown::build_site()"</span>     <span class="co"># Build documentation website</span></span></code></pre></div>
 </div>
-</div>
-<div class="section level2">
-<h2 id="code-conventions">Code Conventions<a class="anchor" aria-label="anchor" href="#code-conventions"></a></h2>
 <div class="section level3">
-<h3 id="s7-classes">S7 Classes<a class="anchor" aria-label="anchor" href="#s7-classes"></a></h3>
-<ul><li>All classes use <code><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">S7::new_class()</a></code> with <code>package = "RSimpleFFI"</code>
+<h3 id="newsmd-updates">NEWS.md Updates<a class="anchor" aria-label="anchor" href="#newsmd-updates"></a></h3>
+</div>
+<div class="section level3">
+<h3 id="demos-and-examples">Demos and Examples<a class="anchor" aria-label="anchor" href="#demos-and-examples"></a></h3>
+<ul><li>Demos and code examples should be kept succinct and focused. Use the README and vignettes for demonstration code.</li>
+<li>If a demo requires auxiliary files (headers, data, etc.), place them in <code>inst/extdata/</code> or another suitable subfolder under <code>inst/</code>.</li>
+<li>Document any demo-specific requirements in the README or relevant vignette.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-for-new-code">Tests for New Code<a class="anchor" aria-label="anchor" href="#tests-for-new-code"></a></h3>
+<ul><li>Any new code (functions, features, or API) must have corresponding tests in <code>tests/testthat/</code>.</li>
+<li>If tests require auxiliary files (headers, data, etc.), add them to <code>inst/extdata/</code> or another appropriate location under <code>inst/</code>.</li>
+<li>Tests should cover typical usage, edge cases, and error handling for new features.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="demos">Demos<a class="anchor" aria-label="anchor" href="#demos"></a></h3>
+<ul><li>Demos should be clear, minimal, and reproducible. Use the README and vignettes for demonstration code.</li>
+<li>Place any required files for demos in <code>inst/extdata/</code> or similar.</li>
+<li>All classes use <code><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">S7::new_class()</a></code> with <code>package = "RSimpleFFI"</code>
 </li>
 <li>Classes have <code>validator</code> functions for property checks</li>
 <li>Use <code>S7::S7_inherits(obj, ClassName)</code> for type checking</li>
@@ -124,6 +138,10 @@
 <strong>Always use roxygen2</strong> for all R function documentation</li>
 <li>Run <code>devtools::document()</code> after adding/modifying roxygen comments</li>
 <li>Use <code>@export</code> for public functions, <code>@keywords internal</code> for internal ones</li>
+</ul></div>
+<div class="section level3">
+<h3 id="newsmd">NEWS.md<a class="anchor" aria-label="anchor" href="#newsmd"></a></h3>
+<ul><li>For any significant feature, bug fix, or API breakage, add a clear entry to <code>NEWS.md</code> describing the change and its impact.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="c-interface">C Interface<a class="anchor" aria-label="anchor" href="#c-interface"></a></h3>
@@ -147,6 +165,12 @@
 <li>
 <strong>Never use <code><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat()</a></code> or <code><a href="https://rdrr.io/r/base/message.html" class="external-link">message()</a></code> for output</strong> - let code results speak for themselves</li>
 <li>No verbose decorations or formatting in examples</li>
+</ul></div>
+<div class="section level3">
+<h3 id="newsmd-style">NEWS.md Style<a class="anchor" aria-label="anchor" href="#newsmd-style"></a></h3>
+<ul><li>Use clear, concise bullet points for each change.</li>
+<li>Group changes under headings: New Features, Breaking Changes, Bug Fixes, Internal Changes.</li>
+<li>Always mention API breakages and migration notes if relevant.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="output-in-package-code">Output in Package Code<a class="anchor" aria-label="anchor" href="#output-in-package-code"></a></h3>

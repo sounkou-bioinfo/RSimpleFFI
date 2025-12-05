@@ -210,7 +210,8 @@
 - [`generate_function_wrapper()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_function_wrapper.md)
   : Generate R function wrapper from parsed function
 - [`generate_package_from_headers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_from_headers.md)
-  : Generate complete package from header files
+  : Generate complete package from header files Generate complete
+  package from header files
 - [`generate_package_init()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_init.md)
   : Generate .onLoad/.onUnload for package
 - [`generate_r_bindings()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.md)

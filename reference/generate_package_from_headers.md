@@ -1,4 +1,4 @@
-# Generate complete package from header files
+# Generate complete package from header files Generate complete package from header files
 
 Creates all necessary R files for a package wrapping a C library.
 Generates a proper R package structure with DESCRIPTION, NAMESPACE, and
@@ -12,6 +12,7 @@ generate_package_from_headers(
   package_name,
   library_name,
   output_dir = package_name,
+  library_path = NULL,
   use_system_lib = TRUE,
   include_helpers = TRUE,
   authors_r = NULL,
@@ -37,6 +38,10 @@ generate_package_from_headers(
 - output_dir:
 
   Directory to create the package (package root)
+
+- library_path:
+
+  Optional: full path to shared library (for custom installs)
 
 - use_system_lib:
 
@@ -72,8 +77,12 @@ generate_package_from_headers(
   package_name = "MyRPackage",
   library_name = "mylib",
   output_dir = "MyRPackage",
+  library_path = "/custom/path/libmylib.so",
   use_system_lib = TRUE,
-  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
+  include_helpers = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))',
+  title = "FFI Bindings to mylib",
+  description = "Auto-generated FFI bindings for mylib."
 )
 } # }
 ```
