@@ -54,12 +54,16 @@ S7::method(ffi_alloc, EnumType) <- function(type, n = 1L) {
   .Call("R_alloc_typed_buffer", type@underlying_type@ref, as.integer(n))
 }
 
+
+
 #' @export
-S7::method(ffi_alloc, S7::class_list) <- function(type, n = 1L) {
-  # Detect bitfield accessor list: must have 'pack', 'unpack', 'get', 'set' functions and field widths
-  if ("bitfield_accessors" %in% attr(type, "class")) {
-    total_bits <- sum(type$field_widths)
-    # Select minimal unsigned type
+S7::method(
+  ffi_alloc,
+  S7::class_list
+) <- function(type, n = 1L) {
+  print(names(type))
+  if (!is.null(type[["is_bitfield"]])) {
+    total_bits <- sum(type[["field_widths"]])
     if (total_bits <= 8) {
       ffi_type <- ffi_uint8()
     } else if (total_bits <= 16) {
@@ -76,8 +80,8 @@ S7::method(ffi_alloc, S7::class_list) <- function(type, n = 1L) {
     }
     return(ffi_alloc(ffi_type, n))
   }
-
-  stop("Unsupported type for ffi_alloc")
+  print("-----")
+  stop(sprintf("Unsupported type %s for ffi_alloc", typeof(type)))
 }
 
 #' Get element from struct array

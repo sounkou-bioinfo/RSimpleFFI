@@ -22,9 +22,11 @@ message("=== htslib FFI Bindings Generator ===\n\n")
 # Find htslib headers
 htslib_dir <- file.path(htslib_root, "include", "htslib")
 if (!dir.exists(htslib_dir)) {
-    stop("htslib headers not found at: ", htslib_dir, "\n",
-         "Install followind instructions here http://www.htslib.org/download/\n",
-         "Or specify custom htslib root as second argument")
+    stop(
+        "htslib headers not found at: ", htslib_dir, "\n",
+        "Install followind instructions here http://www.htslib.org/download/\n",
+        "Or specify custom htslib root as second argument"
+    )
 }
 
 # Determine library location
@@ -35,9 +37,11 @@ if (dir.exists(lib_dir64)) {
 } else if (dir.exists(lib_dir)) {
     lib_path <- lib_dir
 } else {
-    stop("Library directory not found at: ", 
-    lib_dir, " or ", lib_dir64,
-      " Install followind instructions here http://www.htslib.org/download/\n")
+    stop(
+        "Library directory not found at: ",
+        lib_dir, " or ", lib_dir64,
+        " Install followind instructions here http://www.htslib.org/download/\n"
+    )
 }
 
 # Find the actual library file
@@ -111,12 +115,17 @@ for (name in names(result$bindings)) {
 
 # Install
 message("\n=== Installing package ===\n")
-install.packages(output_dir, repos = NULL, type = "source", quiet = TRUE)
+install.packages(output_dir, repos = NULL, type = "source", quiet = FALSE)
 
 # Demo
 message("\n=== Running Demo ===\n\n")
 library(htslibFFI)
-
+ffi_create_bitfield_accessors(
+    list(
+        preserve = 1L
+    )
+) |> names()
+new_hFILE()
 # 1. Get htslib version
 version_ptr <- r_hts_version()
 message("htslib version:", pointer_to_string(version_ptr), "\n\n")

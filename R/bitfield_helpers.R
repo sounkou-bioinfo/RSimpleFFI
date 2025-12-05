@@ -476,61 +476,60 @@ ffi_create_bitfield_accessors <- function(
 
   # Create lookup for field index by name
   field_index <- stats::setNames(seq_along(field_names), field_names)
-  structure(
-    list(
-      # field scpecs
-      .field_names = field_names,
-      .field_widths = field_widths,
-      .field_offsets = field_offsets,
-      # Pack a named list into an integer
-      pack = function(values) {
-        if (!is.list(values)) {
-          stop("values must be a named list")
+
+  list(
+    # Pack a named list into an integer
+    pack = function(values) {
+      if (!is.list(values)) {
+        stop("values must be a named list")
+      }
+
+      int_values <- integer(length(field_names))
+      for (i in seq_along(field_names)) {
+        fname <- field_names[i]
+        if (fname %in% names(values)) {
+          int_values[i] <- as.integer(values[[fname]])
+        } else {
+          int_values[i] <- 0L
         }
+      }
 
-        int_values <- integer(length(field_names))
-        for (i in seq_along(field_names)) {
-          fname <- field_names[i]
-          if (fname %in% names(values)) {
-            int_values[i] <- as.integer(values[[fname]])
-          } else {
-            int_values[i] <- 0L
-          }
-        }
+      ffi_pack_bits(int_values, field_widths, base_type)
+    },
 
-        ffi_pack_bits(int_values, field_widths, base_type)
-      },
+    # Unpack an integer into a named list
+    unpack = function(packed_value) {
+      values <- ffi_unpack_bits(packed_value, field_widths)
+      stats::setNames(as.list(values), field_names)
+    },
 
-      # Unpack an integer into a named list
-      unpack = function(packed_value) {
-        values <- ffi_unpack_bits(packed_value, field_widths)
-        stats::setNames(as.list(values), field_names)
-      },
+    # Get a single field by name
+    get = function(packed_value, field_name) {
+      if (!field_name %in% field_names) {
+        stop(sprintf("Unknown field: %s", field_name))
+      }
+      idx <- field_index[[field_name]]
+      ffi_extract_bit_field(packed_value, field_offsets[idx], field_widths[idx])
+    },
 
-      # Get a single field by name
-      get = function(packed_value, field_name) {
-        if (!field_name %in% field_names) {
-          stop(sprintf("Unknown field: %s", field_name))
-        }
-        idx <- field_index[[field_name]]
-        ffi_extract_bit_field(packed_value, field_offsets[idx], field_widths[idx])
-      },
-
-      # Set a single field by name
-      set = function(packed_value, field_name, new_value) {
-        if (!field_name %in% field_names) {
-          stop(sprintf("Unknown field: %s", field_name))
-        }
-        idx <- field_index[[field_name]]
-        ffi_set_bit_field(
-          packed_value,
-          new_value,
-          field_offsets[idx],
-          field_widths[idx]
-        )
-      },
-      base_type = base_type
-    ),
-    class = "bitfield_accessors"
+    # Set a single field by name
+    set = function(packed_value, field_name, new_value) {
+      if (!field_name %in% field_names) {
+        stop(sprintf("Unknown field: %s", field_name))
+      }
+      idx <- field_index[[field_name]]
+      ffi_set_bit_field(
+        packed_value,
+        new_value,
+        field_offsets[idx],
+        field_widths[idx]
+      )
+    },
+    base_type = base_type,
+    # field scpecs
+    is_bitfield = TRUE,
+    field_names = field_names,
+    field_widths = field_widths,
+    field_offsets = field_offsets
   )
 }
