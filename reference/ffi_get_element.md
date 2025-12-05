@@ -32,7 +32,7 @@ External pointer to the element (no finalizer - parent owns memory)
 ``` r
 if (FALSE) { # \dontrun{
 Point <- ffi_struct(x = ffi_int(), y = ffi_int())
-points <- ffi_alloc(Point, 10L)  # array of 10 Points
+points <- ffi_alloc(Point, 10L) # array of 10 Points
 p3 <- ffi_get_element(points, 3L, Point)
 ffi_set_field(p3, "x", 100L, Point)
 } # }

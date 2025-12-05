@@ -634,10 +634,10 @@
 <span><span class="va">rand_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dll_ffi_symbol.html">dll_ffi_symbol</a></span><span class="op">(</span><span class="st">"rand"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 1956448141</span></span>
+<span><span class="co">#&gt; [1] 1602093335</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 238182657</span></span>
+<span><span class="co">#&gt; [1] 1745510349</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">libc_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -660,7 +660,7 @@
 <span></span>
 <span><span class="co"># Fill the buffer with ASCII 'A' (0x41)</span></span>
 <span><span class="fu">memset_fn</span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fl">0x41</span><span class="op">)</span>, <span class="fl">8L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x5cb8dd675720&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x55d74a8620e0&gt;</span></span>
 <span></span>
 <span><span class="co"># Read back the buffer and print as string</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rawConversion.html" class="external-link">rawToChar</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fl">8L</span>, <span class="va">raw_type</span><span class="op">)</span><span class="op">)</span></span>
@@ -749,8 +749,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 native_r      498µs    818µs     1159.     781KB     11.7</span></span>
-<span><span class="co">#&gt; 2 ffi_call      769µs    858µs     1033.     782KB     21.1</span></span>
+<span><span class="co">#&gt; 1 native_r      259µs    285µs     3462.     781KB     35.0</span></span>
+<span><span class="co">#&gt; 2 ffi_call      384µs    393µs     2506.     782KB     51.1</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -831,7 +831,7 @@
 <span>      <span class="va">out_ptr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span><span class="va">out_ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x5cb8e4a4ed60&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x55d751600ce0&gt;</span></span>
 <span><span class="va">c_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">out_ptr</span>, <span class="va">n_out</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run R convolution</span></span>
@@ -863,8 +863,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 r           53.62ms   64.8ms      14.7     781KB     12.0</span></span>
-<span><span class="co">#&gt; 2 c_ffi        1.02ms   1.43ms     699.      782KB      0</span></span>
+<span><span class="co">#&gt; 1 r            24.6ms   24.8ms      40.1     781KB     26.8</span></span>
+<span><span class="co">#&gt; 2 c_ffi         357µs  433.4µs    2157.      782KB    114.</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -932,7 +932,7 @@
 <span><span class="va">call_expr</span> <span class="op">&lt;-</span> <span class="fu">rf_lang1</span><span class="op">(</span><span class="va">sys_time_sym</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">rf_eval</span><span class="op">(</span><span class="va">call_expr</span>, <span class="va">R_GlobalEnv</span><span class="op">)</span></span>
 <span><span class="fu">rf_REAL_ELT</span><span class="op">(</span><span class="va">result</span>, <span class="fl">0L</span><span class="op">)</span>  <span class="co"># Unix timestamp</span></span>
-<span><span class="co">#&gt; [1] 1764933598</span></span>
+<span><span class="co">#&gt; [1] 1764957289</span></span>
 <span></span>
 <span><span class="co"># Call abs(-42) via C API</span></span>
 <span><span class="va">abs_sym</span> <span class="op">&lt;-</span> <span class="fu">rf_install</span><span class="op">(</span><span class="st">"abs"</span><span class="op">)</span></span>
@@ -972,7 +972,7 @@
 <span></span>
 <span><span class="co"># Preview first part of generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">code</span>, <span class="fl">1</span>, <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 15:19:58.093974\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"</span></span>
+<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 18:54:49.435332\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"</span></span>
 <span></span>
 <span><span class="co"># The generated code includes:</span></span>
 <span><span class="co"># - Constants from #define</span></span>
@@ -1028,8 +1028,8 @@
 <span></span>
 <span><span class="co"># Preview generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">libc_code</span>, <span class="fl">1</span>, <span class="fl">600</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # Auto-generated R bindings for file5a8126b8ace44.h</span></span>
-<span><span class="co">#&gt; # Generated on: 2025-12-05 15:19:58.179585</span></span>
+<span><span class="co">#&gt; # Auto-generated R bindings for filecbe6a18c820d0.h</span></span>
+<span><span class="co">#&gt; # Generated on: 2025-12-05 18:54:49.476592</span></span>
 <span><span class="co">#&gt; # Source hash: 2b4c2eff17ca02fc5e637d979740174c</span></span>
 <span><span class="co">#&gt; #</span></span>
 <span><span class="co">#&gt; # NOTE: These functions expect symbols to be available in the current process.</span></span>
@@ -1077,6 +1077,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Rscript tools/generate_htslib_package.R /tmp/htslibFFI %s"</span>, <span class="va">htslib_root</span><span class="op">)</span>,</span>
 <span>           ignore.stdout <span class="op">=</span> <span class="cn">TRUE</span>, ignore.stderr <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required namespace: htslibFFI</span></span>
+<span><span class="co">#&gt; Loading system library from: /usr/lib/x86_64-linux-gnu/libhts.so.3</span></span>
 <span></span>
 <span><span class="co"># Clean up name conflicts from earlier examples</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"double_t"</span>, <span class="st">"r_abs"</span>, <span class="st">"r_strcmp"</span>, <span class="st">"r_strlen"</span><span class="op">)</span>, envir <span class="op">=</span> <span class="va">.GlobalEnv</span><span class="op">)</span></span>
@@ -1144,7 +1145,7 @@
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".R"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/bindgen_r_api.html">bindgen_r_api</a></span><span class="op">(</span>output_file <span class="op">=</span> <span class="va">outfile</span>, headers <span class="op">=</span> <span class="st">"Rmath.h"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Generated R bindings written to: /tmp/Rtmpd3Li5h/file5a81260e57957.R</span></span>
+<span><span class="co">#&gt; Generated R bindings written to: /tmp/Rtmp8dAOr7/filecbe6a6e060c46.R</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="va">outfile</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">r_Rf_dnorm4</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0L</span><span class="op">)</span></span>
@@ -1238,7 +1239,7 @@
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">2L</span>, <span class="fl">3L</span>, <span class="fl">4L</span>, <span class="fl">5L</span><span class="op">)</span></span>
 <span><span class="va">ptr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sexp_ptr.html">sexp_ptr</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x5cb8e0408618&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x55d74f68d398&gt;</span></span>
 <span></span>
 <span><span class="co"># Call Rf_length via FFI</span></span>
 <span><span class="va">rf_length</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_length"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
