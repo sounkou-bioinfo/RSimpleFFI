@@ -709,10 +709,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 455954976
+#> [1] 584063141
 rand_value <- rand_func()
 rand_value
-#> [1] 955899278
+#> [1] 72162522
 dll_unload(libc_path)
 ```
 
@@ -736,7 +736,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5556d9adacb0>
+#> <pointer: 0x5a437241bd10>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -834,8 +834,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      522µs    642µs     1349.     781KB     13.6
-#> 2 ffi_call      797µs    852µs     1048.     782KB     21.4
+#> 1 native_r      526µs    813µs     1165.     781KB     11.8
+#> 2 ffi_call      831µs    932µs      909.     782KB     18.6
 dll_unload(lib_path)
 ```
 
@@ -918,7 +918,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5556df34a760>
+#> <pointer: 0x5a4375e44630>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -950,8 +950,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r           54.16ms  71.47ms      13.4     781KB     11.0
-#> 2 c_ffi        1.38ms   1.46ms     616.      782KB      0
+#> 1 r            52.3ms   54.7ms      16.4     781KB     13.4
+#> 2 c_ffi       989.3µs    1.4ms     685.      782KB      0
 
 dll_unload(lib_path)
 ```
@@ -1035,7 +1035,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764933026
+#> [1] 1764933309
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1081,7 +1081,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 15:10:25.802326\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 15:15:09.039206\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1139,8 +1139,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file599d032467ba4.h
-#> # Generated on: 2025-12-05 15:10:25.887669
+#> # Auto-generated R bindings for file5a01b45b98a67.h
+#> # Generated on: 2025-12-05 15:15:09.133595
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1180,16 +1180,15 @@ unlink(c(tmpfile, libc_header))
 
 ### Example: Streaming Genomics Data with htslib
 
-Generate bindings for [htslib](https://github.com/samtools/htslib) and
-stream VCF data from the 1000 Genomes Project.
+Generate bindings for [htslib](https://github.com/samtools/htslib) with
+libcurl support and stream VCF data from the 1000 Genomes Project. We’ve
+installed htslib version 1.22 and generate the bindings
 
 ``` r
-# Generate htslibFFI package from system htslib
-if (!dir.exists("/tmp/htslibFFI")) {
-  path <- "./tools/generate_htslib_package.R"
-  system(paste0("Rscript ", path, " /tmp/htslibFFI"), 
-         ignore.stdout = TRUE, ignore.stderr = TRUE)
-}
+# Generate htslibFFI package from custom htslib installation with libcurl
+htslib_root <- "../htslib-install"
+system(sprintf("Rscript tools/generate_htslib_package.R /tmp/htslibFFI %s", htslib_root),
+           ignore.stdout = TRUE, ignore.stderr = TRUE)
 library(htslibFFI)
 #> 
 #> Attaching package: 'htslibFFI'
@@ -1271,7 +1270,7 @@ Generate bindings and call statistical distribution functions directly
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> Generated R bindings written to: /tmp/RtmpRfwhSJ/file599d0599d237b.R
+#> Generated R bindings written to: /tmp/RtmpXsaykm/file5a01b588d32c9.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1379,7 +1378,7 @@ pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x5556dc85d878>
+#> <pointer: 0x5a4373354e48>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
