@@ -67,13 +67,21 @@ R -e "pkgdown::build_site()"     # Build documentation website
 ```
 
 ### NEWS.md Updates
-- **Always update `NEWS.md` for all significant new features, changes, or any API breakage.**
-- Summarize breaking changes, new features, bug fixes, and internal changes in `NEWS.md`.
-- Updating `NEWS.md` is a required step for any feature addition or API change.
 
-## Code Conventions
+### Demos and Examples
+- Demos and code examples should be kept succinct and focused. Use the README and vignettes for demonstration code.
+- If a demo requires auxiliary files (headers, data, etc.), place them in `inst/extdata/` or another suitable subfolder under `inst/`.
+- Document any demo-specific requirements in the README or relevant vignette.
 
-### S7 Classes
+### Tests for New Code
+- Any new code (functions, features, or API) must have corresponding tests in `tests/testthat/`.
+- If tests require auxiliary files (headers, data, etc.), add them to `inst/extdata/` or another appropriate location under `inst/`.
+- Tests should cover typical usage, edge cases, and error handling for new features.
+
+
+### Demos
+- Demos should be clear, minimal, and reproducible. Use the README and vignettes for demonstration code.
+- Place any required files for demos in `inst/extdata/` or similar.
 - All classes use `S7::new_class()` with `package = "RSimpleFFI"`
 - Classes have `validator` functions for property checks
 - Use `S7::S7_inherits(obj, ClassName)` for type checking

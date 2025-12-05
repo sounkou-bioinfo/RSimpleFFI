@@ -23,7 +23,7 @@ message("=== htslib FFI Bindings Generator ===\n\n")
 htslib_dir <- file.path(htslib_root, "include", "htslib")
 if (!dir.exists(htslib_dir)) {
     stop("htslib headers not found at: ", htslib_dir, "\n",
-         "Install with: apt-get install libhts-dev\n",
+         "Install followind instructions here http://www.htslib.org/download/\n",
          "Or specify custom htslib root as second argument")
 }
 
@@ -39,7 +39,10 @@ if (dir.exists(lib_dir64)) {
 }
 
 # Find the actual library file
-lib_files <- list.files(lib_path, pattern = "^libhts\\.so", full.names = TRUE)
+# platform dynlib extensions
+ext <- .Platform$dynlib.ext
+lib_files <- list.files(lib_path, pattern = paste0("^libhts\\", ext), full.names = TRUE)
+# macos
 if (length(lib_files) == 0) {
     stop("libhts.so not found in: ", lib_path)
 }
