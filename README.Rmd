@@ -1003,12 +1003,14 @@ r_hts_close(fp)
 # Display variants
 vcf_lines <- readLines(tmpfile)
 data_lines <- vcf_lines[-(1:grep("^#CHROM", vcf_lines))]
+variants <- character()
 for (line in data_lines) {
   if (nchar(line) > 0) {
     fields <- strsplit(line, "\t")[[1]]
-    sprintf("chr%s:%s %s>%s", fields[1], fields[2], fields[4], fields[5])
+    variants <- c(variants, sprintf("chr%s:%s %s>%s", fields[1], fields[2], fields[4], fields[5]))
   }
 }
+variants
 unlink(tmpfile)
 ```
 
