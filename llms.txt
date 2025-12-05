@@ -31,7 +31,7 @@ Of course this package is inspired by
 library for dynamic ffi calls like `libffi`. The CRAN package
 [rdyncall](https://cran.r-project.org/web/packages/rdyncall/index.html)
 was archived, but there is ongoing project at
-[hongyuanjia/rdyncall)](https://github.com/hongyuanjia/rdyncall) to get
+[hongyuanjia/rdyncall](https://github.com/hongyuanjia/rdyncall) to get
 it back on CRAN.
 
 ## Installation
@@ -709,10 +709,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 52480746
+#> [1] 396978111
 rand_value <- rand_func()
 rand_value
-#> [1] 1548683584
+#> [1] 904293480
 dll_unload(libc_path)
 ```
 
@@ -736,7 +736,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x59b62ec90f30>
+#> <pointer: 0x633978c759b0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -834,8 +834,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      539µs    871µs     1243.     781KB     12.6
-#> 2 ffi_call      799µs    861µs     1067.     782KB     21.8
+#> 1 native_r      530µs    912µs     1207.     781KB     12.2
+#> 2 ffi_call      831µs    893µs     1004.     782KB     20.5
 dll_unload(lib_path)
 ```
 
@@ -918,7 +918,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x59b635a41ad0>
+#> <pointer: 0x63397c9f2ad0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -950,8 +950,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            53.5ms  59.02ms      15.7     781KB     12.8
-#> 2 c_ffi         953µs   1.33ms     777.      782KB      0
+#> 1 r            54.4ms  58.75ms      16.3     781KB     13.4
+#> 2 c_ffi       984.9µs   1.41ms     652.      782KB      0
 
 dll_unload(lib_path)
 ```
@@ -1035,7 +1035,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764920661
+#> [1] 1764920767
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1081,7 +1081,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 11:44:21.489479\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 11:46:07.143448\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1139,8 +1139,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file438a06a1a7bb3.h
-#> # Generated on: 2025-12-05 11:44:21.577322
+#> # Auto-generated R bindings for file43bba8bdee5f.h
+#> # Generated on: 2025-12-05 11:46:07.231314
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1205,7 +1205,7 @@ Generate bindings and call statistical distribution functions directly
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> Generated R bindings written to: /tmp/RtmpjihmoQ/file438a02a353411.R
+#> Generated R bindings written to: /tmp/RtmpRaovHk/file43bba322450ed.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1313,7 +1313,7 @@ pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x59b631c75d88>
+#> <pointer: 0x633978c26ce8>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
