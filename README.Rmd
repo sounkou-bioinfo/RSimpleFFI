@@ -23,7 +23,7 @@ A Simple Foreign Function Interface (FFI) for R using libffi.
 
 RSimpleFFI lets you call C functions from R using the [libffi](https://github.com/libffi/libffi) library. It supports several C types including integers, floats, and platform-specific types. It requires libffi which is available on most R supported plateforms and is vendored in this package for unix systems. It is inspired by the [Rffi package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. We build on the same structure with S7 classes.
 
-As an experimental feature, the package includes automatic R binding generation from C header files. We use the [`tinycc`](https://github.com/tinycc/tinycc) compiler cli for pre-processed C  file generation, allowing  (attempt) to parse C headers and automatically generate R wrapper functions for easy package development using [`treessiter.c`](https://github.com/sounkou-bioinfo/treesitter.c) R binding. The `tinycc` is not used for the in memory compilation facilities but to preprocess the headers given includes and maybe in the future for JIT.
+As an experimental feature, the package includes automatic R binding generation from C header files. We use the [`tinycc`](https://github.com/tinycc/tinycc) compiler cli for pre-processed C  file generation, allowing  (attempt) to parse C headers and automatically generate R wrapper functions for easy package/quick script development using [`treessiter.c`](https://github.com/sounkou-bioinfo/treesitter.c) package. `tinycc` is not used for the in memory compilation facilities but to preprocess the headers given includes and maybe in the future for JIT.
 
 ## Prior Art
 
