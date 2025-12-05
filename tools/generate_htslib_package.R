@@ -35,7 +35,9 @@ if (dir.exists(lib_dir64)) {
 } else if (dir.exists(lib_dir)) {
     lib_path <- lib_dir
 } else {
-    stop("Library directory not found at: ", lib_dir, " or ", lib_dir64)
+    stop("Library directory not found at: ", 
+    lib_dir, " or ", lib_dir64,
+      " Install followind instructions here http://www.htslib.org/download/\n")
 }
 
 # Find the actual library file
