@@ -1,5 +1,12 @@
 # Changelog
 
+## RSimpleFFI 1.2.90000 (Development)
+
+## RSimpleFFI 1.2.0 Release
+
+- An intermediary api Release
+- Some docs polishing and pending notes
+
 ## RSimpleFFI 1.0.1.9002 (Development)
 
 ### New Features
