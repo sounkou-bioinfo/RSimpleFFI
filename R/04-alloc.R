@@ -57,7 +57,7 @@ S7::method(ffi_alloc, EnumType) <- function(type, n = 1L) {
 #' @export
 S7::method(ffi_alloc, S7::class_list) <- function(type, n = 1L) {
   # Detect bitfield accessor list: must have 'pack', 'unpack', 'get', 'set' functions and field widths
-  if ("bitfield_accessors" %in% class(type)) {
+  if ("bitfield_accessors" %in% attr(type, "class")) {
     total_bits <- sum(type$field_widths)
     # Select minimal unsigned type
     if (total_bits <= 8) {
@@ -75,9 +75,9 @@ S7::method(ffi_alloc, S7::class_list) <- function(type, n = 1L) {
       warning("Bitfield accessor allocation is typically for a single packed value; n > 1 is rarely useful.")
     }
     return(ffi_alloc(ffi_type, n))
-  } else {
-    stop("Unsupported type for ffi_alloc")
   }
+
+  stop("Unsupported type for ffi_alloc")
 }
 
 #' Get element from struct array
