@@ -55,7 +55,7 @@ S7::method(ffi_alloc, EnumType) <- function(type, n = 1L) {
 }
 
 #' @export
-S7::method(ffi_alloc, S7::class_any) <- function(type, n = 1L) {
+S7::method(ffi_alloc, S7::class_list) <- function(type, n = 1L) {
   # Detect bitfield accessor list: must have 'pack', 'unpack', 'get', 'set' functions and field widths
   if ("bitfield_accessors" %in% class(type)) {
     total_bits <- sum(type$field_widths)
