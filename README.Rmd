@@ -963,10 +963,15 @@ unlink(c(tmpfile, libc_header))
 Generate bindings for [htslib](https://github.com/samtools/htslib) with libcurl support and stream VCF data from the 1000 Genomes Project. We've installed htslib version 1.22 and generate the bindings 
 
 ```{r}
-# Generate htslibFFI package from custom htslib installation with libcurl
+# Generate htslibFFI package from custom htslib installation with libcurl support
 htslib_root <- "../htslib-install"
+if(!requireNamespace("htslibFFI"))
 system(sprintf("Rscript tools/generate_htslib_package.R /tmp/htslibFFI %s", htslib_root),
            ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+# Clean up name conflicts from earlier examples
+rm(list = c("double_t", "r_abs", "r_strcmp", "r_strlen"), envir = .GlobalEnv)
+
 library(htslibFFI)
 # Open VCF file directly from URL
 vcf_url <- paste0(
