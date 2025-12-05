@@ -55,7 +55,6 @@ S7::method(ffi_alloc, EnumType) <- function(type, n = 1L) {
 }
 
 
-
 #' @export
 S7::method(
   ffi_alloc,
@@ -73,10 +72,14 @@ S7::method(
     } else if (total_bits <= 64) {
       ffi_type <- ffi_uint64()
     } else {
-      stop("Bitfield total width exceeds 64 bits; cannot allocate as a single integer type.")
+      stop(
+        "Bitfield total width exceeds 64 bits; cannot allocate as a single integer type."
+      )
     }
     if (n > 1L) {
-      warning("Bitfield accessor allocation is typically for a single packed value; n > 1 is rarely useful.")
+      warning(
+        "Bitfield accessor allocation is typically for a single packed value; n > 1 is rarely useful."
+      )
     }
     return(ffi_alloc(ffi_type, n))
   }

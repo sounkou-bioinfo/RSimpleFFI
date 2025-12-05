@@ -1,22 +1,12 @@
 test_that("bitfield accessor allocates correct buffer and packs/unpacks", {
     # Create bitfield accessor for 1+3+4 bits
-    acc <- structure(
+    acc <- ffi_create_bitfield_accessors(
         list(
-            field_names = c("enabled", "mode", "priority"),
-            field_widths = c(1L, 3L, 4L),
-            field_offsets = c(0L, 1L, 4L),
-            pack = function(values) {
-                int_values <- c(values$enabled, values$mode, values$priority)
-                ffi_pack_bits(int_values, c(1L, 3L, 4L))
-            },
-            unpack = function(packed_value) {
-                vals <- ffi_unpack_bits(packed_value, c(1L, 3L, 4L))
-                setNames(as.list(vals), c("enabled", "mode", "priority"))
-            }
-        ),
-        class = "bitfield_accessors"
+            enabled = 1L,
+            mode = 3L,
+            priority = 4L
+        )
     )
-
     # Allocate buffer
     ptr <- ffi_alloc(acc)
     expect_true(inherits(ptr, "externalptr"))
@@ -35,7 +25,9 @@ test_that("bitfield accessor allocates correct buffer and packs/unpacks", {
     pack_c <- ffi_function(
         "test_pack_bitfield",
         ffi_uint8(),
-        ffi_uint8(), ffi_uint8(), ffi_uint8()
+        ffi_uint8(),
+        ffi_uint8(),
+        ffi_uint8()
     )
     packed_c <- pack_c(1L, 5L, 12L)
     expect_equal(packed, packed_c)
@@ -44,7 +36,10 @@ test_that("bitfield accessor allocates correct buffer and packs/unpacks", {
     unpack_c <- ffi_function(
         "test_unpack_bitfield",
         ffi_void(),
-        ffi_uint8(), ffi_pointer(), ffi_pointer(), ffi_pointer()
+        ffi_uint8(),
+        ffi_pointer(),
+        ffi_pointer(),
+        ffi_pointer()
     )
     enabled <- as.integer(0)
     mode <- as.integer(0)

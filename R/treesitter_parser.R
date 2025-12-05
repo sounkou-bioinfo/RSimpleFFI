@@ -19,15 +19,18 @@ ffi_parse_header_ts <- function(header_file, includes = NULL) {
     stop("TinyCC not available. Package may not be installed correctly.")
   }
 
-
   preprocessed <- tryCatch(
     tcc_preprocess(header_file, includes = includes),
     error = function(e) {
       message(sprintf(
-        "TCC preprocessing failed for %s: %s", header_file, e$message
+        "TCC preprocessing failed for %s: %s",
+        header_file,
+        e$message
       ))
       warning(sprintf(
-        "TCC preprocessing failed for %s: %s", header_file, e$message
+        "TCC preprocessing failed for %s: %s",
+        header_file,
+        e$message
       ))
       character(0)
     }
@@ -376,7 +379,9 @@ ts_count_pointer_stars <- function(declarator_node) {
   count <- 0
   current <- declarator_node
   # Traverse nested pointer_declarator nodes
-  while (!is.null(current) && treesitter::node_type(current) == "pointer_declarator") {
+  while (
+    !is.null(current) && treesitter::node_type(current) == "pointer_declarator"
+  ) {
     # Each pointer_declarator level has exactly one '*'
     child_count <- treesitter::node_child_count(current)
     for (i in seq_len(child_count)) {
@@ -1055,14 +1060,19 @@ ts_extract_typedefs <- function(root_node, source_text) {
             # Skip typedef'd anonymous structs/unions/enums - these are handled
             # by ts_extract_structs/unions/enums instead
             type_node_type <- treesitter::node_type(type_node)
-            if (type_node_type %in% c("struct_specifier", "union_specifier", "enum_specifier")) {
+            if (
+              type_node_type %in%
+                c("struct_specifier", "union_specifier", "enum_specifier")
+            ) {
               # Check if this is an anonymous definition (has a body)
               has_body <- FALSE
               child_count <- treesitter::node_child_count(type_node)
               for (j in seq_len(child_count)) {
                 child <- treesitter::node_child(type_node, j)
                 child_type <- treesitter::node_type(child)
-                if (child_type %in% c("field_declaration_list", "enumerator_list")) {
+                if (
+                  child_type %in% c("field_declaration_list", "enumerator_list")
+                ) {
                   has_body <- TRUE
                   break
                 }

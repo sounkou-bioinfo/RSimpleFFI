@@ -20,17 +20,21 @@ message("=== R API FFI Bindings Generator ===\n\n")
 # Show available headers using built-in summary function
 message("Checking available R headers...\n")
 header_summary <- bindgen_r_api_summary()
-message("Found", sum(header_summary$exists), "headers in R include directory\n\n")
+message(
+  "Found",
+  sum(header_summary$exists),
+  "headers in R include directory\n\n"
+)
 
 # Get R's include directory
 r_include_dir <- R.home("include")
 
 # Recursively find all header files
 headers_to_parse <- list.files(
-    r_include_dir,
-    pattern = "\\.h$",
-    recursive = TRUE,
-    full.names = TRUE
+  r_include_dir,
+  pattern = "\\.h$",
+  recursive = TRUE,
+  full.names = TRUE
 )
 
 # Filter to existing headers only
@@ -38,7 +42,7 @@ headers_to_parse <- headers_to_parse[file.exists(headers_to_parse)]
 
 message("Will parse", length(headers_to_parse), "headers:\n")
 for (h in headers_to_parse) {
-    message("  -", sub(r_include_dir, "", h), "\n")
+  message("  -", sub(r_include_dir, "", h), "\n")
 }
 message("\n")
 
@@ -46,15 +50,15 @@ message("\n")
 message("Generating package using generate_package_from_headers()...\n\n")
 
 result <- generate_package_from_headers(
-    header_files = headers_to_parse,
-    package_name = "RInternalsFFI",
-    library_name = "R",
-    output_dir = output_dir,
-    use_system_lib = FALSE,
-    include_helpers = TRUE,
-    authors_r = 'person("RSimpleFFI", "Generator", email = "auto@generated.com", role = c("aut", "cre"))',
-    title = "FFI Bindings to R's Internal C API",
-    description = "Auto-generated FFI bindings to R's internal C API functions. Provides direct access to functions from Rinternals.h, Rmath.h, and other R system headers via the RSimpleFFI package."
+  header_files = headers_to_parse,
+  package_name = "RInternalsFFI",
+  library_name = "R",
+  output_dir = output_dir,
+  use_system_lib = FALSE,
+  include_helpers = TRUE,
+  authors_r = 'person("RSimpleFFI", "Generator", email = "auto@generated.com", role = c("aut", "cre"))',
+  title = "FFI Bindings to R's Internal C API",
+  description = "Auto-generated FFI bindings to R's internal C API functions. Provides direct access to functions from Rinternals.h, Rmath.h, and other R system headers via the RSimpleFFI package."
 )
 
 # Custom zzz.R for R API (R symbols are already loaded in the process)
@@ -95,16 +99,16 @@ message("\n=== Generation Complete ===\n")
 message("Package created in:", normalizePath(output_dir), "\n")
 message("Generated files:\n")
 for (f in result$files) {
-    message("  -", basename(f), "\n")
+  message("  -", basename(f), "\n")
 }
 
 # Show binding statistics
 message("\nBinding statistics:\n")
 for (name in names(result$bindings)) {
-    b <- result$bindings[[name]]
-    n_funcs <- if (!is.null(b$functions)) nrow(b$functions) else 0
-    n_structs <- length(b$structs)
-    message(sprintf("  %s: %d functions, %d structs\n", name, n_funcs, n_structs))
+  b <- result$bindings[[name]]
+  n_funcs <- if (!is.null(b$functions)) nrow(b$functions) else 0
+  n_structs <- length(b$structs)
+  message(sprintf("  %s: %d functions, %d structs\n", name, n_funcs, n_structs))
 }
 
 # Install and run demo
@@ -116,9 +120,12 @@ library(RInternalsFFI)
 
 # Load R shared library so symbols are available
 message("Loading R shared library...\n")
-r_lib <- file.path(R.home("lib"), if (.Platform$OS.type == "windows") "R.dll" else "libR.so")
+r_lib <- file.path(
+  R.home("lib"),
+  if (.Platform$OS.type == "windows") "R.dll" else "libR.so"
+)
 if (!file.exists(r_lib) && Sys.info()["sysname"] == "Darwin") {
-    r_lib <- file.path(R.home("lib"), "libR.dylib")
+  r_lib <- file.path(R.home("lib"), "libR.dylib")
 }
 dll_load(r_lib)
 message("Loaded:", r_lib, "\n\n")
