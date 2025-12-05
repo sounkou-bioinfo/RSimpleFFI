@@ -41,7 +41,7 @@ collected, calling through its function pointer will crash.
 
 ## See also
 
-[`ffi_closure_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure_pointer.md)
+[ffi_closure_pointer()](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure_pointer.md)
 to get the callable function pointer
 
 ## Examples

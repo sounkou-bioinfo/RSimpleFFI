@@ -27,5 +27,5 @@ It will invoke the R function when called.
 
 ## See also
 
-[`ffi_closure()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure.md)
+[ffi_closure()](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_closure.md)
 to create closures

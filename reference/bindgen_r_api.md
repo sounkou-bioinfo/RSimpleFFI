@@ -89,9 +89,9 @@ documentation with parameter types and return values.
 
 ## See also
 
-[`ffi_parse_header()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md),
-[`generate_r_bindings()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.md),
-[`ffi_function()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_function.md)
+[ffi_parse_header()](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_parse_header.md),
+[generate_r_bindings()](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_r_bindings.md),
+[ffi_function()](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_function.md)
 
 ## Examples
 
