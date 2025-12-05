@@ -960,15 +960,13 @@ unlink(c(tmpfile, libc_header))
 
 ### Example: Streaming Genomics Data with htslib
 
-Generate bindings for [htslib](https://github.com/samtools/htslib) and stream VCF data from the 1000 Genomes Project.
+Generate bindings for [htslib](https://github.com/samtools/htslib) with libcurl support and stream VCF data from the 1000 Genomes Project. We've installed htslib version 1.22 and generate the bindings 
 
 ```{r}
-# Generate htslibFFI package from system htslib
-if (!dir.exists("/tmp/htslibFFI")) {
-  path <- "./tools/generate_htslib_package.R"
-  system(paste0("Rscript ", path, " /tmp/htslibFFI"), 
-         ignore.stdout = TRUE, ignore.stderr = TRUE)
-}
+# Generate htslibFFI package from custom htslib installation with libcurl
+htslib_root <- "../htslib-install"
+system(sprintf("Rscript tools/generate_htslib_package.R /tmp/htslibFFI %s", htslib_root),
+           ignore.stdout = TRUE, ignore.stderr = TRUE)
 library(htslibFFI)
 # Open VCF file directly from URL
 vcf_url <- paste0(
