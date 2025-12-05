@@ -141,6 +141,7 @@ generate_package_from_headers <- function(
   package_name,
   library_name,
   output_dir = package_name,
+  library_path = NULL,
   use_system_lib = TRUE,
   include_helpers = TRUE,
   authors_r = NULL,
@@ -203,6 +204,7 @@ generate_package_from_headers <- function(
   zzz_code <- generate_package_init(
     library_name,
     package_name,
+    library_path = library_path,
     use_system_lib = use_system_lib
   )
   zzz_file <- file.path(r_dir, "zzz.R")
