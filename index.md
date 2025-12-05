@@ -709,10 +709,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 758042727
+#> [1] 290781644
 rand_value <- rand_func()
 rand_value
-#> [1] 493860277
+#> [1] 1997991429
 dll_unload(libc_path)
 ```
 
@@ -736,7 +736,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5ceb7e99d3a0>
+#> <pointer: 0x60c5edc14b20>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -834,8 +834,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      528µs    786µs     1237.     781KB     12.5
-#> 2 ffi_call      816µs    920µs     1019.     782KB     20.8
+#> 1 native_r      532µs 701.57µs     1210.     781KB     12.2
+#> 2 ffi_call      827µs   1.04ms      896.     782KB     18.3
 dll_unload(lib_path)
 ```
 
@@ -918,7 +918,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5ceb7f754400>
+#> <pointer: 0x60c5f4a4c330>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -950,8 +950,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            54.9ms  65.52ms      15.0     781KB     12.3
-#> 2 c_ffi       985.7µs   1.43ms     670.      782KB      0
+#> 1 r           68.15ms  87.14ms      11.3     781KB     9.26
+#> 2 c_ffi        1.07ms   1.75ms     539.      782KB     0
 
 dll_unload(lib_path)
 ```
@@ -1035,7 +1035,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764932694
+#> [1] 1764932812
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1081,7 +1081,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 15:04:54.454288\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 15:06:51.665441\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1139,8 +1139,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file590b2225178e1.h
-#> # Generated on: 2025-12-05 15:04:54.542016
+#> # Auto-generated R bindings for file593dd26d4ce1f.h
+#> # Generated on: 2025-12-05 15:06:51.764003
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1234,12 +1234,15 @@ r_hts_close(fp)
 # Display variants
 vcf_lines <- readLines(tmpfile)
 data_lines <- vcf_lines[-(1:grep("^#CHROM", vcf_lines))]
+variants <- character()
 for (line in data_lines) {
   if (nchar(line) > 0) {
     fields <- strsplit(line, "\t")[[1]]
-    sprintf("chr%s:%s %s>%s", fields[1], fields[2], fields[4], fields[5])
+    variants <- c(variants, sprintf("chr%s:%s %s>%s", fields[1], fields[2], fields[4], fields[5]))
   }
 }
+variants
+#> [1] "chrchr21:5030578 C>T" "chrchr21:5030588 T>C" "chrchr21:5030596 A>G"
 unlink(tmpfile)
 ```
 
@@ -1273,7 +1276,7 @@ Generate bindings and call statistical distribution functions directly
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> Generated R bindings written to: /tmp/RtmplxOo4V/file590b26b17915.R
+#> Generated R bindings written to: /tmp/RtmpVZVyf6/file593dd4361f754.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1381,7 +1384,7 @@ pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x5ceb7bb972f8>
+#> <pointer: 0x60c5f0a8a2b8>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
