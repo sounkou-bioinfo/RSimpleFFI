@@ -11,6 +11,7 @@
 
 #' @keywords internal
 .onUnload <- function(libpath) {
+  library(RSimpleFFI) # to get the S7 generics
   if (!is.null(.{{LIBRARY_NAME}}_lib)) {
     dll_unload(.{{LIBRARY_NAME}}_lib)
   }
