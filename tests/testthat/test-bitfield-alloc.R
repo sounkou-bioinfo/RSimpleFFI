@@ -21,6 +21,31 @@ test_that("bitfield accessor allocates correct buffer and packs/unpacks", {
     expect_equal(unpacked$mode, 5L)
     expect_equal(unpacked$priority, 12L)
 
+    # Write packed value into allocated buffer and exercise pointer-based C APIs
+    # Fill the typed buffer (ptr) with the packed value. Use signed 32-bit
+    # writer because R helper currently supports int32, double and raw only.
+    ffi_fill_typed_buffer(ptr, as.integer(packed), ffi_int32())
+
+    # Call C function that reads mode from a SettingsFlags* pointer
+    get_mode_ptr <- ffi_function(
+        "test_bitfield_struct_ptr_get_mode",
+        ffi_int(),
+        ffi_pointer()
+    )
+    mode_from_ptr <- get_mode_ptr(ptr)
+    expect_equal(as.integer(mode_from_ptr), 5L)
+
+    # Call C function that sets mode via pointer and verify change
+    set_mode_ptr <- ffi_function(
+        "test_bitfield_struct_ptr_set_mode",
+        ffi_void(),
+        ffi_pointer(),
+        ffi_int()
+    )
+    set_mode_ptr(ptr, 7L)
+    mode_after_set <- get_mode_ptr(ptr)
+    expect_equal(as.integer(mode_after_set), 7L)
+
     # Compare with C bitfield packing
     pack_c <- ffi_function(
         "test_pack_bitfield",
