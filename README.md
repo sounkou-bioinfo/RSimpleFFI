@@ -5,49 +5,57 @@
 
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/R-CMD-check.yaml)[![RSimpleFFI
 status
-badge](https://sounkou-bioinfo.r-universe.dev/RSimpleFFI/badges/version)](https://sounkou-bioinfo.r-universe.dev/RSimpleFFI)
+badge](https://sounkou-bioinfo.r-universe.dev/RSimpleFFI/badges/version)](https://sounkou-bioinfo.r-universe.dev/RSimpleFFI)[![R-hub](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/rhub.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RSimpleFFI/actions/workflows/rhub.yaml)
 <!-- badges: end -->
 
 A Simple Foreign Function Interface (FFI) for R using libffi.
 
-## Overview
+## Abstract
 
 RSimpleFFI lets you call C functions from R using the
 [libffi](https://github.com/libffi/libffi) library. It supports several
-C types including integers, floats, and platform-specific types. It only
-needs libffi which is available on most systems and is vendored in this
-package for unix systems. RSimpleFFI is inspired by the [Rffi
-package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. It
-builds on the same structure with S7 classes. As an experimental
-feature, the package includes automatic R binding generation from C
-header files using the [`tinycc`](https://github.com/tinycc/tinycc)
-compiler cli for preprocessed c file generation, allowing (attempt) to
-parse C headers and automatically generate R wrapper functions for easy
-package development using
-[treessiter.c](https://github.com/sounkou-bioinfo/treesitter.c) R
+C types including integers, floats, and platform-specific types. It
+requires libffi which is available on most R supported plateforms and is
+vendored in this package for unix systems. It is inspired by the [Rffi
+package](https://github.com/omegahat/Rffi/) by Duncan Temple Lang. We
+build on the same structure with S7 classes.
+
+As an experimental feature, the package includes automatic R binding
+generation from C header files. We use the
+[`tinycc`](https://github.com/tinycc/tinycc) compiler cli for
+pre-processed C file generation, allowing (attempt) to parse C headers
+and automatically generate R wrapper functions for easy package
+development using
+[`treessiter.c`](https://github.com/sounkou-bioinfo/treesitter.c) R
 binding. The `tinycc` is not used for the in memory compilation
 facilities but to preprocess the headers given includes and maybe in the
 future for JIT.
 
+## Prior Art
+
+Of course this package is inspired by
+[Rffi](https://github.com/omegahat/Rffi).
+[`Dyncall`](https://dyncall.org/docs/dynload.3.html) is an alternative C
+library for dynamic ffi calls like `libffi`. The CRAN package
+[rdyncall](https://cran.r-project.org/web/packages/rdyncall/index.html)
+was archived, but there is ongoing project at
+[hongyuanjia/rdyncall)](https://github.com/hongyuanjia/rdyncall) to get
+it back on CRAN.
+
 ## Installation
 
 You can install RSimpleFFI from source using the `remotes` package or
-via r-universe
+via r-universe. On windows, it requires libffi to be installed along
+with pkg-config : this is always the case with recent
+[RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html).
+On Unix-alikes libffi is always built from source.
 
 ``` r
 # r-universe
-
 install.packages('RSimpleFFI', repos = c('https://sounkou-bioinfo.r-universe.dev', 'https://cloud.r-project.org'))
-
 # remotes
-
 remotes::install_git("sounkou-bioinfo/RSimpleFFI")
 ```
-
-on windows, it requires libffi to be installed along with pkg-config :
-this is always the case with recent
-[RTools](https://cran.r-project.org/bin/windows/Rtools/rtools45/news.html).
-On Unix-alikes libffi is always built from source.
 
 ## Quick Start
 
@@ -75,9 +83,13 @@ result
 ## Type System
 
 RSimpleFFI supports many C types including integers, floats, and
-platform-specific types
+platform-specific types. Types are C backed S7 objects, they hold in C
+structs informations about alignments, sizes, libffi internal types that
+are used when we call C functions.
 
 ### Basic Types
+
+These are C basic types mostly mirroring libffi types
 
 ``` r
 void_type <- ffi_void()
@@ -132,8 +144,8 @@ ffi_copy_array(double_buf, 5L, double_type)
 ### Array Types (ArrayType)
 
 Array types can be created using `ffi_array_type()` and used with
-`ffi_alloc()` and `ffi_copy_array_type()`. They provide a convenient way
-to handle fixed-size arrays and passed them to C functions via pointers.
+`ffi_alloc()` and `ffi_copy_array_type()`. They is a way to handle
+fixed-size arrays and passed them to C functions via pointers
 
 ``` r
 # Allocate an array of 4 integers
@@ -155,7 +167,7 @@ result
 ### Struct Types
 
 You can define and use C struct types using `ffi_struct()`,
-`ffi_alloc()`, `ffi_get_field()`, and `ffi_set_field()`
+`ffi_alloc()`, `ffi_get_field()`, `ffi_set_field()` and allied
 
 ``` r
 
@@ -226,12 +238,12 @@ label  # string fields are returned directly as character
 ```
 
 You can define more complex structs by adding more fields and using any
-supported FFI type.
+supported FFI type
 
 ### Struct Arrays
 
 You can allocate contiguous arrays of structs and access elements by
-index:
+index
 
 ``` r
 # Define a Point struct
@@ -257,8 +269,8 @@ ffi_get_field(p3, "y", Point)
 
 ### Field Introspection
 
-Use `ffi_field_info()`, `ffi_offsetof()`, and `ffi_all_offsets()` to
-inspect struct layout:
+Use `ffi_field_info()`, `ffi_offsetof()`, `ffi_all_offsets()` and the
+packed struct versions to inspect struct types’ layout
 
 ``` r
 # Struct with alignment padding: int (4) + padding (4) + double (8) = 16 bytes
@@ -285,7 +297,7 @@ ffi_field_info(Mixed, "b")
 ### Struct Packing
 
 By default, structs use natural alignment (platform ABI). Use the `pack`
-parameter to control alignment, matching C’s `#pragma pack(n)`:
+parameter to control alignment, matching C’s `#pragma pack(n)`
 
 ``` r
 # Natural alignment: int (4) + padding (4) + double (8) = 16 bytes
@@ -305,8 +317,8 @@ ffi_offsetof(Packed, "b")   # 4 (immediately after int)
 #> [1] 4
 ```
 
-Pack values work like GCC/Clang/MSVC: each field’s alignment is
-`min(natural_alignment, pack)`.
+Pack values work like GCC/Clang/MSVC meaning each field’s alignment is
+`min(natural_alignment, pack)`
 
 ``` r
 # .pack=2: fields aligned to at most 2-byte boundaries
@@ -322,7 +334,7 @@ ffi_sizeof(Pack4)  # 12 bytes
 #> [1] 12
 ```
 
-Use `ffi_all_offsets()` to see the complete layout:
+Use `ffi_all_offsets()` to see the complete layout
 
 ``` r
 # Compare layouts
@@ -426,10 +438,18 @@ ffi_get_field(data_ptr, "as_float", Value)
 
 ## Function Calling
 
+After definining types for input and output arguments, we can called
+availaible C callables after some call preparation. We need to find the
+native function adress with functions like `ffi_symbol` (and the dll\_\*
+versions) ,`ffi_cif` creates the context required for a libffi call. We
+can then call using `ffi_call`. `ffi_function` is a more stremalined
+version
+
 ### Basic Function Calls
 
 The package comes with some built-in C test functions for testing, they
-are defined in [src/test_functions.c](src/test_functions.c)
+are defined in [src/test\_functions.c](src/test_functions.c) and are
+accessible when the package is loaded.
 
 ``` r
 void_func <- ffi_symbol("test_void_function")
@@ -444,7 +464,7 @@ factorial_result
 #> [1] 120
 ```
 
-#### Testing Integer Types
+#### Some Integer Types examples
 
 ``` r
 # test_int8_func: returns input + 1
@@ -495,17 +515,23 @@ float_result
 
 This calls a C function that returns a string (const char\*). With
 `ffi_string()` type, strings are returned directly as R character
-vectors.
+vectors, usually it is advised to use `ffi_pointer` and explicitly
+convert them after. Care should be taken to the lifetime of the return
+external pointers
 
 ``` r
 string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
-string_result  # returned directly as character
+string_result  
 #> [1] "Hello from C!"
 ```
 
 #### Struct Types
+
+For structs, arrays and more complex types, you need to allocate your
+struct after defining the types. They allocated data are managed by R
+finalizers so there should be no special concerns around their lifetime.
 
 ``` r
 # Define struct type: struct Point { int x; double y; }
@@ -528,7 +554,7 @@ result_x
 
 RSimpleFFI converts between R and C types following C99 semantics.
 Doubles are truncated to integers, overflow uses modular arithmetic, and
-negative values convert to unsigned types via two’s complement (e.g.,
+negative values convert to unsigned types via two’s complement (e.g
 `-1L` -\> `uint8` = 255). Large integers (64-bit) return as doubles and
 may lose precision beyond 2^53.
 
@@ -599,11 +625,11 @@ double_fn(NaN, 5.0)  # NaN + 5 = NaN
 #> [1] NaN
 ```
 
-### Closures (R callbacks for C)
+### Closures and R callbacks for C
 
 The closure API lets you wrap R functions as C callbacks. This is useful
 when C code expects a function pointer (e.g., qsort comparator, event
-handlers).
+handlers) and you want to use an R function
 
 ``` r
 # Create an R function to use as callback
@@ -626,12 +652,12 @@ test_callback_fn <- ffi_function(
  ffi_int()
 )
 
-test_callback_fn(callback_ptr, 5L)  # 5 + 10 = 15
+test_callback_fn(callback_ptr, 5L) 
 #> [1] "adding 5 to 10"
 #> [1] 15
 ```
 
-Closures work with any signature:
+Closures work with any signature RSimpleFFI supports
 
 ``` r
 # double (*transform)(double)
@@ -654,9 +680,13 @@ test_double_callback_fn(ffi_closure_pointer(square_closure), 4.0)
 You can load external shared libraries at runtime using RSimpleFFI’s
 `dll_load()` and `dll_ffi_symbol()` functions. These are wrappers around
 R’s native `dyn.load()` facilities that search for shared libraries in
-system paths when required.
+system paths when required. It is advised to used the other more
+explicit path definition version
 
 #### Search so files in system paths
+
+On some systems libc symbols are not already accessible in the R
+process’ adress space, so this example loads it
 
 ``` r
 # Example: call the C standard library rand() function
@@ -665,14 +695,16 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 934962216
+#> [1] 52480746
 rand_value <- rand_func()
 rand_value
-#> [1] 452855221
+#> [1] 1548683584
 dll_unload(libc_path)
 ```
 
 #### Explicitly load shared libraries
+
+This is the preferred method to load libraries
 
 ``` r
 # Find the libc shared object (libc is always present)
@@ -690,7 +722,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5f716d1266d0>
+#> <pointer: 0x59b62ec90f30>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -704,8 +736,8 @@ dll_unload(lib_path)
 
 ### Compile and Load C Code
 
-The package provides facilities to load C code on the fly. The compiler
-uses R CMD SHLIB under the hood
+The package provides facilities to load C code on the fly. The
+compilation uses `R CMD SHLIB` under the hood
 
 ``` r
 c_code <- '
@@ -747,15 +779,21 @@ dll_unload(lib_path)
 ## Benchmarking
 
 We run some benchmarks to estimate the performance of FFI calls (i.e the
-overhead of calling C functions from R using RSimpleFFI) compared to
-native R C built-in functions.
+overhead of calling C functions from R using RSimpleFFI ) compared to
+native R C built-in functions. We would expect some overhead of the
+marshalling performed by the package and libffi. So this will be added
+to the `.Call` overhead. So for more performance critical applications
+and availability of time, making the usual `.Call` interface `SEXP`
+wrappers is more advisable
 
 ### R builtin C functions
 
+Here we compare to the builtin R C functions
+
 ``` r
 
-set.seed(123)
-n <- 10000
+set.seed(1995)
+n <- 100000
 x_vec <- runif(n, 1, 100)
 x_ptr <- ffi_alloc(ffi_double(), n)
 ffi_fill_typed_buffer(x_ptr, x_vec, ffi_double())
@@ -768,6 +806,7 @@ void vec_sqrt(const double* x, double* out, int n) {
     for (int i = 0; i < n; ++i) out[i] = sqrt(x[i]);
 }
 '
+
 lib_path <- dll_compile_and_load(math_code, "bench_vec", libs = "m", cflags = "-O3")
 vec_sqrt_func <- dll_ffi_symbol("vec_sqrt", ffi_void(), ffi_pointer(), ffi_pointer(), ffi_int())
 
@@ -781,14 +820,15 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r     13.1µs   29.3µs    33870.    78.2KB        0
-#> 2 ffi_call    103.1µs  108.1µs     8879.    78.7KB        0
+#> 1 native_r      539µs    871µs     1243.     781KB     12.6
+#> 2 ffi_call      799µs    861µs     1067.     782KB     21.8
 dll_unload(lib_path)
 ```
 
-### Interpreted R Code
+### Compared to interpreted R Code
 
-We compare a pure C convolution (via FFI) to a simple R implementation.
+Let’s compare a pure C convolution to a simple R implementation. This is
+classic benchmark due to the loop overhead in R even with the JIT
 
 ``` r
 # Slow R convolution
@@ -821,7 +861,7 @@ void c_convolve(const double* signal, int n_signal, const double* kernel, int n_
 '
 
 set.seed(1995)
-signal <- rnorm(10000)
+signal <- rnorm(100000)
 kernel <- c(0.2, 0.5, 0.3)
 n_signal <- length(signal)
 n_kernel <- length(kernel)
@@ -864,7 +904,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5f717002e610>
+#> <pointer: 0x59b635a41ad0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -896,19 +936,19 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            2.48ms   2.58ms      383.    78.2KB     20.1
-#> 2 c_ffi      118.62µs 130.18µs     7227.    78.7KB      0
+#> 1 r            53.5ms  59.02ms      15.7     781KB     12.8
+#> 2 c_ffi         953µs   1.33ms     777.      782KB      0
 
 dll_unload(lib_path)
 ```
 
-## Dangerous: Calling R API Exported Symbols
+## Some `Dangerous` Call to R API Exported Symbols
 
-Since `libR.so` is loaded we can use its exported symbols and functions.
-This allows calling R’s internal C API directly via FFI - the same
-functions that R packages use in their C code. This is for educational
-purposes only! Calling R internals incorrectly can crash R or corrupt
-memory.
+Since `libR.so` is loaded (on unix systems) we can use its exported
+symbols and functions. This allows calling R’s internal C API directly
+via FFI - the same functions that R packages use in their C code. This
+is for educational purposes only\! Calling R internals incorrectly can
+crash R or corrupt memory.
 
 ``` r
 # Rf_ScalarInteger - create an R integer scalar (returns SEXP pointer)
@@ -979,7 +1019,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764880579
+#> [1] 1764920661
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -993,8 +1033,12 @@ rf_INTEGER_ELT(abs_result, 0L)
 ## Header Parsing and Code Generation
 
 RSimpleFFI can parse C header files using
-[tinycc](https://github.com/tinycc/tinycc) and automatically generate R
-bindings, making it easy to create R packages that wrap C libraries.
+[tinycc](https://github.com/tinycc/tinycc) to generate preprocessed
+headers, use the c grammar and treesitter.c package to automatically
+generate R bindings, making it easy to create R packages that wrap C
+libraries. These will required manual review. It is preferable to not
+include system includes to avoid junk type definitons and helpers which
+are of no interest or clash with tinycc’s standard library
 
 ### Parse Headers
 
@@ -1021,7 +1065,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-04 21:36:18.947716\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 11:44:21.489479\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1058,7 +1102,8 @@ unlink(tmpfile)
 
 ### Generate Bindings for System Libraries
 
-Let’s create bindings for real C library functions:
+Let’s create bindings for real C library functions. This is the prefered
+way to avoid extraneous includes.
 
 ``` r
 # Create a simple header with libc function signatures
@@ -1078,8 +1123,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file9cb6e648c7e72.h
-#> # Generated on: 2025-12-04 21:36:18.984284
+#> # Auto-generated R bindings for file438a06a1a7bb3.h
+#> # Generated on: 2025-12-05 11:44:21.577322
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1122,11 +1167,11 @@ unlink(c(tmpfile, libc_header))
 The `bindgen_r_api()` function parses R’s own header files
 (Rinternals.h, Rmath.h) and generates FFI bindings. This provides access
 to R’s internal C functions without writing C code. Educational purpose
-only ! (also to test the parsing code)
+only and to test the parsing code logic \! Scripts in [tools](./tools)
+will provide more interesting examples.
 
 ``` r
 result <- bindgen_r_api(headers = c("Rinternals.h", "Rmath.h"))
-
 names(result)
 #> [1] "Rinternals" "Rmath"
 length(result$Rinternals$functions)
@@ -1136,12 +1181,12 @@ names(result$Rinternals$enums)
 #> [4] "cetype_t"           "R_pstream_format_t"
 ```
 
-Generate bindings and call statistical distribution functions directly:
+Generate bindings and call statistical distribution functions directly
 
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> Generated R bindings written to: /tmp/RtmpTJnKcR/file9cb6e5d072848.R
+#> Generated R bindings written to: /tmp/RtmpjihmoQ/file438a02a353411.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1169,6 +1214,8 @@ unlink(outfile)
 
 ### Create R Packages
 
+We can create R package scafolds from some headers
+
 ``` r
 # Generate complete package scaffolding
 tmpdir <- tempfile()
@@ -1189,6 +1236,17 @@ list.files(tmpdir)
 list.files(file.path(tmpdir, "R"))
 #> [1] "helpers.R"               "simple_types_bindings.R"
 #> [3] "zzz.R"
+```
+
+### Binding Generation
+
+The `bindgen_r_api()` function parses R’s C headers and generates
+wrapper functions automatically. This is for testing the parser mostly,
+using this is discourage \!
+
+``` r
+# Generate bindings for all R headers
+bindgen_r_api(output_file = "r_bindings.R", verbose = TRUE)
 ```
 
 ### Helper Functions
@@ -1219,11 +1277,34 @@ ffi_print_struct(pt, Point)
 #>   y (int): 20
 ```
 
-## Limitations
+### SEXP Pointer Helpers
 
-Current limitations include unnecessary copying, lack of protection,
-potential memory leaks, and type objects are C pointers that are never
-finalized.
+When calling R’s internal C API via FFI, you need pointers to R objects
+(SEXP). The `sexp_ptr()` and `data_ptr()` helpers extract pointers while
+preventing garbage collection via `R_PreserveObject`. Protection is
+automatically released when the pointer is garbage collected.
+
+``` r
+x <- c(1L, 2L, 3L, 4L, 5L)
+ptr <- sexp_ptr(x)
+ptr
+#> <pointer: 0x59b631c75d88>
+
+# Call Rf_length via FFI
+rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
+rf_length(ptr)
+#> [1] 5
+```
+
+## Limitations and issues of note
+
+Current limitations include some unnecessary copying, potential memory
+leaks and the fact that our type objects are C pointers that are never
+and should never be finalized.
+[`rchck`](https://github.com/kalibera/rchk) is regularly used to detect
+potential issues. Care should be taken to the lifetime of returned and
+create memory because we are interacting like we are in `C` after all \!
+Some other specific issues are described below
 
 ### Bit-fields
 
@@ -1313,7 +1394,7 @@ settings$get(packed, "priority")
 #> [1] 10
 ```
 
-Helper functions: `ffi_pack_bits()`, `ffi_unpack_bits()`,
+Some helper functions `ffi_pack_bits()`, `ffi_unpack_bits()`,
 `ffi_extract_bit_field()`, `ffi_set_bit_field()`,
 `ffi_create_bitfield_accessors()`.
 
@@ -1366,56 +1447,22 @@ ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 Struct/union passing by value may be unreliable across platforms. Packed
 structs cannot be passed by value (libffi limitation). Prefer pointers.
 
-## Miscellaneous Utils
-
-### SEXP Pointer Helpers
-
-When calling R’s internal C API via FFI, you need pointers to R objects
-(SEXP). The `sexp_ptr()` and `data_ptr()` helpers extract pointers while
-preventing garbage collection via `R_PreserveObject`. Protection is
-automatically released when the pointer is garbage collected.
-
-``` r
-x <- c(1L, 2L, 3L, 4L, 5L)
-ptr <- sexp_ptr(x)
-ptr
-#> <pointer: 0x5f7171648eb8>
-
-# Call Rf_length via FFI
-rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
-rf_length(ptr)
-#> [1] 5
-```
-
-### Binding Generation
-
-The `bindgen_r_api()` function parses R’s C headers and generates
-wrapper functions automatically. This is for testing the parser mostly,
-using this is discourage !
-
-``` r
-# Generate bindings for all R headers
-bindgen_r_api(output_file = "r_bindings.R", verbose = TRUE)
-```
-
-## License
+# License
 
 This project is licensed under the GPL-3 License.
 
 # References
 
-- [Rffi](https://github.com/omegahat/Rffi)
+  - [Rffi](https://github.com/omegahat/Rffi)
 
-- [libffi](https://github.com/libffi/libffi) - Portable foreign function
-  interface library
+  - [libffi](https://github.com/libffi/libffi) - Portable foreign
+    function interface library
 
-- [tinycc](https://github.com/tinycc/tinycc) - Tiny C Compiler used for
-  header parsing
+  - [tinycc](https://github.com/tinycc/tinycc) - Tiny C Compiler used
+    for header parsing
 
-- [libffi
-  Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
+  - [libffi
+    Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
 
-- [CPython’s ctypes
-  module](https://docs.python.org/3/library/ctypes.html)
-
-- [purectypes repo](https://github.com/aguinet/purectypes.git)
+  - [CPython’s ctypes
+    module](https://docs.python.org/3/library/ctypes.html)

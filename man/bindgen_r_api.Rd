@@ -79,5 +79,5 @@ bindgen_r_api(
 
 }
 \seealso{
-\code{\link[=ffi_parse_header]{ffi_parse_header()}}, \code{\link[=generate_r_bindings]{generate_r_bindings()}}, \code{\link[=ffi_function]{ffi_function()}}
+\link[RSimpleFFI:ffi_parse_header]{ffi_parse_header()}, \link[RSimpleFFI:generate_r_bindings]{generate_r_bindings()}, \link[RSimpleFFI:ffi_function]{ffi_function()}
 }

@@ -21,5 +21,5 @@ The returned pointer can be passed to C functions via \code{ffi_call()}.
 It will invoke the R function when called.
 }
 \seealso{
-\code{\link[=ffi_closure]{ffi_closure()}} to create closures
+\link[RSimpleFFI:ffi_closure]{ffi_closure()} to create closures
 }

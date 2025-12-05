@@ -56,7 +56,7 @@
 #' # r_Rf_dnorm4(0, 0, 1, 0L)  # same as dnorm(0, 0, 1)
 #' }
 #'
-#' @seealso [ffi_parse_header()], [generate_r_bindings()], [ffi_function()]
+#' @seealso \link[RSimpleFFI:ffi_parse_header]{ffi_parse_header()}, \link[RSimpleFFI:generate_r_bindings]{generate_r_bindings()}, \link[RSimpleFFI:ffi_function]{ffi_function()}
 #' @export
 bindgen_r_api <- function(
   output_file = NULL,

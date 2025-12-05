@@ -379,7 +379,7 @@ ffi_closures_supported <- function() {
 #' cmp_ptr <- ffi_closure_pointer(cmp_closure)
 #' }
 #'
-#' @seealso [ffi_closure_pointer()] to get the callable function pointer
+#' @seealso \link[RSimpleFFI:ffi_closure_pointer]{ffi_closure_pointer()} to get the callable function pointer
 #' @export
 ffi_closure <- function(r_function, return_type, ...) {
   if (!is.function(r_function)) {
@@ -419,7 +419,7 @@ ffi_closure <- function(r_function, return_type, ...) {
 #' The returned pointer can be passed to C functions via `ffi_call()`.
 #' It will invoke the R function when called.
 #'
-#' @seealso [ffi_closure()] to create closures
+#' @seealso \link[RSimpleFFI:ffi_closure]{ffi_closure()} to create closures
 #' @export
 ffi_closure_pointer <- function(closure) {
   if (!S7::S7_inherits(closure, FFIClosure)) {

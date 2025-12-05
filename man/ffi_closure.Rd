@@ -51,5 +51,5 @@ cmp_ptr <- ffi_closure_pointer(cmp_closure)
 
 }
 \seealso{
-\code{\link[=ffi_closure_pointer]{ffi_closure_pointer()}} to get the callable function pointer
+\link[RSimpleFFI:ffi_closure_pointer]{ffi_closure_pointer()} to get the callable function pointer
 }
