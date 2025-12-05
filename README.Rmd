@@ -965,28 +965,24 @@ Generate bindings for [htslib](https://github.com/samtools/htslib) and stream VC
 ```{r}
 # Generate htslibFFI package from system htslib
 if (!dir.exists("/tmp/htslibFFI")) {
-  system("Rscript tools/generate_htslib_package.R /tmp/htslibFFI", 
+  path <- "./tools/generate_htslib_package.R"
+  system(paste0("Rscript ", path, " /tmp/htslibFFI"), 
          ignore.stdout = TRUE, ignore.stderr = TRUE)
 }
-
 library(htslibFFI)
-
 # Open VCF file directly from URL
 vcf_url <- paste0(
   "https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/",
   "1000G_2504_high_coverage/working/20220422_3202_phased_SNV_INDEL_SV/",
   "1kGP_high_coverage_Illumina.chr21.filtered.SNV_INDEL_SV_phased_panel.vcf.gz"
 )
-
 fp <- r_hts_open(vcf_url, "r")
 hdr <- r_bcf_hdr_read(fp)
-
 # Read first 3 variants
 rec <- r_bcf_init()
 tmpfile <- tempfile(fileext = ".vcf")
 outfp <- r_hts_open(tmpfile, "w")
 r_vcf_hdr_write(outfp, hdr)
-
 count <- 0
 while (count < 3) {
   if (r_bcf_read(fp, hdr, rec) < 0) break
@@ -994,12 +990,11 @@ while (count < 3) {
   r_vcf_write(outfp, hdr, rec)
   count <- count + 1
 }
-
+# cleanup in C
 r_hts_close(outfp)
 r_bcf_destroy(rec)
 r_bcf_hdr_destroy(hdr)
 r_hts_close(fp)
-
 # Display variants
 vcf_lines <- readLines(tmpfile)
 data_lines <- vcf_lines[-(1:grep("^#CHROM", vcf_lines))]
