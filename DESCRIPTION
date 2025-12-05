@@ -1,5 +1,5 @@
 Package: RSimpleFFI
-Version: 1.2.0.9000
+Version: 1.2.0.90000
 Title: Simple Foreign Function Interface using 'S7' and 'libffi'
 Description: Simple Foreign Function Interface for 'R' using 'libffi' and 'S7' classes.
     Supports calling 'C' functions with type conversion and struct handling.
