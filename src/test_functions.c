@@ -551,7 +551,20 @@ uint32_t test_bitfield_toggle_enabled(uint32_t packed) {
     u.flags.enabled = !u.flags.enabled;
     return u.packed;
 }
+/*
+    * Pack individual bit-field values into a single uint8_t
+*/
+uint8_t test_pack_bitfield(uint8_t enabled, uint8_t mode, uint8_t priority) {
+    return (enabled & 0x1)
+        | ((mode & 0x7) << 1)
+        | ((priority & 0xF) << 4);
+}
 
+void test_unpack_bitfield(uint8_t packed, uint8_t* enabled, uint8_t* mode, uint8_t* priority) {
+    *enabled = packed & 0x1;
+    *mode = (packed >> 1) & 0x7;
+    *priority = (packed >> 4) & 0xF;
+}
 /* Test with a smaller bit-field struct (8-bit) */
 typedef struct {
     unsigned int syn : 1;

@@ -96,7 +96,11 @@ uint64_t test_uint64_func(uint64_t a);
 long test_long_func(long a);
 unsigned long test_ulong_func(unsigned long a);
 
-// Structure test functions
+/* Bitfield test functions */
+uint8_t test_pack_bitfield(uint8_t enabled, uint8_t mode, uint8_t priority);
+void test_unpack_bitfield(uint8_t packed, uint8_t* enabled, uint8_t* mode, uint8_t* priority);
+
+/* Structure test functions */
 typedef struct {
     int x;
     int y;
@@ -241,6 +245,10 @@ static const R_CMethodDef CEntries[] = {
     {"test_uint64_func", (DL_FUNC) &test_uint64_func, 1},
     {"test_long_func", (DL_FUNC) &test_long_func, 1},
     {"test_ulong_func", (DL_FUNC) &test_ulong_func, 1},
+    
+    // Bitfield test functions
+    {"test_pack_bitfield", (DL_FUNC) &test_pack_bitfield, 3},
+    {"test_unpack_bitfield", (DL_FUNC) &test_unpack_bitfield, 4},
     
     // Structure test functions
     {"test_move_point2d", (DL_FUNC) &test_move_point2d, 3},

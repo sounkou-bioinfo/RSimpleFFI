@@ -448,7 +448,7 @@ version
 ### Basic Function Calls
 
 The package comes with some built-in C test functions for testing, they
-are defined in [src/test\_functions.c](src/test_functions.c) and are
+are defined in [src/test_functions.c](src/test_functions.c) and are
 accessible when the package is loaded.
 
 ``` r
@@ -695,10 +695,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1956448141
+#> [1] 1602093335
 rand_value <- rand_func()
 rand_value
-#> [1] 238182657
+#> [1] 1745510349
 dll_unload(libc_path)
 ```
 
@@ -722,7 +722,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x5cb8dd675720>
+#> <pointer: 0x55d74a8620e0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -820,8 +820,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      498µs    818µs     1159.     781KB     11.7
-#> 2 ffi_call      769µs    858µs     1033.     782KB     21.1
+#> 1 native_r      259µs    285µs     3462.     781KB     35.0
+#> 2 ffi_call      384µs    393µs     2506.     782KB     51.1
 dll_unload(lib_path)
 ```
 
@@ -904,7 +904,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x5cb8e4a4ed60>
+#> <pointer: 0x55d751600ce0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -936,8 +936,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r           53.62ms   64.8ms      14.7     781KB     12.0
-#> 2 c_ffi        1.02ms   1.43ms     699.      782KB      0
+#> 1 r            24.6ms   24.8ms      40.1     781KB     26.8
+#> 2 c_ffi         357µs  433.4µs    2157.      782KB    114.
 
 dll_unload(lib_path)
 ```
@@ -947,7 +947,7 @@ dll_unload(lib_path)
 Since `libR.so` is loaded (on unix systems) we can use its exported
 symbols and functions. This allows calling R’s internal C API directly
 via FFI - the same functions that R packages use in their C code. This
-is for educational purposes only\! Calling R internals incorrectly can
+is for educational purposes only! Calling R internals incorrectly can
 crash R or corrupt memory.
 
 ``` r
@@ -1019,7 +1019,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1764933598
+#> [1] 1764957289
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1065,7 +1065,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 15:19:58.093974\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-05 18:54:49.435332\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1123,8 +1123,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file5a8126b8ace44.h
-#> # Generated on: 2025-12-05 15:19:58.179585
+#> # Auto-generated R bindings for filecbe6a18c820d0.h
+#> # Generated on: 2025-12-05 18:54:49.476592
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1175,6 +1175,7 @@ if(!requireNamespace("htslibFFI"))
 system(sprintf("Rscript tools/generate_htslib_package.R /tmp/htslibFFI %s", htslib_root),
            ignore.stdout = TRUE, ignore.stderr = TRUE)
 #> Loading required namespace: htslibFFI
+#> Loading system library from: /usr/lib/x86_64-linux-gnu/libhts.so.3
 
 # Clean up name conflicts from earlier examples
 rm(list = c("double_t", "r_abs", "r_strcmp", "r_strlen"), envir = .GlobalEnv)
@@ -1233,7 +1234,7 @@ The generator automatically creates 400+ function wrappers with proper
 The `bindgen_r_api()` function parses R’s own header files
 (Rinternals.h, Rmath.h) and generates FFI bindings. This provides access
 to R’s internal C functions without writing C code. Educational purpose
-only and to test the parsing code logic \! Scripts in [tools](./tools)
+only and to test the parsing code logic ! Scripts in [tools](./tools)
 will provide more interesting examples.
 
 ``` r
@@ -1252,7 +1253,7 @@ Generate bindings and call statistical distribution functions directly
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> Generated R bindings written to: /tmp/Rtmpd3Li5h/file5a81260e57957.R
+#> Generated R bindings written to: /tmp/Rtmp8dAOr7/filecbe6a6e060c46.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1308,7 +1309,7 @@ list.files(file.path(tmpdir, "R"))
 
 The `bindgen_r_api()` function parses R’s C headers and generates
 wrapper functions automatically. This is for testing the parser mostly,
-using this is discourage \!
+using this is discourage !
 
 ``` r
 # Generate bindings for all R headers
@@ -1354,7 +1355,7 @@ automatically released when the pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x5cb8e0408618>
+#> <pointer: 0x55d74f68d398>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
@@ -1369,7 +1370,7 @@ leaks and the fact that our type objects are C pointers that are never
 and should never be finalized.
 [`rchck`](https://github.com/kalibera/rchk) is regularly used to detect
 potential issues. Care should be taken to the lifetime of returned and
-create memory because we are interacting like we are in `C` after all \!
+create memory because we are interacting like we are in `C` after all !
 Some other specific issues are described below
 
 ### Bit-fields
@@ -1519,16 +1520,16 @@ This project is licensed under the GPL-3 License.
 
 # References
 
-  - [Rffi](https://github.com/omegahat/Rffi)
+- [Rffi](https://github.com/omegahat/Rffi)
 
-  - [libffi](https://github.com/libffi/libffi) - Portable foreign
-    function interface library
+- [libffi](https://github.com/libffi/libffi) - Portable foreign function
+  interface library
 
-  - [tinycc](https://github.com/tinycc/tinycc) - Tiny C Compiler used
-    for header parsing
+- [tinycc](https://github.com/tinycc/tinycc) - Tiny C Compiler used for
+  header parsing
 
-  - [libffi
-    Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
+- [libffi
+  Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
 
-  - [CPython’s ctypes
-    module](https://docs.python.org/3/library/ctypes.html)
+- [CPython’s ctypes
+  module](https://docs.python.org/3/library/ctypes.html)

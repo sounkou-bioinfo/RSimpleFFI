@@ -55,20 +55,28 @@ S7::method(ffi_alloc, EnumType) <- function(type, n = 1L) {
 }
 
 #' @export
-S7::method(ffi_alloc, S7::class_list) <- function(type, n = 1L) {
-  # Detect bitfield accessor list: must have 'pack', 'unpack', 'get', 'set' functions and 'base_type'
-  is_bitfield <- all(c("pack", "unpack", "get", "set") %in% names(type)) && !is.null(type$base_type)
-  if (is_bitfield) {
-    base_type <- type$base_type
-    if (!S7::S7_inherits(base_type, FFIType)) {
-      stop("base_type must be an FFIType object")
+S7::method(ffi_alloc, S7::class_any) <- function(type, n = 1L) {
+  # Detect bitfield accessor list: must have 'pack', 'unpack', 'get', 'set' functions and field widths
+  if ("bitfield_accessors" %in% class(type)) {
+    total_bits <- sum(type$field_widths)
+    # Select minimal unsigned type
+    if (total_bits <= 8) {
+      ffi_type <- ffi_uint8()
+    } else if (total_bits <= 16) {
+      ffi_type <- ffi_uint16()
+    } else if (total_bits <= 32) {
+      ffi_type <- ffi_uint32()
+    } else if (total_bits <= 64) {
+      ffi_type <- ffi_uint64()
+    } else {
+      stop("Bitfield total width exceeds 64 bits; cannot allocate as a single integer type.")
     }
-    if (length(n) != 1 || !is.numeric(n) || n < 1) {
-      stop("n must be a positive integer")
+    if (n > 1L) {
+      warning("Bitfield accessor allocation is typically for a single packed value; n > 1 is rarely useful.")
     }
-    .Call("R_alloc_typed_buffer", base_type@ref, as.integer(n))
+    return(ffi_alloc(ffi_type, n))
   } else {
-    stop("Don't know how to allocate for this list type. If this is a bitfield accessor, it must have 'pack', 'unpack', 'get', 'set', and 'base_type'.")
+    stop("Unsupported type for ffi_alloc")
   }
 }
 
