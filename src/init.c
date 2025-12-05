@@ -46,6 +46,34 @@ SEXP R_fill_typed_buffer(SEXP r_ptr, SEXP r_vals, SEXP r_type);
 SEXP R_ffi_free(SEXP r_ptr);
 /*libffi versions*/
 SEXP R_libffi_version(void);
+
+/* pointer utility functions */
+SEXP R_pointer_to_string(SEXP r_ptr);
+SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name);
+SEXP R_get_pointer_type(SEXP r_ptr);
+SEXP R_deref_pointer(SEXP r_ptr);
+SEXP R_read_global(SEXP r_ptr, SEXP r_type);
+
+/* closure API functions */
+SEXP R_ffi_closures_supported(void);
+SEXP R_create_closure(SEXP r_function, SEXP r_cif);
+SEXP R_get_closure_pointer(SEXP r_closure);
+
+/* 64-bit bitfield operations */
+SEXP R_ffi_pack_bits64(SEXP r_values, SEXP r_widths);
+SEXP R_ffi_unpack_bits64(SEXP r_packed, SEXP r_widths);
+SEXP R_ffi_extract_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
+SEXP R_ffi_extract_signed_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
+SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width);
+
+/* SEXP pointer helpers */
+SEXP R_sexp_ptr(SEXP x);
+SEXP R_data_ptr(SEXP x);
+SEXP R_data_ptr_ro(SEXP x);
+SEXP R_is_protected_ptr(SEXP ptr);
+SEXP R_release_protected_ptr(SEXP ptr);
+SEXP R_ptr_to_sexp(SEXP ptr);
+
 /* Declare test functions */
 double test_add_double(double a, double b);
 double test_square(double x);
@@ -121,32 +149,7 @@ int test_signed_bitfield_get5(uint16_t packed);
 long long test_longlong_func(long long a);
 unsigned long long test_ulonglong_func(unsigned long long a);
 
-/* pointer utility functions */
-SEXP R_pointer_to_string(SEXP r_ptr);
-SEXP R_make_typed_pointer(SEXP r_ptr, SEXP r_type_name);
-SEXP R_get_pointer_type(SEXP r_ptr);
-SEXP R_deref_pointer(SEXP r_ptr);
-SEXP R_read_global(SEXP r_ptr, SEXP r_type);
 
-/* closure API functions */
-SEXP R_ffi_closures_supported(void);
-SEXP R_create_closure(SEXP r_function, SEXP r_cif);
-SEXP R_get_closure_pointer(SEXP r_closure);
-
-/* 64-bit bitfield operations */
-SEXP R_ffi_pack_bits64(SEXP r_values, SEXP r_widths);
-SEXP R_ffi_unpack_bits64(SEXP r_packed, SEXP r_widths);
-SEXP R_ffi_extract_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
-SEXP R_ffi_extract_signed_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
-SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width);
-
-/* SEXP pointer helpers */
-SEXP R_sexp_ptr(SEXP x);
-SEXP R_data_ptr(SEXP x);
-SEXP R_data_ptr_ro(SEXP x);
-SEXP R_is_protected_ptr(SEXP ptr);
-SEXP R_release_protected_ptr(SEXP ptr);
-SEXP R_ptr_to_sexp(SEXP ptr);
 
 /* Registration table */
 static const R_CallMethodDef CallEntries[] = {
@@ -214,7 +217,10 @@ static const R_CallMethodDef CallEntries[] = {
 };
 
 
-/* C method table for test functions */
+/* C method table for test functions 
+ we are never actually going to call these through .C, but we need to register them
+ to make sure they are visible when the package is loaded
+*/
 static const R_CMethodDef CEntries[] = {
     {"test_add_double", (DL_FUNC) &test_add_double, 2},
     {"test_square", (DL_FUNC) &test_square, 1},
