@@ -27,7 +27,7 @@ As an experimental feature, the package includes automatic R binding generation 
 
 ## Prior Art
 
-Of course this package is inspired by [Rffi](https://github.com/omegahat/Rffi). [`Dyncall`](https://dyncall.org/docs/dynload.3.html) is an alternative C library for dynamic ffi calls like `libffi`. The CRAN package  [rdyncall](https://cran.r-project.org/web/packages/rdyncall/index.html) was archived, but there is ongoing project  at [hongyuanjia/rdyncall)](https://github.com/hongyuanjia/rdyncall) to get it back on CRAN.
+Of course this package is inspired by [Rffi](https://github.com/omegahat/Rffi). [`Dyncall`](https://dyncall.org/docs/dynload.3.html) is an alternative C library for dynamic ffi calls like `libffi`. The CRAN package  [rdyncall](https://cran.r-project.org/web/packages/rdyncall/index.html) was archived, but there is ongoing project  at [hongyuanjia/rdyncall](https://github.com/hongyuanjia/rdyncall) to get it back on CRAN.
 
 ## Installation
 
