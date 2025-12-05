@@ -66,6 +66,11 @@ R -e "rmarkdown::render('README.Rmd')"  # Render README.Rmd to README.md
 R -e "pkgdown::build_site()"     # Build documentation website
 ```
 
+### NEWS.md Updates
+- **Always update `NEWS.md` for all significant new features, changes, or any API breakage.**
+- Summarize breaking changes, new features, bug fixes, and internal changes in `NEWS.md`.
+- Updating `NEWS.md` is a required step for any feature addition or API change.
+
 ## Code Conventions
 
 ### S7 Classes
@@ -78,6 +83,9 @@ R -e "pkgdown::build_site()"     # Build documentation website
 - **Always use roxygen2** for all R function documentation
 - Run `devtools::document()` after adding/modifying roxygen comments
 - Use `@export` for public functions, `@keywords internal` for internal ones
+
+### NEWS.md
+- For any significant feature, bug fix, or API breakage, add a clear entry to `NEWS.md` describing the change and its impact.
 
 ### C Interface
 - All R-callable C functions are prefixed with `R_` (e.g., `R_ffi_call`)
@@ -94,6 +102,11 @@ R -e "pkgdown::build_site()"     # Build documentation website
 - Keep examples succinct and focused
 - **Never use `cat()` or `message()` for output** - let code results speak for themselves
 - No verbose decorations or formatting in examples
+
+### NEWS.md Style
+- Use clear, concise bullet points for each change.
+- Group changes under headings: New Features, Breaking Changes, Bug Fixes, Internal Changes.
+- Always mention API breakages and migration notes if relevant.
 
 ### Output in Package Code
 - **Never use `cat()` or `print()` in package functions**

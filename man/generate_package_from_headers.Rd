@@ -2,13 +2,15 @@
 % Please edit documentation in R/package_generation.R
 \name{generate_package_from_headers}
 \alias{generate_package_from_headers}
-\title{Generate complete package from header files}
+\title{Generate complete package from header files
+Generate complete package from header files}
 \usage{
 generate_package_from_headers(
   header_files,
   package_name,
   library_name,
   output_dir = package_name,
+  library_path = NULL,
   use_system_lib = TRUE,
   include_helpers = TRUE,
   authors_r = NULL,
@@ -25,12 +27,13 @@ generate_package_from_headers(
 
 \item{output_dir}{Directory to create the package (package root)}
 
+\item{library_path}{Optional: full path to shared library (for custom installs)}
+
 \item{use_system_lib}{Logical: search system library paths}
 
 \item{include_helpers}{Logical: include allocation helper functions}
 
-\item{authors_r}{Authors@R field for DESCRIPTION (R code string).
-Default creates a placeholder person().}
+\item{authors_r}{Authors@R field for DESCRIPTION (R code string). Default creates a placeholder person().}
 
 \item{title}{Package title (default: auto-generated)}
 
@@ -51,8 +54,12 @@ generate_package_from_headers(
   package_name = "MyRPackage",
   library_name = "mylib",
   output_dir = "MyRPackage",
+  library_path = "/custom/path/libmylib.so",
   use_system_lib = TRUE,
-  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
+  include_helpers = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))',
+  title = "FFI Bindings to mylib",
+  description = "Auto-generated FFI bindings for mylib."
 )
 }
 }

@@ -108,6 +108,8 @@ generate_package_init <- function(
 }
 
 #' Generate complete package from header files
+##
+#' Generate complete package from header files
 #'
 #' Creates all necessary R files for a package wrapping a C library.
 #' Generates a proper R package structure with DESCRIPTION, NAMESPACE,
@@ -117,10 +119,10 @@ generate_package_init <- function(
 #' @param package_name Name of the R package
 #' @param library_name Name of the shared library
 #' @param output_dir Directory to create the package (package root)
+#' @param library_path Optional: full path to shared library (for custom installs)
 #' @param use_system_lib Logical: search system library paths
 #' @param include_helpers Logical: include allocation helper functions
-#' @param authors_r Authors@@R field for DESCRIPTION (R code string).
-#'   Default creates a placeholder person().
+#' @param authors_r Authors@@R field for DESCRIPTION (R code string). Default creates a placeholder person().
 #' @param title Package title (default: auto-generated)
 #' @param description Package description (default: auto-generated)
 #' @return Invisibly returns list of generated files
@@ -132,8 +134,12 @@ generate_package_init <- function(
 #'   package_name = "MyRPackage",
 #'   library_name = "mylib",
 #'   output_dir = "MyRPackage",
+#'   library_path = "/custom/path/libmylib.so",
 #'   use_system_lib = TRUE,
-#'   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
+#'   include_helpers = TRUE,
+#'   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))',
+#'   title = "FFI Bindings to mylib",
+#'   description = "Auto-generated FFI bindings for mylib."
 #' )
 #' }
 generate_package_from_headers <- function(
