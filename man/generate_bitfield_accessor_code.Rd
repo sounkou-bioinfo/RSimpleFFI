@@ -4,12 +4,18 @@
 \alias{generate_bitfield_accessor_code}
 \title{Generate bit-field accessor code}
 \usage{
-generate_bitfield_accessor_code(struct_name, bitfield_specs)
+generate_bitfield_accessor_code(struct_name, bitfield_specs, typedefs = NULL)
 }
 \arguments{
 \item{struct_name}{Name of the struct}
 
 \item{bitfield_specs}{Character vector of "'name : width'" strings}
+
+\item{typedefs}{Optional named list mapping typedef aliases to canonical C type strings.
+When provided, the generator will attempt to resolve per-field base types through
+this map (e.g., list(myint = "int32_t")). Useful when parsing headers that use
+typedefs, so the code can auto-detect a common base_type to emit in the generated
+call to \code{ffi_create_bitfield_accessors}.}
 }
 \value{
 Character string with accessor code

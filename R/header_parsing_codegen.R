@@ -357,6 +357,11 @@ get_resolvable_types <- function() {
 #' Generate bit-field accessor code
 #' @param struct_name Name of the struct
 #' @param bitfield_specs Character vector of "'name : width'" strings
+#' @param typedefs Optional named list mapping typedef aliases to canonical C type strings.
+#'   When provided, the generator will attempt to resolve per-field base types through
+#'   this map (e.g., list(myint = "int32_t")). Useful when parsing headers that use
+#'   typedefs, so the code can auto-detect a common base_type to emit in the generated
+#'   call to `ffi_create_bitfield_accessors`.
 #' @return Character string with accessor code
 #' @keywords internal
 generate_bitfield_accessor_code <- function(struct_name, bitfield_specs, typedefs = NULL) {
