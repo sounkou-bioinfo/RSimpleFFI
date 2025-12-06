@@ -366,10 +366,21 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
     # Remove quotes and split by :
     clean_spec <- gsub("'", "", spec)
     parts <- strsplit(clean_spec, ":")[[1]]
-    if (length(parts) == 2) {
+    # Expect either 'name : width' or 'name : width : signed|unsigned'
+    if (length(parts) >= 2) {
       field_name <- trimws(parts[1])
       field_width <- as.integer(trimws(parts[2]))
-      fields[[field_name]] <- field_width
+      is_signed <- FALSE
+      if (length(parts) >= 3) {
+        tag <- trimws(parts[3])
+        if (identical(tolower(tag), "signed")) is_signed <- TRUE
+      }
+      # Store either as integer width or as a list(width=..., signed=...)
+      if (is_signed) {
+        fields[[field_name]] <- list(width = field_width, signed = TRUE)
+      } else {
+        fields[[field_name]] <- field_width
+      }
     }
   }
 
@@ -381,10 +392,18 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
   }
 
   # Generate code
-  field_list <- paste(
-    sprintf("  %s = %dL", names(fields), unlist(fields)),
-    collapse = ",\n"
-  )
+  # Build field list handling signed markers: emit either 'name = widthL' or
+  # 'name = list(width = widthL, signed = TRUE)'
+  field_entries <- vapply(names(fields), function(nm) {
+    v <- fields[[nm]]
+    if (is.list(v) && !is.null(v$width) && isTRUE(v$signed)) {
+      sprintf("  %s = list(width = %dL, signed = TRUE)", nm, as.integer(v$width))
+    } else {
+      w <- if (is.list(v) && !is.null(v$width)) as.integer(v$width) else as.integer(v)
+      sprintf("  %s = %dL", nm, w)
+    }
+  }, FUN.VALUE = "")
+  field_list <- paste(field_entries, collapse = ",\n")
 
   code <- sprintf(
     "# Bit-field accessor for %s\n# C struct has bit-fields: %s\n%s <- ffi_create_bitfield_accessors(\n  list(\n%s\n  )\n)\n# Usage:\n#  packed <- %s$pack(list(%s))\n#  %s$get(packed, \"%s\")\n#  packed <- %s$set(packed, \"%s\", new_value)",

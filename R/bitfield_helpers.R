@@ -457,19 +457,56 @@ ffi_create_bitfield_accessors <- function(
   }
 
   field_names <- names(field_specs)
-  field_widths <- as.integer(unlist(field_specs))
+
+  # Support two styles for field_specs:
+  #  - simple: list(enabled = 1L, mode = 3L)
+  #  - detailed: list(mode = list(width = 3L, signed = TRUE), ...)
+  n_fields <- length(field_names)
+  field_widths <- integer(n_fields)
+  field_signed <- logical(n_fields)
+
+  for (i in seq_along(field_names)) {
+    entry <- field_specs[[i]]
+    if (is.list(entry) && !is.null(entry$width)) {
+      field_widths[i] <- as.integer(entry$width)
+      field_signed[i] <- isTRUE(entry$signed)
+    } else {
+      field_widths[i] <- as.integer(entry)
+      field_signed[i] <- FALSE
+    }
+  }
 
   if (any(field_widths <= 0)) {
     stop("All field widths must be positive")
   }
 
-  # Calculate bit offsets
+  # Calculate bit offsets honoring the base type allocation unit (e.g. int, char)
+  # Fields are allocated into repeated allocation units of the base type; if a
+  # field does not fit in the remainder of the current unit it starts at the
+  # next unit. This mirrors C compiler behaviour for bit-field allocation and
+  # is essential when the base_type has a width smaller than the sum of
+  # consecutive fields (e.g. int8_t bit-fields).
+  base_bits <- as.integer(base_type@size) * 8L
+  if (base_bits <= 0L) base_bits <- 32L
   field_offsets <- integer(length(field_widths))
   if (length(field_widths) > 0) {
-    field_offsets[1] <- 0L
-    if (length(field_widths) > 1) {
-      for (i in 2:length(field_widths)) {
-        field_offsets[i] <- field_offsets[i - 1] + field_widths[i - 1]
+    bit_offset <- 0L
+    rem_bits_in_unit <- base_bits
+    for (i in seq_along(field_widths)) {
+      width <- as.integer(field_widths[i])
+      # If the field doesn't fit in the remainder of the current allocation
+      # unit, start at the next unit boundary
+      if (width > rem_bits_in_unit) {
+        # Align to next unit boundary
+        bit_offset <- bit_offset + rem_bits_in_unit
+        rem_bits_in_unit <- base_bits
+      }
+      field_offsets[i] <- bit_offset
+      bit_offset <- bit_offset + width
+      rem_bits_in_unit <- rem_bits_in_unit - width
+      if (rem_bits_in_unit == 0L) {
+        # Move to next allocation unit
+        rem_bits_in_unit <- base_bits
       }
     }
   }
@@ -483,24 +520,58 @@ ffi_create_bitfield_accessors <- function(
       if (!is.list(values)) {
         stop("values must be a named list")
       }
-
       int_values <- integer(length(field_names))
       for (i in seq_along(field_names)) {
         fname <- field_names[i]
         if (fname %in% names(values)) {
-          int_values[i] <- as.integer(values[[fname]])
+          val <- as.integer(values[[fname]])
         } else {
-          int_values[i] <- 0L
+          val <- 0L
         }
+        # For signed fields, convert negative values to two's-complement
+        if (field_signed[i] && val < 0L) {
+          val <- val + bitwShiftL(1L, field_widths[i])
+        }
+        int_values[i] <- val
       }
-
-      ffi_pack_bits(int_values, field_widths, base_type)
+      # Pack respecting base type allocation boundaries using the computed
+      # offsets. Use 64-bit helpers for larger base types.
+      if (base_type@size <= 4L) {
+        result <- 0L
+        for (i in seq_along(int_values)) {
+          result <- ffi_set_bit_field(result, int_values[i], field_offsets[i], field_widths[i])
+        }
+        result
+      } else {
+        # 64-bit base type
+        result <- 0.0
+        for (i in seq_along(int_values)) {
+          result <- ffi_set_bits64(result, as.double(int_values[i]), field_offsets[i], field_widths[i])
+        }
+        result
+      }
     },
 
     # Unpack an integer into a named list
     unpack = function(packed_value) {
-      values <- ffi_unpack_bits(packed_value, field_widths)
-      stats::setNames(as.list(values), field_names)
+      # Unpack each field individually so we can apply signed extraction
+      res <- integer(length(field_names))
+      for (i in seq_along(field_names)) {
+        if (base_type@size <= 4L) {
+          if (field_signed[i]) {
+            res[i] <- ffi_extract_signed_bit_field(packed_value, field_offsets[i], field_widths[i])
+          } else {
+            res[i] <- ffi_extract_bit_field(packed_value, field_offsets[i], field_widths[i])
+          }
+        } else {
+          if (field_signed[i]) {
+            res[i] <- ffi_extract_signed_bits64(packed_value, field_offsets[i], field_widths[i])
+          } else {
+            res[i] <- ffi_extract_bits64(packed_value, field_offsets[i], field_widths[i])
+          }
+        }
+      }
+      stats::setNames(as.list(res), field_names)
     },
 
     # Get a single field by name
@@ -509,7 +580,19 @@ ffi_create_bitfield_accessors <- function(
         stop(sprintf("Unknown field: %s", field_name))
       }
       idx <- field_index[[field_name]]
-      ffi_extract_bit_field(packed_value, field_offsets[idx], field_widths[idx])
+      if (base_type@size <= 4L) {
+        if (field_signed[idx]) {
+          ffi_extract_signed_bit_field(packed_value, field_offsets[idx], field_widths[idx])
+        } else {
+          ffi_extract_bit_field(packed_value, field_offsets[idx], field_widths[idx])
+        }
+      } else {
+        if (field_signed[idx]) {
+          ffi_extract_signed_bits64(packed_value, field_offsets[idx], field_widths[idx])
+        } else {
+          ffi_extract_bits64(packed_value, field_offsets[idx], field_widths[idx])
+        }
+      }
     },
 
     # Set a single field by name
@@ -518,18 +601,33 @@ ffi_create_bitfield_accessors <- function(
         stop(sprintf("Unknown field: %s", field_name))
       }
       idx <- field_index[[field_name]]
-      ffi_set_bit_field(
-        packed_value,
-        new_value,
-        field_offsets[idx],
-        field_widths[idx]
-      )
+      nv <- as.integer(new_value)
+      # For signed fields, convert negative value to two's-complement representation
+      if (field_signed[idx] && nv < 0L) {
+        nv <- nv + bitwShiftL(1L, field_widths[idx])
+      }
+      if (base_type@size <= 4L) {
+        ffi_set_bit_field(
+          packed_value,
+          nv,
+          field_offsets[idx],
+          field_widths[idx]
+        )
+      } else {
+        ffi_set_bits64(
+          packed_value,
+          as.double(nv),
+          field_offsets[idx],
+          field_widths[idx]
+        )
+      }
     },
     base_type = base_type,
     # field scpecs
     is_bitfield = TRUE,
     field_names = field_names,
     field_widths = field_widths,
+    field_signed = field_signed,
     field_offsets = field_offsets
   )
 }

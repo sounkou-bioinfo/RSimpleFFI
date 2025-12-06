@@ -145,9 +145,21 @@ uint32_t test_bitfield64_get_low(uint64_t packed);
 uint32_t test_bitfield64_get_high(uint64_t packed);
 
 /* Signed bitfield test functions */
+/* Forward-declare SignedBitfield structure used in tests so prototypes below compile.
+   Definition is in src/test_functions.c and must match this layout. */
+typedef struct {
+    int8_t signed4 : 4;   /* -8 to 7 */
+    int8_t signed5 : 5;   /* -16 to 15 */
+    int8_t padding : 7;
+} SignedBitfield;
+
 uint16_t test_signed_bitfield_pack(int val4, int val5);
 int test_signed_bitfield_get4(uint16_t packed);
 int test_signed_bitfield_get5(uint16_t packed);
+int test_signed_bitfield_struct_get4(SignedBitfield settings);
+SignedBitfield test_signed_bitfield_struct_create(int val4, int val5);
+int test_signed_bitfield_struct_ptr_get4(SignedBitfield* settings);
+void test_signed_bitfield_struct_ptr_set4(SignedBitfield* settings, int val);
 
 /* Long long test functions */
 long long test_longlong_func(long long a);
@@ -291,6 +303,10 @@ static const R_CMethodDef CEntries[] = {
     {"test_signed_bitfield_pack", (DL_FUNC) &test_signed_bitfield_pack, 2},
     {"test_signed_bitfield_get4", (DL_FUNC) &test_signed_bitfield_get4, 1},
     {"test_signed_bitfield_get5", (DL_FUNC) &test_signed_bitfield_get5, 1},
+    {"test_signed_bitfield_struct_get4", (DL_FUNC) &test_signed_bitfield_struct_get4, 1},
+    {"test_signed_bitfield_struct_create", (DL_FUNC) &test_signed_bitfield_struct_create, 2},
+    {"test_signed_bitfield_struct_ptr_get4", (DL_FUNC) &test_signed_bitfield_struct_ptr_get4, 1},
+    {"test_signed_bitfield_struct_ptr_set4", (DL_FUNC) &test_signed_bitfield_struct_ptr_set4, 2},
     
     // Long long test functions
     {"test_longlong_func", (DL_FUNC) &test_longlong_func, 1},

@@ -207,6 +207,7 @@ ts_check_packed_attribute <- function(struct_node, source_text) {
 ts_extract_struct_fields <- function(body_node, source_text) {
   fields <- list()
   bitfield_info <- character()
+  bitfield_info_detailed <- character()
 
   child_count <- treesitter::node_child_count(body_node)
 
@@ -225,7 +226,17 @@ ts_extract_struct_fields <- function(body_node, source_text) {
 
         # Track bitfields for warning attribute
         if (grepl(":\\s*[0-9]+$", field_info$name)) {
-          bitfield_info <- c(bitfield_info, sprintf("'%s'", field_info$name))
+          # Determine signedness from the field type text. If 'unsigned' appears
+          # in the type we mark as unsigned, otherwise signed.
+          is_unsigned <- grepl("unsigned", field_info$type)
+          sign_tag <- if (is_unsigned) "unsigned" else "signed"
+          width_part <- sub(".*: ", "", field_info$name)
+          # Preserve the original simple spec for backward compatibility
+          simple_spec <- sprintf("'%s'", field_info$name)
+          # Detailed spec includes signedness: 'name : width : signed'
+          detailed_spec <- sprintf("'%s : %s : %s'", field_info$name, width_part, sign_tag)
+          bitfield_info <- c(bitfield_info, simple_spec)
+          bitfield_info_detailed <- c(bitfield_info_detailed, detailed_spec)
         }
       }
     }
@@ -233,10 +244,14 @@ ts_extract_struct_fields <- function(body_node, source_text) {
 
   # Add bitfield warning attribute if any bitfields detected
   if (length(bitfield_info) > 0) {
-    attr(fields, "bitfield_warning") <- list(
+    warning_attr <- list(
       has_bitfields = TRUE,
       fields = bitfield_info
     )
+    if (length(bitfield_info_detailed) > 0) {
+      warning_attr$detailed_fields <- bitfield_info_detailed
+    }
+    attr(fields, "bitfield_warning") <- warning_attr
   }
 
   fields

@@ -719,6 +719,38 @@ int test_signed_bitfield_get5(uint16_t packed) {
     return u.fields.signed5;
 }
 
+/* ==========================================================================
+ * Signed bit-field struct pass-by-value / pointer helpers
+ *
+ * Provide functions that operate on SignedBitfield structs by value and by
+ * pointer so tests can exercise signed bit-field behaviour when passing
+ * structs across the FFI.
+ * ==========================================================================*/
+
+/* Function that takes SignedBitfield struct by value and returns its 4-bit field */
+int test_signed_bitfield_struct_get4(SignedBitfield settings) {
+    return settings.signed4;
+}
+
+/* Function that returns SignedBitfield struct by value */
+SignedBitfield test_signed_bitfield_struct_create(int val4, int val5) {
+    SignedBitfield s;
+    s.signed4 = (int8_t)val4;
+    s.signed5 = (int8_t)val5;
+    s.padding = 0;
+    return s;
+}
+
+/* Function that takes pointer to SignedBitfield and returns signed4 */
+int test_signed_bitfield_struct_ptr_get4(SignedBitfield* settings) {
+    return settings->signed4;
+}
+
+/* Function that sets signed4 via pointer */
+void test_signed_bitfield_struct_ptr_set4(SignedBitfield* settings, int val) {
+    settings->signed4 = (int8_t)val;
+}
+
 /* Long long test functions */
 long long test_longlong_func(long long a) {
     return a * 2;
