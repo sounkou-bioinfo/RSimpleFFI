@@ -359,14 +359,21 @@ get_resolvable_types <- function() {
 #' @param bitfield_specs Character vector of "'name : width'" strings
 #' @return Character string with accessor code
 #' @keywords internal
-generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
+generate_bitfield_accessor_code <- function(struct_name, bitfield_specs, typedefs = NULL) {
   # Parse field specs: 'enabled : 1' -> list(name='enabled', width=1)
   fields <- list()
+  # Arrays to track per-field base types (as strings) for possible
+  # base_type autodetection. If all fields share the same base type that
+  # can be resolved to an FFI constructor we will emit base_type in the
+  # generated call (e.g., base_type = ffi_int8()). Otherwise we emit a
+  # conservative warning in the generated snippet.
+  field_bases <- character(0)
   for (spec in bitfield_specs) {
     # Remove quotes and split by :
     clean_spec <- gsub("'", "", spec)
     parts <- strsplit(clean_spec, ":")[[1]]
-    # Expect either 'name : width' or 'name : width : signed|unsigned'
+    # Expect either 'name : width' or 'name : width : signed|unsigned' or
+    # 'name : width : signed|unsigned : base_type'
     if (length(parts) >= 2) {
       field_name <- trimws(parts[1])
       field_width <- as.integer(trimws(parts[2]))
@@ -376,11 +383,16 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
         if (identical(tolower(tag), "signed")) is_signed <- TRUE
       }
       # Store either as integer width or as a list(width=..., signed=...)
+      base_type_str <- NULL
+      if (length(parts) >= 4) {
+        base_type_str <- trimws(parts[4])
+      }
       if (is_signed) {
         fields[[field_name]] <- list(width = field_width, signed = TRUE)
       } else {
         fields[[field_name]] <- field_width
       }
+      field_bases <- c(field_bases, if (is.null(base_type_str)) NA_character_ else base_type_str)
     }
   }
 
@@ -389,6 +401,56 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
       "# %s - bit-field struct (see ?ffi_create_bitfield_accessors)",
       struct_name
     ))
+  }
+
+  # Attempt to resolve common base_type across all fields using typedefs
+  resolved_base_ffi <- NULL
+  # Helper to resolve a C type string through typedefs to a canonical type
+  resolve_c_to_ffi <- function(c_type) {
+    if (is.null(c_type) || is.na(c_type) || c_type == "") {
+      return(NULL)
+    }
+    type_map <- get_ffi_type_map()
+    # Direct mapping
+    if (c_type %in% names(type_map)) {
+      return(type_map[[c_type]])
+    }
+    # Try resolving typedef chain if provided
+    current <- c_type
+    visited <- character(0)
+    while (!is.null(current) && !current %in% visited) {
+      visited <- c(visited, current)
+      if (!is.null(typedefs) && current %in% names(typedefs)) {
+        # typedefs maps alias -> base_type string
+        current <- typedefs[[current]]
+        if (current %in% names(type_map)) {
+          return(type_map[[current]])
+        }
+      } else {
+        break
+      }
+    }
+    NULL
+  }
+
+  # Resolve per-field bases
+  if (length(field_bases) > 0) {
+    # If every base is NA, nothing to do
+    if (!all(is.na(field_bases))) {
+      resolved <- vapply(field_bases, function(b) {
+        if (is.na(b) || is.null(b)) {
+          return(NA_character_)
+        }
+        r <- resolve_c_to_ffi(b)
+        if (is.null(r)) NA_character_ else r
+      }, FUN.VALUE = "")
+      if (!any(is.na(resolved))) {
+        # All resolved - check if all identical
+        if (length(unique(resolved)) == 1) {
+          resolved_base_ffi <- resolved[1]
+        }
+      }
+    }
   }
 
   # Generate code
@@ -405,15 +467,34 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
   }, FUN.VALUE = "")
   field_list <- paste(field_entries, collapse = ",\n")
 
+  # Build the `base_type` argument if we have a consistent resolved base
+  base_type_arg <- ""
+  if (!is.null(resolved_base_ffi)) {
+    base_type_arg <- sprintf(", base_type = %s", resolved_base_ffi)
+  }
+
+  # If mixed or unresolved bases exist, emit a clear warning comment in the generated code
+  mixed_warning_str <- NULL
+  if (length(field_bases) > 0 && (any(!is.na(field_bases)))) {
+    # If we couldn't compute a consistent resolved_base_ffi then warn
+    if (is.null(resolved_base_ffi)) {
+      mixed_warning_str <- sprintf(
+        "# WARNING: Bit-field base types: %s; generator couldn't determine a uniform base_type for this struct.\n# Provide base_type to ffi_create_bitfield_accessors(...) to ensure correct offsets.",
+        paste(sprintf("%s=%s", names(fields), ifelse(is.na(field_bases), "unknown", field_bases)), collapse = ", ")
+      )
+    }
+  }
+
   code <- sprintf(
-    "# Bit-field accessor for %s\n# C struct has bit-fields: %s\n%s <- ffi_create_bitfield_accessors(\n  list(\n%s\n  )\n)\n# Usage:\n#  packed <- %s$pack(list(%s))\n#  %s$get(packed, \"%s\")\n#  packed <- %s$set(packed, \"%s\", new_value)",
+    "# Bit-field accessor for %s\n# C struct has bit-fields: %s\n%s <- ffi_create_bitfield_accessors(\n  list(\n%s\n  )%s\n)\n# Usage:\n#  packed <- %s$pack(list(%s))\n#  %s$get(packed, \"%s\")\n#  packed <- %s$set(packed, \"%s\", new_value)",
     struct_name,
     paste(names(fields), collapse = ", "),
     struct_name,
     field_list,
+    base_type_arg,
     struct_name,
     paste(
-      sprintf("%s = 0L", names(fields)[1:min(2, length(fields))]),
+      sprintf("%s = 0L", names(fields)[seq_len(min(2, length(fields)))]),
       collapse = ", "
     ),
     struct_name,
@@ -422,7 +503,11 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs) {
     names(fields)[1]
   )
 
-  code
+  if (!is.null(mixed_warning_str)) {
+    paste(mixed_warning_str, "\n", paste(code, collapse = "\n"), sep = "")
+  } else {
+    paste(code, collapse = "\n")
+  }
 }
 
 #' Parse C header file and create structured result
@@ -479,10 +564,13 @@ generate_struct_definition <- function(
       call. = FALSE
     )
 
-    # Generate bit-field accessor code instead of struct
+    # Generate bit-field accessor code instead of struct. We prefer to pass
+    # the detailed specs (which now include base type if parsable) so the
+    # generator can try to automatically determine the correct base_type.
     return(generate_bitfield_accessor_code(
       struct_name,
-      bitfield_warning$fields
+      bitfield_warning$detailed_fields,
+      typedefs = typedefs
     ))
   }
 
@@ -590,7 +678,7 @@ generate_struct_definition <- function(
   # Add commas to all fields except the last one (or all if we're adding pack)
   # Need to insert comma BEFORE any comment (# ...)
   if (length(field_defs) > 0) {
-    last_field_idx <- if (is_packed) length(field_defs) else length(field_defs)
+    # last_field_idx unused - we just iterate and add commas as needed
     for (i in seq_along(field_defs)) {
       needs_comma <- (i < length(field_defs)) || is_packed
       if (needs_comma) {
@@ -613,7 +701,7 @@ generate_struct_definition <- function(
       ),
       sprintf("%s <- ffi_struct(", struct_name),
       paste(field_defs, collapse = "\n"),
-      "  .pack = 1L",
+      "  .pack = 1",
       ")"
     )
   } else {

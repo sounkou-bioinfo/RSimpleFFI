@@ -234,7 +234,10 @@ ts_extract_struct_fields <- function(body_node, source_text) {
           # Preserve the original simple spec for backward compatibility
           simple_spec <- sprintf("'%s'", field_info$name)
           # Detailed spec includes signedness: 'name : width : signed'
-          detailed_spec <- sprintf("'%s : %s : %s'", field_info$name, width_part, sign_tag)
+          # Include the base type in detailed spec so generators can resolve
+          # allocation unit size (e.g., int8_t, unsigned int) when creating
+          # accessors. Format: 'name : width : signed : base_type'.
+          detailed_spec <- sprintf("'%s : %s : %s : %s'", field_info$name, width_part, sign_tag, field_info$type)
           bitfield_info <- c(bitfield_info, simple_spec)
           bitfield_info_detailed <- c(bitfield_info_detailed, detailed_spec)
         }
