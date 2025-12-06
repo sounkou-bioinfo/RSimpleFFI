@@ -39,7 +39,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_bitfield_accessor_code</span><span class="op">(</span><span class="va">struct_name</span>, <span class="va">bitfield_specs</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_bitfield_accessor_code</span><span class="op">(</span><span class="va">struct_name</span>, <span class="va">bitfield_specs</span>, typedefs <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -52,6 +52,14 @@
 
 <dt id="arg-bitfield-specs">bitfield_specs<a class="anchor" aria-label="anchor" href="#arg-bitfield-specs"></a></dt>
 <dd><p>Character vector of "'name : width'" strings</p></dd>
+
+
+<dt id="arg-typedefs">typedefs<a class="anchor" aria-label="anchor" href="#arg-typedefs"></a></dt>
+<dd><p>Optional named list mapping typedef aliases to canonical C type strings.
+When provided, the generator will attempt to resolve per-field base types through
+this map (e.g., list(myint = "int32_t")). Useful when parsing headers that use
+typedefs, so the code can auto-detect a common base_type to emit in the generated
+call to <code>ffi_create_bitfield_accessors</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
