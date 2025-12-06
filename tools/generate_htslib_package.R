@@ -133,13 +133,6 @@ install.packages(output_dir, repos = NULL, type = "source", quiet = FALSE)
 # Demo
 message("\n=== Running Demo ===\n\n")
 library(htslibFFI)
-ffi_create_bitfield_accessors(
-  list(
-    preserve = 1L
-  )
-) |>
-  names()
-new_hFILE()
 # 1. Get htslib version
 version_ptr <- r_hts_version()
 message("htslib version:", pointer_to_string(version_ptr), "\n\n")

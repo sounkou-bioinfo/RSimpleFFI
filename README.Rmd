@@ -27,7 +27,7 @@ As an experimental feature, the package includes automatic R binding generation 
 
 ## Prior Art
 
-Of course this package is inspired by [Rffi](https://github.com/omegahat/Rffi). [`Dyncall`](https://dyncall.org/docs/dynload.3.html) is an alternative C library for dynamic ffi calls like `libffi`. The CRAN package  [rdyncall](https://cran.r-project.org/web/packages/rdyncall/index.html) was archived, but there is ongoing project  at [hongyuanjia/rdyncall](https://github.com/hongyuanjia/rdyncall) to get it back on CRAN.
+Of course this package is inspired by [Rffi](https://github.com/omegahat/Rffi). [`Dyncall`](https://dyncall.org/docs/dynload.3.html) is an alternative C library for dynamic ffi calls like `libffi`. The CRAN package  `rdyncall` was archived, but there is ongoing project  at [hongyuanjia/rdyncall](https://github.com/hongyuanjia/rdyncall) to get it back on CRAN.
 
 ## Installation
 
@@ -1234,6 +1234,21 @@ ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 
 Struct/union passing by value may be unreliable across platforms. Packed structs cannot be passed by value (libffi limitation). Prefer pointers.
 
+### Structs with mixed bit-fields and other members
+
+Some C structs have members that are bit-fields. An example is hFile from htslib. Code generation won't work now for this type of structure.
+
+```c
+typedef struct hFILE {
+    char *buffer, *begin, *end, *limit;
+    const struct hFILE_backend *backend;
+    off_t offset;
+    unsigned at_eof:1, mobile:1, readonly:1, preserve:1;
+    int has_errno;
+} hFILE;
+```
+
+
 
 # License
 
@@ -1241,11 +1256,11 @@ This project is licensed under the GPL-3 License.
 
 # References
 
+- [libffi](https://github.com/libffi/libffi)
+
 - [Rffi](https://github.com/omegahat/Rffi)
 
-- [libffi](https://github.com/libffi/libffi) - Portable foreign function interface library
-
-- [tinycc](https://github.com/tinycc/tinycc) - Tiny C Compiler used for header parsing
+- [tinycc](https://github.com/tinycc/tinycc)
 
 - [libffi Examples](http://www.chiark.greenend.org.uk/doc/libffi-dev/html/Using-libffi.html)
 

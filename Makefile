@@ -37,5 +37,6 @@ dev-install:
 test:
 	R -e 'devtools::test()'
 
-
+rdm: dev-install
+	R -e "rmarkdown::render('README.Rmd')"
 .PHONY: all rd build check install_deps install clean dev-install dev-test dev-preprocess-test dev-parse-test dev-all-tests
