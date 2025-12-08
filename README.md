@@ -779,10 +779,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 497701689
+#> [1] 1435565041
 rand_value <- rand_func()
 rand_value
-#> [1] 1349856060
+#> [1] 616956541
 dll_unload(libc_path)
 ```
 
@@ -806,7 +806,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x612b58cf3800>
+#> <pointer: 0x62740d3becd0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -904,8 +904,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      470µs    525µs     1800.     781KB     18.2
-#> 2 ffi_call      728µs    780µs     1183.     782KB     24.1
+#> 1 native_r      479µs    547µs     1567.     781KB     15.8
+#> 2 ffi_call      727µs    829µs     1089.     782KB     22.2
 dll_unload(lib_path)
 ```
 
@@ -988,7 +988,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x612b5ebc2da0>
+#> <pointer: 0x627411904dc0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -1020,8 +1020,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            47.6ms   50.8ms      19.4     781KB     15.8
-#> 2 c_ffi       765.2µs  834.2µs    1145.      782KB      0
+#> 1 r            47.7ms  54.97ms      18.3     781KB     15.0
+#> 2 c_ffi         789µs   1.24ms     821.      782KB      0
 
 dll_unload(lib_path)
 ```
@@ -1103,7 +1103,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1765203747
+#> [1] 1765203809
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1171,7 +1171,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-08 18:22:27.53341\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_point"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-08 18:23:28.742222\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1229,7 +1229,7 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
 #> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
-#> -> /tmp/RtmpKq0xuN/file7228b6a0c4da5.h
+#> -> /tmp/RtmpY33Wya/file726984f9afdcf.h
 #> Preprocessed file size: 209 bytes
 #> Preprocessed file lines: 9 lines
 #> Preprocessed file total characters: 200 characters
@@ -1237,9 +1237,9 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> preprocessing produced suspiciously small output (209 bytes, 9 lines). This may
 #> indicate incomplete preprocessing.
 #> Last 10 lines of preprocessed output:
-#> # 1 "/tmp/RtmpKq0xuN/file7228b6a0c4da5.h"
+#> # 1 "/tmp/RtmpY33Wya/file726984f9afdcf.h"
 #> # 1 "<command line>" 1
-#> # 1 "/tmp/RtmpKq0xuN/file7228b6a0c4da5.h" 2
+#> # 1 "/tmp/RtmpY33Wya/file726984f9afdcf.h" 2
 #> 
 #> unsigned long strlen(const char* s);
 #> int strcmp(const char* s1, const char* s2);
@@ -1250,8 +1250,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file7228b6a0c4da5.h
-#> # Generated on: 2025-12-08 18:22:27.629841
+#> # Auto-generated R bindings for file726984f9afdcf.h
+#> # Generated on: 2025-12-08 18:23:28.836156
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1403,7 +1403,7 @@ bindgen_r_api(output_file = outfile, headers = "Rmath.h")
 #> Preprocessed file size: 34939 bytes
 #> Preprocessed file lines: 1353 lines
 #> Preprocessed file total characters: 33586 characters
-#> Generated R bindings written to: /tmp/RtmpKq0xuN/file7228b3d9917d3.R
+#> Generated R bindings written to: /tmp/RtmpY33Wya/file7269870190ff7.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1527,7 +1527,7 @@ automatically released when the pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x612b5c4a63f8>
+#> <pointer: 0x62740f2dc218>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())

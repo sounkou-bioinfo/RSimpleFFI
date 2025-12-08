@@ -296,6 +296,7 @@ ffi_get_field(ptr, "x", Point)
 
 **API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C code with `offsetof()`, compile it with `R CMD SHLIB`, and extract accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with `$new()`, `$get()`, and `$set()` methods.
 
+
 ```{r}
 # API mode: compiler-computed offsets
 helpers <- ffi_create_helpers("Point", list(x = ffi_int(), y = ffi_double()))
@@ -307,6 +308,7 @@ helpers$get(ptr, "x")
 helpers$fields$x$offset
 helpers$fields$y$offset
 ```
+
 
 Use ABI mode for simple structs and quick prototyping. Use API mode for structs with bitfields or when you need guaranteed correct layout matching the C compiler's output.
 
