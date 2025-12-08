@@ -133,14 +133,15 @@ test_that("FILE* and opaque pointers generate valid code", {
     package = "RSimpleFFI"
   )
   skip_if(header == "", "difficult_structs.h not found")
-
+  lines <- tcc_preprocess(header)
+  message("Preprocessed lines:\n")
+  cat(lines)
   parsed <- ffi_parse_header(header)
 
   # Try to get warning, dump debug info if not found
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
   message("Generated code:\n")
-  cat(code)
 
   expect_true(
     result$warning_caught,
@@ -206,11 +207,11 @@ test_that("recursive structs generate valid definitions", {
     result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
+  message("Generated code:\n")
 
   tmpfile <- tempfile(fileext = ".R")
   writeLines(code, tmpfile)
   message("Generated code:\n")
-  cat(code)
 
   env <- new.env()
   expect_no_error(source(tmpfile, local = env))
@@ -244,8 +245,7 @@ test_that("nested structs generate complete definitions", {
     result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
-
-  tmpfile <- tempfile(fileext = ".R")
+  message("Generated code:\n")  tmpfile <- tempfile(fileext = ".R")
   writeLines(code, tmpfile)
 
   env <- new.env()
