@@ -35,7 +35,16 @@ ffi_get_field_ptr <- function(struct_ptr, field_name, struct_type) {
   offset <- as.numeric(field_info$offset)
   field_type <- field_info$type
   
-  .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type, PACKAGE = "RSimpleFFI")
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else if (inherits(field_type, "externalptr")) {
+    field_type_ptr <- field_type
+  } else {
+    stop("field_type must be an FFIType or external pointer")
+  }
+  
+  .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type_ptr, PACKAGE = "RSimpleFFI")
 }
 
 #' Set field value in struct
@@ -67,7 +76,16 @@ ffi_set_field <- function(struct_ptr, field_name, struct_type, value) {
   offset <- as.numeric(field_info$offset)
   field_type <- field_info$type
   
-  .Call("R_struct_set_field", struct_ptr, offset, field_type, value, PACKAGE = "RSimpleFFI")
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else if (inherits(field_type, "externalptr")) {
+    field_type_ptr <- field_type
+  } else {
+    stop("field_type must be an FFIType or external pointer")
+  }
+  
+  .Call("R_struct_set_field", struct_ptr, offset, field_type_ptr, value, PACKAGE = "RSimpleFFI")
   invisible(NULL)
 }
 
