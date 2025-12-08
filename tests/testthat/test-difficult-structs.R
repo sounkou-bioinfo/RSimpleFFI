@@ -139,6 +139,8 @@ test_that("FILE* and opaque pointers generate valid code", {
   # Try to get warning, dump debug info if not found
   result <- generate_bindings_with_debug(parsed, header)
   code <- result$code
+  message("Generated code:\n")
+  cat(code)
 
   expect_true(
     result$warning_caught,
@@ -207,6 +209,8 @@ test_that("recursive structs generate valid definitions", {
 
   tmpfile <- tempfile(fileext = ".R")
   writeLines(code, tmpfile)
+  message("Generated code:\n")
+  cat(code)
 
   env <- new.env()
   expect_no_error(source(tmpfile, local = env))
