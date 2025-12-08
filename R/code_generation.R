@@ -1,0 +1,163 @@
+#' Code Generation for API Mode
+#'
+#' Generate C helper code for struct field access using compiler-computed offsets.
+#'
+#' @name code_generation
+#' @keywords internal
+NULL
+
+#' Generate offset extractor function for a struct (API mode)
+#'
+#' Creates C code that returns all field offsets for a struct using offsetof().
+#' The compiler computes the offsets, handling alignment, padding, and bitfields
+#' correctly for the target platform.
+#'
+#' @param struct_name Name of the C struct (e.g., "Point2D", "hFILE")
+#' @param field_names Character vector of field names
+#' @param prefix Prefix for generated function names (default "rffi_")
+#' @return Character string containing C code
+#' @export
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' code <- generate_api_offset_extractor("Point2D", c("x", "y"))
+#' cat(code)
+#' }
+generate_api_offset_extractor <- function(struct_name, field_names, prefix = "rffi_") {
+  if (length(field_names) == 0) {
+    stop("field_names cannot be empty")
+  }
+  
+  func_name <- paste0(prefix, struct_name, "_offsets")
+  
+  # Build field names array
+  names_array <- paste0(
+    '        "', field_names, '"',
+    collapse = ",\n"
+  )
+  
+  # Build offsetof() calls array
+  offsets_array <- paste0(
+    '        offsetof(', struct_name, ', ', field_names, ')',
+    collapse = ",\n"
+  )
+  
+  # Generate C function
+  c_code <- sprintf('
+#include <R.h>
+#include <Rinternals.h>
+#include <stddef.h>
+
+// Returns named list of field offsets (compiler-computed with offsetof())
+SEXP %s(void) {
+    const char* names[] = {
+%s
+    };
+    
+    size_t offsets[] = {
+%s
+    };
+    
+    int n_fields = sizeof(offsets) / sizeof(size_t);
+    SEXP result = PROTECT(Rf_allocVector(VECSXP, n_fields));
+    SEXP result_names = PROTECT(Rf_allocVector(STRSXP, n_fields));
+    
+    for (int i = 0; i < n_fields; i++) {
+        SET_STRING_ELT(result_names, i, Rf_mkChar(names[i]));
+        SET_VECTOR_ELT(result, i, Rf_ScalarReal((double)offsets[i]));
+    }
+    
+    Rf_setAttrib(result, R_NamesSymbol, result_names);
+    UNPROTECT(2);
+    return result;
+}
+', func_name, names_array, offsets_array)
+  
+  return(c_code)
+}
+
+#' Generate constructor function for a struct (API mode)
+#'
+#' Creates C code for allocating and initializing a struct with default values.
+#'
+#' @param struct_name Name of the C struct
+#' @param prefix Prefix for generated function names (default "rffi_")
+#' @return Character string containing C code
+#' @export
+#' @keywords internal
+generate_api_constructor <- function(struct_name, prefix = "rffi_") {
+  func_name <- paste0(prefix, struct_name, "_new")
+  
+  c_code <- sprintf('
+// Constructor returns SEXP external pointer with automatic finalization
+static void %s_finalizer(SEXP ext_ptr) {
+    %s* obj = (%s*)R_ExternalPtrAddr(ext_ptr);
+    if (obj) {
+        free(obj);
+        R_ClearExternalPtr(ext_ptr);
+    }
+}
+
+SEXP %s(void) {
+    %s* obj = (%s*)calloc(1, sizeof(%s));
+    if (!obj) {
+        Rf_error("Failed to allocate memory for %s");
+    }
+    
+    // Wrap in external pointer with finalizer
+    SEXP ext_ptr = PROTECT(R_MakeExternalPtr(obj, R_NilValue, R_NilValue));
+    R_RegisterCFinalizerEx(ext_ptr, %s_finalizer, TRUE);
+    
+    UNPROTECT(1);
+    return ext_ptr;
+}
+', struct_name, struct_name, struct_name, func_name, struct_name, 
+   struct_name, struct_name, struct_name, struct_name)
+  
+  return(c_code)
+}
+
+#' Generate complete helper module for a struct (API mode)
+#'
+#' Combines constructor and offset extractor into a complete C file.
+#'
+#' @param struct_name Name of the C struct
+#' @param field_names Character vector of field names
+#' @param header_includes Character vector of header files to include
+#' @param prefix Prefix for generated function names (default "rffi_")
+#' @return Character string containing complete C code
+#' @export
+#' @keywords internal
+generate_api_struct_helpers <- function(struct_name, field_names, 
+                                   header_includes = NULL, prefix = "rffi_") {
+  # Build includes
+  includes <- c(
+    "#include <R.h>",
+    "#include <Rinternals.h>",
+    "#include <stddef.h>",
+    "#include <stdlib.h>"
+  )
+  
+  if (!is.null(header_includes)) {
+    includes <- c(includes, paste0("#include <", header_includes, ">"))
+  }
+  
+  includes_code <- paste(includes, collapse = "\n")
+  
+  # Generate functions
+  constructor_code <- generate_api_constructor(struct_name, prefix)
+  offset_code <- generate_api_offset_extractor(struct_name, field_names, prefix)
+  
+  # Combine
+  complete_code <- paste(
+    includes_code,
+    "",
+    constructor_code,
+    "",
+    offset_code,
+    sep = "\n"
+  )
+  
+  return(complete_code)
+}
