@@ -296,12 +296,16 @@ ffi_get_field(ptr, "x", Point)
 
 **API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C code with `offsetof()`, compile it with `R CMD SHLIB`, and extract accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with `$new()`, `$get()`, and `$set()` methods.
 
-```{r eval=FALSE}
+```{r}
 # API mode: compiler-computed offsets
 helpers <- ffi_create_helpers("Point", list(x = ffi_int(), y = ffi_double()))
 ptr <- helpers$new()
 helpers$set(ptr, "x", 42L)  # No struct type needed
 helpers$get(ptr, "x")
+
+# Field metadata shows compiler-computed offset
+helpers$fields$x$offset
+helpers$fields$y$offset
 ```
 
 Use ABI mode for simple structs and quick prototyping. Use API mode for structs with bitfields or when you need guaranteed correct layout matching the C compiler's output.
@@ -1308,6 +1312,47 @@ typedef struct hFILE {
     unsigned at_eof:1, mobile:1, readonly:1, preserve:1;  // bitfields
     int has_errno;
 } hFILE;
+```
+
+When working with such structs, you can only access non-bitfield members via ABI mode:
+
+```{r}
+# ABI mode: can only access non-bitfield members
+hFILE <- ffi_struct(
+  buffer = ffi_pointer(),
+  begin = ffi_pointer(),
+  end = ffi_pointer(),
+  limit = ffi_pointer(),
+  backend = ffi_pointer(),
+  offset = ffi_long(),
+  # Skip bitfields: at_eof, mobile, readonly, preserve
+  has_errno = ffi_int()
+)
+
+ptr <- ffi_alloc(hFILE)
+ffi_set_field(ptr, "has_errno", 5L, hFILE)
+ffi_get_field(ptr, "has_errno", hFILE)
+```
+
+For complete access including bitfields, use API mode:
+
+```{r}
+# API mode: compiler handles all fields including bitfields
+helpers <- ffi_create_helpers("hFILE_like", list(
+  buffer = ffi_pointer(),
+  begin = ffi_pointer(),
+  end = ffi_pointer(),
+  limit = ffi_pointer(),
+  backend = ffi_pointer(),
+  offset = ffi_long(),
+  has_errno = ffi_int()
+))
+
+ptr <- helpers$new()
+helpers$set(ptr, "has_errno", 5L)
+helpers$get(ptr, "has_errno")
+# Offsets account for bitfields even though not listed
+helpers$fields$has_errno$offset
 ```
 
 
