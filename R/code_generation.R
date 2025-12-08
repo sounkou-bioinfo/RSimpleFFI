@@ -118,18 +118,49 @@ SEXP %s(void) {
   return(c_code)
 }
 
+#' Generate struct typedef from field types
+#'
+#' @param struct_name Name of the C struct
+#' @param field_names Character vector of field names
+#' @param field_types Character vector of C type names (e.g., "int", "double")
+#' @return Character string containing typedef
+#' @export
+#' @keywords internal
+generate_api_struct_typedef <- function(struct_name, field_names, field_types = NULL) {
+  if (is.null(field_types)) {
+    # Default to int for all fields
+    field_types <- rep("int", length(field_names))
+  }
+  
+  if (length(field_types) != length(field_names)) {
+    stop("field_types must have same length as field_names")
+  }
+  
+  # Build field declarations
+  field_decls <- paste0("    ", field_types, " ", field_names, ";", collapse = "\n")
+  
+  typedef_code <- sprintf(
+    "typedef struct {\n%s\n} %s;\n",
+    field_decls,
+    struct_name
+  )
+  
+  return(typedef_code)
+}
+
 #' Generate complete helper module for a struct (API mode)
 #'
 #' Combines constructor and offset extractor into a complete C file.
 #'
 #' @param struct_name Name of the C struct
 #' @param field_names Character vector of field names
+#' @param field_types Character vector of C type names (defaults to "int" for all)
 #' @param header_includes Character vector of header files to include
 #' @param prefix Prefix for generated function names (default "rffi_")
 #' @return Character string containing complete C code
 #' @export
 #' @keywords internal
-generate_api_struct_helpers <- function(struct_name, field_names, 
+generate_api_struct_helpers <- function(struct_name, field_names, field_types = NULL,
                                    header_includes = NULL, prefix = "rffi_") {
   # Build includes
   includes <- c(
@@ -145,6 +176,13 @@ generate_api_struct_helpers <- function(struct_name, field_names,
   
   includes_code <- paste(includes, collapse = "\n")
   
+  # Generate struct typedef if not using external header
+  typedef_code <- if (is.null(header_includes)) {
+    generate_api_struct_typedef(struct_name, field_names, field_types)
+  } else {
+    ""
+  }
+  
   # Generate functions
   constructor_code <- generate_api_constructor(struct_name, prefix)
   offset_code <- generate_api_offset_extractor(struct_name, field_names, prefix)
@@ -153,6 +191,7 @@ generate_api_struct_helpers <- function(struct_name, field_names,
   complete_code <- paste(
     includes_code,
     "",
+    typedef_code,
     constructor_code,
     "",
     offset_code,
