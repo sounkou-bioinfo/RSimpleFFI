@@ -1,7 +1,7 @@
 #ifndef DIFFICULT_STRUCTS_H
 #define DIFFICULT_STRUCTS_H
 
-//#include <stdio.h>
+#include <stdio.h>
 
 /* Test FILE* and other opaque pointers */
 FILE* open_file(const char* path, const char* mode);

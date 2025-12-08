@@ -78,6 +78,48 @@ if [ -d "$TINYCC_SRC" ]; then
     
     echo "tinycc built and installed to $TINYCC_DEST" >> config.log
     rm -rf "$TINYCC_SRC"
+    
+    # Test TinyCC preprocessing with difficult_structs.h
+    cd "${THISDir}"
+    echo "" >> config.log
+    echo "=== Testing TinyCC preprocessing ===" >> config.log
+    TCC_BIN="${TINYCC_DEST}/bin/tcc"
+    TEST_HEADER="${THISDir}/inst/extdata/difficult_structs.h"
+    
+    if [ -f "$TCC_BIN" ] && [ -f "$TEST_HEADER" ]; then
+        echo "TinyCC binary: $TCC_BIN" >> config.log
+        echo "Test header: $TEST_HEADER" >> config.log
+        
+        # Get TinyCC version
+        "$TCC_BIN" -v 2>&1 | head -1 >> config.log
+        
+        # Test preprocessing
+        TMP_OUT=$(mktemp)
+        echo "Running: $TCC_BIN -E $TEST_HEADER -o $TMP_OUT" >> config.log
+        if "$TCC_BIN" -E -v "$TEST_HEADER" -o "$TMP_OUT" >> config.log 2>&1; then
+            OUTPUT_SIZE=$(wc -c < "$TMP_OUT")
+            OUTPUT_LINES=$(wc -l < "$TMP_OUT")
+            echo "Preprocessing SUCCESS: $OUTPUT_SIZE bytes, $OUTPUT_LINES lines" >> config.log
+            
+            # Check if output is suspiciously small
+            if [ "$OUTPUT_SIZE" -lt 5000 ]; then
+                echo "WARNING: Preprocessed output is suspiciously small ($OUTPUT_SIZE bytes)" >> config.log
+                echo "This may indicate TinyCC cannot process system headers properly" >> config.log
+                echo "Last 20 lines of preprocessed output:" >> config.log
+                tail -20 "$TMP_OUT" >> config.log
+            else
+                echo "Preprocessing appears successful (output size is reasonable)" >> config.log
+            fi
+        else
+            echo "ERROR: TinyCC preprocessing failed" >> config.log
+            echo "This may cause test failures related to header parsing" >> config.log
+        fi
+        rm -f "$TMP_OUT"
+    else
+        echo "Cannot test TinyCC: binary or test header not found" >> config.log
+    fi
+    echo "=== End TinyCC preprocessing test ===" >> config.log
+    echo "" >> config.log
 else
     echo "Error: tinycc source directory $TINYCC_SRC does not exist."
     exit 1
