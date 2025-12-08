@@ -30,21 +30,16 @@ test_that("generate_api_struct_helpers combines code correctly", {
 test_that("ffi_compile_shlib compiles and loads code", {
   skip_on_cran()
   
-  # Generate helpers for Point2D from test_functions.c
+  # Generate code (now includes struct typedef automatically)
   code <- generate_api_struct_helpers(
     "Point2D", 
     c("x", "y"),
-    header_includes = NULL  # Point2D is declared in init.c
+    field_types = c("int", "int"),  # Explicit C types
+    header_includes = NULL
   )
   
-  # Add Point2D struct definition for compilation
-  full_code <- paste0(
-    "typedef struct { int x; int y; } Point2D;\n\n",
-    code
-  )
-  
-  # Compile
-  lib <- ffi_compile_shlib(full_code, verbose = FALSE)
+  # Compile (no need to add typedef manually)
+  lib <- ffi_compile_shlib(code, verbose = FALSE)
   
   expect_s3_class(lib, "rffi_compiled_lib")
   expect_true(file.exists(lib$path))
@@ -74,47 +69,40 @@ test_that("ffi_compile_shlib compiles and loads code", {
 test_that("compiled helpers integrate with API mode", {
   skip_on_cran()
   
-  # Generate and compile helpers
+  # Generate complete helper code (includes typedef)
   code <- generate_api_struct_helpers(
-    "Point2D",
-    c("x", "y")
+    "Point2D", 
+    c("x", "y"),
+    field_types = c("int", "int")
   )
   
-  full_code <- paste0(
-    "typedef struct { int x; int y; } Point2D;\n\n",
-    code
-  )
+  # Compile
+  lib <- ffi_compile_shlib(code)
   
-  lib <- ffi_compile_shlib(full_code)
-  
-  # Get functions
+  # Extract functions
   new_fn <- ffi_get_symbol(lib, "rffi_Point2D_new")
   offsets_fn <- ffi_get_symbol(lib, "rffi_Point2D_offsets")
   
-  # Create struct
+  # Use constructor
   ptr <- new_fn()
+  expect_true(inherits(ptr, "externalptr"))
   
   # Get offsets
   offsets <- offsets_fn()
+  expect_equal(offsets$x, 0)
+  expect_equal(offsets$y, 4)
   
-  # Build type metadata for API mode
-  Point2D_type <- list(
-    fields = list(
-      x = list(type = ffi_int(), offset = offsets$x),
-      y = list(type = ffi_int(), offset = offsets$y)
-    )
-  )
+  # Use with API mode accessors (direct C calls)
+  .Call("R_struct_set_field", ptr, offsets$x, ffi_int()@ref, 42L, PACKAGE = "RSimpleFFI")
+  .Call("R_struct_set_field", ptr, offsets$y, ffi_int()@ref, 100L, PACKAGE = "RSimpleFFI")
   
-  # Use API mode accessors
-  ffi_set_field(ptr, "x", Point2D_type, 42L)
-  ffi_set_field(ptr, "y", Point2D_type, 100L)
+  field_ptr_x <- .Call("R_struct_get_field_ptr", ptr, offsets$x, ffi_int()@ref, PACKAGE = "RSimpleFFI")
+  field_ptr_y <- .Call("R_struct_get_field_ptr", ptr, offsets$y, ffi_int()@ref, PACKAGE = "RSimpleFFI")
   
-  x_val <- ffi_get_field(ptr, "x", Point2D_type)
-  y_val <- ffi_get_field(ptr, "y", Point2D_type)
-  
-  expect_equal(x_val, 42L)
-  expect_equal(y_val, 100L)
+  expect_equal(.Call("R_field_to_r", field_ptr_x, PACKAGE = "RSimpleFFI"), 42L)
+  expect_equal(.Call("R_field_to_r", field_ptr_y, PACKAGE = "RSimpleFFI"), 100L)
   
   # Cleanup
   ffi_cleanup_lib(lib)
 })
+
