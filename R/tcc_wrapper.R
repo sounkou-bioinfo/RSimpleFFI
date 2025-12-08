@@ -28,6 +28,14 @@ tcc_binary_path <- function() {
   if (!nzchar(tcc_path) || !file.exists(tcc_path)) {
     stop("TCC binary not found. Package may not be installed correctly.")
   }
+  # replace tcc_path with gcc/clang from R CMD confic CC
+  # if we can find them
+  R_CC <- system2("R", c("CMD", "config", "CC"), stdout = TRUE)
+  if (nzchar(R_CC) && file.exists(R_CC)) {
+    # remove stuff like 'gcc -std=gnu11' to just get the binary path
+    R_CC <- strsplit(R_CC, " ")[[1]][1]
+    tcc_path <- normalizePath(R_CC)
+  }
 
   tcc_path
 }
@@ -44,7 +52,7 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
   }
 
   tcc <- tcc_binary_path()
-  
+
   # Diagnostic: Check TinyCC include path (differs between Windows and Unix)
   if (.Platform$OS.type == "windows") {
     # Windows: inst/tinycc/include/
@@ -54,32 +62,32 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
     tcc_lib_path <- file.path(dirname(dirname(tcc)), "lib", "tcc")
     tcc_include <- file.path(tcc_lib_path, "include")
   }
-  
+
   if (!dir.exists(tcc_include)) {
     warning("TinyCC include path not found: ", tcc_include)
   } else {
     message("TinyCC include path: ", tcc_include)
-    message("TinyCC builtin headers: ", paste(list.files(tcc_include), collapse=", "))
+    message("TinyCC builtin headers: ", paste(list.files(tcc_include), collapse = ", "))
   }
-  
+
   tmp_out <- tempfile(fileext = ".i")
   tmp_err <- tempfile(fileext = ".err")
   on.exit(unlink(c(tmp_out, tmp_err)), add = TRUE)
 
-  args <- c("-E", "-v")  # Add -v for verbose output
+  args <- c("-E", "-v") # Add -v for verbose output
 
   if (!is.null(includes)) {
     args <- c(args, paste0("-I", includes))
   }
 
   args <- c(args, header_file, "-o", tmp_out)
-  
+
   # Capture both stdout and stderr separately
   result <- system2(tcc, args, stdout = tmp_err, stderr = tmp_err)
-  
+
   # Read error/diagnostic output
   err_output <- if (file.exists(tmp_err)) readLines(tmp_err, warn = FALSE) else character(0)
-  
+
   if (length(err_output) > 0) {
     message("TCC diagnostic output:")
     message(paste(head(err_output, 20), collapse = "\n"))
@@ -88,30 +96,32 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
   if (!file.exists(tmp_out)) {
     stop("TCC preprocessing failed:\n", paste(err_output, collapse = "\n"))
   }
-  
+
   # Check if output seems truncated
   file_size <- file.info(tmp_out)$size
   lines <- readLines(tmp_out, warn = FALSE)
   num_lines <- length(lines)
-  
+
   # message size of the temp file  and number of characters
   message("Preprocessed file size: ", file_size, " bytes")
   message("Preprocessed file lines: ", num_lines, " lines")
-  
+
   # count bytes of each line and sum them
   line_sizes <- nchar(lines, type = "bytes")
   total_chars <- sum(line_sizes)
   message("Preprocessed file total characters: ", total_chars, " characters")
-  
+
   # Check for suspiciously small output
   if (file_size < 5000 && num_lines < 100) {
-    warning("TinyCC preprocessing produced suspiciously small output (", 
-            file_size, " bytes, ", num_lines, " lines). ",
-            "This may indicate incomplete preprocessing.")
+    warning(
+      "TinyCC preprocessing produced suspiciously small output (",
+      file_size, " bytes, ", num_lines, " lines). ",
+      "This may indicate incomplete preprocessing."
+    )
     message("Last 10 lines of preprocessed output:")
     message(paste(tail(lines, 10), collapse = "\n"))
   }
-  
+
   lines
 }
 
