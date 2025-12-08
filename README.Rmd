@@ -280,38 +280,63 @@ ffi_sizeof(Pack4)  # 12 bytes
 Use `ffi_all_offsets()` to see the complete layout
 ```
 
-### Compiler-Based Struct Helpers
+### ABI Mode vs API Mode
 
-For structs with bitfields or complex alignment, use `ffi_create_helpers()` to generate accessor functions with compiler-computed offsets via `offsetof()`:
+RSimpleFFI supports two approaches for working with structs:
+
+**ABI Mode (Reflection-Based)**: Uses `ffi_struct()` to create struct types where field offsets are computed at runtime using platform ABI rules. Access fields with `ffi_get_field()` and `ffi_set_field()` passing the struct type object. This works for most structs but cannot handle bitfields since bitfield addresses cannot be taken.
 
 ```{r}
-# Define struct with bitfields (like htslib's hFILE)
+# ABI mode: runtime offset calculation
+Point <- ffi_struct(x = ffi_int(), y = ffi_double())
+ptr <- ffi_alloc(Point)
+ffi_set_field(ptr, "x", 42L, Point)  # Pass struct type
+ffi_get_field(ptr, "x", Point)
+```
+
+**API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C code with `offsetof()`, compile it with `R CMD SHLIB`, and extract accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with `$new()`, `$get()`, and `$set()` methods.
+
+```{r eval=FALSE}
+# API mode: compiler-computed offsets
+helpers <- ffi_create_helpers("Point", list(x = ffi_int(), y = ffi_double()))
+ptr <- helpers$new()
+helpers$set(ptr, "x", 42L)  # No struct type needed
+helpers$get(ptr, "x")
+```
+
+Use ABI mode for simple structs and quick prototyping. Use API mode for structs with bitfields or when you need guaranteed correct layout matching the C compiler's output.
+
+### Compiler-Based Struct Helpers
+
+For structs with bitfields or complex alignment, use `ffi_create_helpers()` to generate accessor functions with compiler-computed offsets via `offsetof()`. The struct definition is written in C and compiled, so the compiler handles bitfield layout:
+
+```{r}
+# Define fields matching htslib's hFILE (bitfields handled by compiler)
 hfile_fields <- list(
   buffer = ffi_pointer(),
   begin = ffi_pointer(),
   end = ffi_pointer(),
   limit = ffi_pointer(),
+  backend = ffi_pointer(),
   offset = ffi_long(),
   has_errno = ffi_int()
 )
 
-# Generate constructor and accessors
+# Generate constructor and accessors with correct compiler-computed offsets
 helpers <- ffi_create_helpers("hFILE_like", hfile_fields)
 
 # Create instance
 obj <- helpers$new()
 
-# Set field using compiled accessor
+# Set and get fields
 helpers$set(obj, "has_errno", 42L)
-
-# Get field
 helpers$get(obj, "has_errno")
 
-# Field metadata
+# Compiler-computed offset accounts for all padding and bitfields
 helpers$fields$has_errno$offset
 ```
 
-The generated code compiles with `R CMD SHLIB` and uses the C compiler's layout calculations, handling bitfields and platform-specific alignment automatically.
+The generated C code uses `offsetof()` so the compiler handles alignment, padding, and bitfields automatically. This is the only way to correctly access structs with bitfields since their layout is compiler and platform-specific.
 
 ### Struct Arrays
 

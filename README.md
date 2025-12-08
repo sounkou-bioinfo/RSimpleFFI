@@ -337,43 +337,79 @@ Use `ffi_all_offsets()` to see the complete layout
 
 ```` 
 
-### Compiler-Based Struct Helpers
+### ABI Mode vs API Mode
 
-For structs with bitfields or complex alignment, use `ffi_create_helpers()` to generate accessor functions with compiler-computed offsets via `offsetof()`:
+RSimpleFFI supports two approaches for working with structs:
+
+**ABI Mode (Reflection-Based)**: Uses `ffi_struct()` to create struct types where field offsets are computed at runtime using platform ABI rules. Access fields with `ffi_get_field()` and `ffi_set_field()` passing the struct type object. This works for most structs but cannot handle bitfields since bitfield addresses cannot be taken.
 
 
 ``` r
-# Define struct with bitfields (like htslib's hFILE)
+# ABI mode: runtime offset calculation
+Point <- ffi_struct(x = ffi_int(), y = ffi_double())
+ptr <- ffi_alloc(Point)
+ffi_set_field(ptr, "x", 42L, Point)  # Pass struct type
+ffi_get_field(ptr, "x", Point)
+#> [1] 42
+````
+
+**API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C
+code with `offsetof()`, compile it with `R CMD SHLIB`, and extract
+accessor functions. The compiler computes all offsets, handling
+bitfields and complex alignment. Returns a helper object with `$new()`,
+`$get()`, and `$set()` methods.
+
+``` r
+# API mode: compiler-computed offsets
+helpers <- ffi_create_helpers("Point", list(x = ffi_int(), y = ffi_double()))
+ptr <- helpers$new()
+helpers$set(ptr, "x", 42L)  # No struct type needed
+helpers$get(ptr, "x")
+```
+
+Use ABI mode for simple structs and quick prototyping. Use API mode for
+structs with bitfields or when you need guaranteed correct layout
+matching the C compiler’s output.
+
+### Compiler-Based Struct Helpers
+
+For structs with bitfields or complex alignment, use
+`ffi_create_helpers()` to generate accessor functions with
+compiler-computed offsets via `offsetof()`. The struct definition is
+written in C and compiled, so the compiler handles bitfield layout:
+
+``` r
+# Define fields matching htslib's hFILE (bitfields handled by compiler)
 hfile_fields <- list(
   buffer = ffi_pointer(),
   begin = ffi_pointer(),
   end = ffi_pointer(),
   limit = ffi_pointer(),
+  backend = ffi_pointer(),
   offset = ffi_long(),
   has_errno = ffi_int()
 )
 
-# Generate constructor and accessors
+# Generate constructor and accessors with correct compiler-computed offsets
 helpers <- ffi_create_helpers("hFILE_like", hfile_fields)
 
 # Create instance
 obj <- helpers$new()
 
-# Set field using compiled accessor
+# Set and get fields
 helpers$set(obj, "has_errno", 42L)
-
-# Get field
 helpers$get(obj, "has_errno")
 #> [1] 42
 
-# Field metadata
+# Compiler-computed offset accounts for all padding and bitfields
 helpers$fields$has_errno$offset
-#> [1] 40
-````
+#> [1] 48
+```
 
-The generated code compiles with `R CMD SHLIB` and uses the C compiler’s
-layout calculations, handling bitfields and platform-specific alignment
-automatically.
+The generated C code uses `offsetof()` so the compiler handles
+alignment, padding, and bitfields automatically. This is the only way to
+correctly access structs with bitfields since their layout is compiler
+and platform-specific.
 
 ### Struct Arrays
 
@@ -736,10 +772,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 723560869
+#> [1] 355352178
 rand_value <- rand_func()
 rand_value
-#> [1] 885448614
+#> [1] 978413834
 dll_unload(libc_path)
 ```
 
@@ -763,7 +799,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x59e6eed01a60>
+#> <pointer: 0x5f85cb66a940>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -861,8 +897,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      517µs  722.2µs     1236.     781KB     12.5
-#> 2 ffi_call      842µs   1.06ms      903.     782KB     18.4
+#> 1 native_r      458µs    497µs     1601.     781KB     16.2
+#> 2 ffi_call      725µs    855µs     1090.     782KB     22.2
 dll_unload(lib_path)
 ```
 
@@ -945,7 +981,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x59e6f597f050>
+#> <pointer: 0x5f85cf26dc90>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -977,8 +1013,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            51.1ms  56.35ms      16.8     781KB     13.7
-#> 2 c_ffi       961.4µs   1.31ms     749.      782KB      0
+#> 1 r            47.6ms   48.8ms      19.6     781KB     16.0
+#> 2 c_ffi       813.7µs  862.7µs    1019.      782KB      0
 
 dll_unload(lib_path)
 ```
@@ -1060,7 +1096,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1765203437
+#> [1] 1765203596
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1128,7 +1164,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-08 18:17:17.490144\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-08 18:19:56.486713\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1186,7 +1222,7 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
 #> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
-#> -> /tmp/RtmpEABV8N/file710ac57513b9f.h
+#> -> /tmp/RtmpvpOjZV/file718a472c47fb2.h
 #> Preprocessed file size: 209 bytes
 #> Preprocessed file lines: 9 lines
 #> Preprocessed file total characters: 200 characters
@@ -1194,9 +1230,9 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> preprocessing produced suspiciously small output (209 bytes, 9 lines). This may
 #> indicate incomplete preprocessing.
 #> Last 10 lines of preprocessed output:
-#> # 1 "/tmp/RtmpEABV8N/file710ac57513b9f.h"
+#> # 1 "/tmp/RtmpvpOjZV/file718a472c47fb2.h"
 #> # 1 "<command line>" 1
-#> # 1 "/tmp/RtmpEABV8N/file710ac57513b9f.h" 2
+#> # 1 "/tmp/RtmpvpOjZV/file718a472c47fb2.h" 2
 #> 
 #> unsigned long strlen(const char* s);
 #> int strcmp(const char* s1, const char* s2);
@@ -1207,8 +1243,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file710ac57513b9f.h
-#> # Generated on: 2025-12-08 18:17:17.569792
+#> # Auto-generated R bindings for file718a472c47fb2.h
+#> # Generated on: 2025-12-08 18:19:56.561805
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1360,7 +1396,7 @@ bindgen_r_api(output_file = outfile, headers = "Rmath.h")
 #> Preprocessed file size: 34939 bytes
 #> Preprocessed file lines: 1353 lines
 #> Preprocessed file total characters: 33586 characters
-#> Generated R bindings written to: /tmp/RtmpEABV8N/file710ac56015081.R
+#> Generated R bindings written to: /tmp/RtmpvpOjZV/file718a44ec359b4.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1484,7 +1520,7 @@ automatically released when the pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x59e6f4969d98>
+#> <pointer: 0x5f85cd378b98>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
