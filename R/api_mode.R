@@ -78,6 +78,10 @@ S7::method(ffi_set_field, list(S7::class_any, S7::class_any, S7::class_any, Stru
     }
   } else {
     field_idx <- field_name
+    # Validate integer index
+    if (field_idx < 1 || field_idx > length(struct_type@fields)) {
+      stop("Field index out of range")
+    }
   }
   
   offset <- ffi_offsetof(struct_type, field_idx, use_pack = TRUE)
@@ -161,6 +165,10 @@ S7::method(ffi_get_field, list(S7::class_any, S7::class_any, StructType)) <- fun
     }
   } else {
     field_idx <- field_name
+    # Validate integer index
+    if (field_idx < 1 || field_idx > length(struct_type@fields)) {
+      stop("Field index out of range")
+    }
   }
   
   offset <- ffi_offsetof(struct_type, field_idx, use_pack = TRUE)
@@ -198,6 +206,10 @@ S7::method(ffi_set_field, list(S7::class_any, S7::class_any, S7::class_any, Unio
     }
   } else {
     field_idx <- field_name
+    # Validate integer index
+    if (field_idx < 1 || field_idx > length(struct_type@fields)) {
+      stop("Field index out of range")
+    }
   }
   
   # For unions, offset is always 0 (all fields share the same memory)
@@ -230,6 +242,10 @@ S7::method(ffi_get_field, list(S7::class_any, S7::class_any, UnionType)) <- func
     }
   } else {
     field_idx <- field_name
+    # Validate integer index
+    if (field_idx < 1 || field_idx > length(struct_type@fields)) {
+      stop("Field index out of range")
+    }
   }
   
   # For unions, offset is always 0 (all fields share the same memory)
