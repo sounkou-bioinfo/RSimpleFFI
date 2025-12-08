@@ -2223,11 +2223,16 @@ SEXP R_struct_get_field_ptr(SEXP struct_ptr, SEXP r_offset, SEXP field_type) {
         Rf_error("NULL struct pointer");
     }
     
-    // Get offset
-    if (!IS_NUMERIC(r_offset) || LENGTH(r_offset) != 1) {
+    // Get offset - accept both numeric and integer
+    if (!(Rf_isNumeric(r_offset) || Rf_isInteger(r_offset)) || LENGTH(r_offset) != 1) {
         Rf_error("offset must be a single numeric value");
     }
-    size_t offset = (size_t)REAL(r_offset)[0];
+    size_t offset;
+    if (Rf_isReal(r_offset)) {
+        offset = (size_t)REAL(r_offset)[0];
+    } else {
+        offset = (size_t)INTEGER(r_offset)[0];
+    }
     
     // Calculate field address
     void* field_addr = (char*)struct_addr + offset;
@@ -2256,8 +2261,10 @@ SEXP R_struct_set_field(SEXP struct_ptr, SEXP r_offset, SEXP field_type, SEXP va
         Rf_error("NULL FFI type pointer");
     }
     
-    // Write value based on type
-    write_typed_value(field_addr, type, value);
+    // Convert R value to native and write to field address
+    // Use convert_r_to_native which handles all types
+    void* native_value = convert_r_to_native(value, type);
+    memcpy(field_addr, native_value, type->size);
     
     return R_NilValue;
 }
@@ -2285,6 +2292,6 @@ SEXP R_field_to_r(SEXP field_ptr) {
         Rf_error("NULL FFI type in field pointer tag");
     }
     
-    // Use existing read_typed_value function
-    return read_typed_value(field_addr, type);
+    // Use existing convert_native_to_r function
+    return convert_native_to_r(field_addr, type);
 }
