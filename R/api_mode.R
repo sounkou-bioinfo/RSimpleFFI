@@ -68,7 +68,7 @@ S7::method(ffi_set_field, list(S7::class_any, S7::class_any, S7::class_any, Stru
   
   # Handle both character field names and integer indices
   if (is.character(field_name)) {
-    field_idx <- which(names(struct_type@fields) == field_name)
+    field_idx <- which(struct_type@fields == field_name)
     if (length(field_idx) == 0) {
       if (S7::S7_inherits(struct_type, UnionType)) {
         stop("No such field '", field_name, "' in union")
@@ -81,7 +81,7 @@ S7::method(ffi_set_field, list(S7::class_any, S7::class_any, S7::class_any, Stru
   }
   
   offset <- ffi_offsetof(struct_type, field_idx, use_pack = TRUE)
-  field_type <- struct_type@fields[[field_idx]]
+  field_type <- struct_type@field_types[[field_idx]]
   
   # Extract external pointer ref from S7 FFIType object
   if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
@@ -151,7 +151,7 @@ S7::method(ffi_get_field, list(S7::class_any, S7::class_any, StructType)) <- fun
   
   # Handle both character field names and integer indices
   if (is.character(field_name)) {
-    field_idx <- which(names(struct_type@fields) == field_name)
+    field_idx <- which(struct_type@fields == field_name)
     if (length(field_idx) == 0) {
       if (S7::S7_inherits(struct_type, UnionType)) {
         stop("No such field '", field_name, "' in union")
@@ -164,7 +164,77 @@ S7::method(ffi_get_field, list(S7::class_any, S7::class_any, StructType)) <- fun
   }
   
   offset <- ffi_offsetof(struct_type, field_idx, use_pack = TRUE)
-  field_type <- struct_type@fields[[field_idx]]
+  field_type <- struct_type@field_types[[field_idx]]
+  
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else {
+    stop("field_type must be an FFIType")
+  }
+  
+  # Get pointer to field (tagged with type)
+  field_ptr <- .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type_ptr, PACKAGE = "RSimpleFFI")
+  
+  # Convert to R value
+  .Call("R_field_to_r", field_ptr, PACKAGE = "RSimpleFFI")
+}
+
+#' @export
+S7::method(ffi_set_field, list(S7::class_any, S7::class_any, S7::class_any, UnionType)) <- function(struct_ptr, field_name, arg3, arg4) {
+  # Old UnionType API: (ptr, field_name, value, UnionType)
+  value <- arg3
+  struct_type <- arg4  # Use struct_type to match generic signature
+  
+  if (!inherits(struct_ptr, "externalptr")) {
+    stop("struct_ptr must be an external pointer")
+  }
+  
+  # Handle both character field names and integer indices
+  if (is.character(field_name)) {
+    field_idx <- which(struct_type@fields == field_name)
+    if (length(field_idx) == 0) {
+      stop("No such field '", field_name, "' in union")
+    }
+  } else {
+    field_idx <- field_name
+  }
+  
+  # For unions, offset is always 0 (all fields share the same memory)
+  offset <- 0
+  field_type <- struct_type@field_types[[field_idx]]
+  
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else {
+    stop("field_type must be an FFIType")
+  }
+  
+  .Call("R_struct_set_field", struct_ptr, offset, field_type_ptr, value, PACKAGE = "RSimpleFFI")
+  invisible(NULL)
+}
+
+#' @export
+S7::method(ffi_get_field, list(S7::class_any, S7::class_any, UnionType)) <- function(struct_ptr, field_name, struct_type) {
+  # Old UnionType API: (ptr, field_name, UnionType)
+  if (!inherits(struct_ptr, "externalptr")) {
+    stop("struct_ptr must be an external pointer")
+  }
+  
+  # Handle both character field names and integer indices
+  if (is.character(field_name)) {
+    field_idx <- which(struct_type@fields == field_name)
+    if (length(field_idx) == 0) {
+      stop("No such field '", field_name, "' in union")
+    }
+  } else {
+    field_idx <- field_name
+  }
+  
+  # For unions, offset is always 0 (all fields share the same memory)
+  offset <- 0
+  field_type <- struct_type@field_types[[field_idx]]
   
   # Extract external pointer ref from S7 FFIType object
   if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
