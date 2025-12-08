@@ -31,7 +31,7 @@ test_that("API mode generic field accessors work with simple struct", {
   
   # Test field pointer with lazy conversion
   x_ptr <- ffi_get_field_ptr(ptr, "x", Point2D_type)
-  expect_s3_class(x_ptr, "externalptr")
+  expect_true(inherits(x_ptr, "externalptr"))
   
   # Convert field pointer to R value
   x_val2 <- ffi_field_to_r(x_ptr)
