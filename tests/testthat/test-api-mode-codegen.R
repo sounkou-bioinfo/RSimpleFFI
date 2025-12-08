@@ -62,8 +62,8 @@ test_that("ffi_compile_shlib compiles and loads code", {
   expect_equal(offsets$x, 0)  # x is first field
   expect_equal(offsets$y, 4)  # y follows 4-byte int
   
-  # Cleanup
-  ffi_cleanup_lib(lib)
+  # Note: Cleanup happens automatically via gc() or when R exits
+  # Explicitly calling ffi_cleanup_lib() can cause issues if pointers are still in use
 })
 
 test_that("compiled helpers integrate with API mode", {
@@ -102,7 +102,6 @@ test_that("compiled helpers integrate with API mode", {
   expect_equal(.Call("R_field_to_r", field_ptr_x, PACKAGE = "RSimpleFFI"), 42L)
   expect_equal(.Call("R_field_to_r", field_ptr_y, PACKAGE = "RSimpleFFI"), 100L)
   
-  # Cleanup
-  ffi_cleanup_lib(lib)
+  # Note: Cleanup happens automatically
 })
 
