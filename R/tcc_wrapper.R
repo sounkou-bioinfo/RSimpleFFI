@@ -34,7 +34,9 @@ tcc_binary_path <- function() {
   if (nzchar(R_CC) && file.exists(R_CC)) {
     # remove stuff like 'gcc -std=gnu11' to just get the binary path
     R_CC <- strsplit(R_CC, " ")[[1]][1]
-    tcc_path <- normalizePath(R_CC)
+    if (file.exists(R_CC)) {
+      tcc_path <- normalizePath(R_CC)
+    }
   }
 
   tcc_path
