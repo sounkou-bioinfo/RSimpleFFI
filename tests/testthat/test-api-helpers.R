@@ -14,6 +14,7 @@ test_that("ffi_create_helpers validates inputs", {
     "field_types must be a named list"
   )
   
+  
   expect_error(
     ffi_create_helpers("Point", list()),  # empty unnamed also triggers named list check
     "field_types must be a named list"
