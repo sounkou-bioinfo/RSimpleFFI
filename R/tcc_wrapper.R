@@ -58,7 +58,12 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
   if (!file.exists(tmp_out)) {
     stop("TCC preprocessing failed:\n", paste(result, collapse = "\n"))
   }
-
+  # message size of the temp file  and number of characters
+  message("Preprocessed file size: ", file.info(tmp_out)$size, " bytes")
+  message("Preprocessed file lines: ", length(readLines(tmp_out)), " lines")
+  # count bytes of each line and sum them
+  line_sizes <- nchar(readLines(tmp_out), type = "bytes")
+  message("Preprocessed file total characters: ", sum(line_sizes), " characters")
   readLines(tmp_out)
 }
 

@@ -134,8 +134,14 @@ test_that("FILE* and opaque pointers generate valid code", {
   )
   skip_if(header == "", "difficult_structs.h not found")
   lines <- tcc_preprocess(header)
-  message("Preprocessed lines:\n")
-  cat(lines)
+  message("Preprocessed lines Start:========================================\n")
+  # split by #
+  nchar_lines <- nchar(lines, type = "bytes")
+  message("Preprocessed lines length: ", nchar_lines, "\n")
+  lines_split <- strsplit(lines, "#")
+  lines_split <- unlist(lapply(lines_split, function(x) trimws(x)))
+  cat(lines_split, sep = "\n")
+  message("Preprocessed lines end:========================================\n")
   parsed <- ffi_parse_header(header)
 
   # Try to get warning, dump debug info if not found
@@ -245,7 +251,10 @@ test_that("nested structs generate complete definitions", {
     result$warning_caught,
     info = "Expected warning about bit-fields but none was produced. See debug output above."
   )
-  message("Generated code:\n")  tmpfile <- tempfile(fileext = ".R")
+  message("Generated code:\n")
+  cat(code)
+
+  tmpfile <- tempfile(fileext = ".R")
   writeLines(code, tmpfile)
 
   env <- new.env()
