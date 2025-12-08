@@ -4,24 +4,28 @@
 \alias{ffi_set_field}
 \title{Set field value in FFI structure}
 \usage{
-ffi_set_field(struct_ptr, field_name, struct_type, value)
+ffi_set_field(struct_ptr, field_name, arg3, arg4, ...)
 
-ffi_set_field(struct_ptr, field_name, struct_type, value)
+ffi_set_field(struct_ptr, field_name, arg3, arg4, ...)
 }
 \arguments{
 \item{struct_ptr}{External pointer to the struct}
 
-\item{field_name}{Name of the field to set}
+\item{field_name}{Name of the field to set (character or integer index)}
 
-\item{struct_type}{Struct type metadata (contains field offsets and types)}
+\item{arg3}{Third argument (struct_type or value)}
 
-\item{value}{Value to set}
+\item{arg4}{Fourth argument (value or struct_type)}
+
+\item{...}{Additional arguments (not used)}
 
 \item{ptr}{External pointer to structure}
 
 \item{field}{Character field name or integer field index}
 
-\item{...}{Additional arguments (not used)}
+\item{value}{Value to set}
+
+\item{struct_type}{StructType object}
 }
 \value{
 Updated pointer
@@ -29,8 +33,10 @@ Updated pointer
 NULL (invisible)
 }
 \description{
-Sets a field value using type-aware writing. Works with bitfields, regular
-fields, pointers, nested structs, etc.
+S7 generic for setting struct field values. Supports both:
+\itemize{
+\item New API mode: ffi_set_field(ptr, field, struct_type_list, value)
+\item Old StructType: ffi_set_field(ptr, field, value, StructType)
+}
 }
 \keyword{Types}
-\keyword{internal}

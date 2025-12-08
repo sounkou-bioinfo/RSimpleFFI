@@ -4,22 +4,22 @@
 \alias{ffi_get_field}
 \title{Get field value from FFI structure}
 \usage{
-ffi_get_field(struct_ptr, field_name, struct_type)
+ffi_get_field(struct_ptr, field_name, struct_type, ...)
 
-ffi_get_field(struct_ptr, field_name, struct_type)
+ffi_get_field(struct_ptr, field_name, struct_type, ...)
 }
 \arguments{
 \item{struct_ptr}{External pointer to the struct}
 
-\item{field_name}{Name of the field to get}
+\item{field_name}{Name of the field to get (character or integer index)}
 
-\item{struct_type}{Struct type metadata (contains field offsets and types)}
+\item{struct_type}{Struct type (list or StructType object)}
+
+\item{...}{Additional arguments (not used)}
 
 \item{ptr}{External pointer to structure}
 
 \item{field}{Character field name or integer field index}
-
-\item{...}{Additional arguments (not used)}
 }
 \value{
 Field value
@@ -27,8 +27,10 @@ Field value
 Field value converted to appropriate R type
 }
 \description{
-Reads a field value using type-aware conversion. Works with bitfields, regular
-fields, pointers, nested structs, etc.
+S7 generic for getting struct field values. Supports both:
+\itemize{
+\item New API mode: ffi_get_field(ptr, field, struct_type_list)
+\item Old StructType: ffi_get_field(ptr, field, StructType)
+}
 }
 \keyword{Types}
-\keyword{internal}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/api_mode.R
 \name{ffi_get_field_ptr}
 \alias{ffi_get_field_ptr}
-\title{Get field pointer from struct}
+\title{Get field pointer from struct (internal helper)}
 \usage{
 ffi_get_field_ptr(struct_ptr, field_name, struct_type)
 }

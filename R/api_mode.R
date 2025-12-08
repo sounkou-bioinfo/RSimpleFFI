@@ -7,59 +7,26 @@
 #' @keywords internal
 NULL
 
-#' Get field pointer from struct
-#'
-#' Returns an external pointer to a field within a struct, tagged with the
-#' field's FFI type information for later type-aware operations.
-#'
-#' @param struct_ptr External pointer to the struct
-#' @param field_name Name of the field to access
-#' @param struct_type Struct type metadata (contains field offsets and types)
-#' @return External pointer to the field, tagged with FFI type
-#' @export
-#' @keywords internal
-ffi_get_field_ptr <- function(struct_ptr, field_name, struct_type) {
-  if (!inherits(struct_ptr, "externalptr")) {
-    stop("struct_ptr must be an external pointer")
-  }
-  
-  if (!is.list(struct_type) || !("fields" %in% names(struct_type))) {
-    stop("struct_type must contain 'fields' element")
-  }
-  
-  field_info <- struct_type$fields[[field_name]]
-  if (is.null(field_info)) {
-    stop("Unknown field: ", field_name)
-  }
-  
-  offset <- as.numeric(field_info$offset)
-  field_type <- field_info$type
-  
-  # Extract external pointer ref from S7 FFIType object
-  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
-    field_type_ptr <- field_type@ref
-  } else if (inherits(field_type, "externalptr")) {
-    field_type_ptr <- field_type
-  } else {
-    stop("field_type must be an FFIType or external pointer")
-  }
-  
-  .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type_ptr, PACKAGE = "RSimpleFFI")
-}
-
 #' Set field value in struct
 #'
-#' Sets a field value using type-aware writing. Works with bitfields, regular
-#' fields, pointers, nested structs, etc.
+#' S7 generic for setting struct field values. Supports both:
+#' - New API mode: ffi_set_field(ptr, field, struct_type_list, value)
+#' - Old StructType: ffi_set_field(ptr, field, value, StructType)
 #'
 #' @param struct_ptr External pointer to the struct
-#' @param field_name Name of the field to set
-#' @param struct_type Struct type metadata (contains field offsets and types)
-#' @param value Value to set
+#' @param field_name Name of the field to set (character or integer index)
+#' @param arg3 Third argument (struct_type or value)
+#' @param arg4 Fourth argument (value or struct_type)
 #' @return NULL (invisible)
 #' @export
-#' @keywords internal
-ffi_set_field <- function(struct_ptr, field_name, struct_type, value) {
+ffi_set_field <- S7::new_generic("ffi_set_field", c("struct_ptr", "field_name", "arg3", "arg4"))
+
+#' @export
+S7::method(ffi_set_field, list(S7::class_any, S7::class_character, S7::class_list, S7::class_any)) <- function(struct_ptr, field_name, arg3, arg4) {
+  # New API mode: (ptr, field_name, struct_type_list, value)
+  struct_type <- arg3
+  value <- arg4
+  
   if (!inherits(struct_ptr, "externalptr")) {
     stop("struct_ptr must be an external pointer")
   }
@@ -89,23 +56,139 @@ ffi_set_field <- function(struct_ptr, field_name, struct_type, value) {
   invisible(NULL)
 }
 
+#' @export
+S7::method(ffi_set_field, list(S7::class_any, S7::class_any, S7::class_any, StructType)) <- function(struct_ptr, field_name, arg3, arg4) {
+  # Old StructType API: (ptr, field_name, value, StructType)
+  value <- arg3
+  struct_type <- arg4
+  
+  if (!inherits(struct_ptr, "externalptr")) {
+    stop("struct_ptr must be an external pointer")
+  }
+  
+  # Handle both character field names and integer indices
+  if (is.character(field_name)) {
+    field_idx <- which(names(struct_type@fields) == field_name)
+    if (length(field_idx) == 0) {
+      if (S7::S7_inherits(struct_type, UnionType)) {
+        stop("No such field '", field_name, "' in union")
+      } else {
+        stop("No such field '", field_name, "' in struct")
+      }
+    }
+  } else {
+    field_idx <- field_name
+  }
+  
+  offset <- ffi_offsetof(struct_type, field_idx, use_pack = TRUE)
+  field_type <- struct_type@fields[[field_idx]]
+  
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else {
+    stop("field_type must be an FFIType")
+  }
+  
+  .Call("R_struct_set_field", struct_ptr, offset, field_type_ptr, value, PACKAGE = "RSimpleFFI")
+  invisible(NULL)
+}
+
 #' Get field value from struct
 #'
-#' Reads a field value using type-aware conversion. Works with bitfields, regular
-#' fields, pointers, nested structs, etc.
+#' S7 generic for getting struct field values. Supports both:
+#' - New API mode: ffi_get_field(ptr, field, struct_type_list)
+#' - Old StructType: ffi_get_field(ptr, field, StructType)
 #'
 #' @param struct_ptr External pointer to the struct
-#' @param field_name Name of the field to get
-#' @param struct_type Struct type metadata (contains field offsets and types)
+#' @param field_name Name of the field to get (character or integer index)
+#' @param struct_type Struct type (list or StructType object)
 #' @return Field value converted to appropriate R type
 #' @export
-#' @keywords internal
-ffi_get_field <- function(struct_ptr, field_name, struct_type) {
+ffi_get_field <- S7::new_generic("ffi_get_field", c("struct_ptr", "field_name", "struct_type"))
+
+#' @export
+S7::method(ffi_get_field, list(S7::class_any, S7::class_character, S7::class_list)) <- function(struct_ptr, field_name, struct_type) {
+  # New API mode: (ptr, field_name, struct_type_list)
   # Get field pointer (tagged with type)
   field_ptr <- ffi_get_field_ptr(struct_ptr, field_name, struct_type)
   
   # Convert to R value
   ffi_field_to_r(field_ptr)
+}
+
+#' @export
+S7::method(ffi_get_field, list(S7::class_any, S7::class_any, StructType)) <- function(struct_ptr, field_name, struct_type) {
+  # Old StructType API: (ptr, field_name, StructType)
+  if (!inherits(struct_ptr, "externalptr")) {
+    stop("struct_ptr must be an external pointer")
+  }
+  
+  # Handle both character field names and integer indices
+  if (is.character(field_name)) {
+    field_idx <- which(names(struct_type@fields) == field_name)
+    if (length(field_idx) == 0) {
+      if (S7::S7_inherits(struct_type, UnionType)) {
+        stop("No such field '", field_name, "' in union")
+      } else {
+        stop("No such field '", field_name, "' in struct")
+      }
+    }
+  } else {
+    field_idx <- field_name
+  }
+  
+  offset <- ffi_offsetof(struct_type, field_idx, use_pack = TRUE)
+  field_type <- struct_type@fields[[field_idx]]
+  
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else {
+    stop("field_type must be an FFIType")
+  }
+  
+  field_ptr <- .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type_ptr, PACKAGE = "RSimpleFFI")
+  .Call("R_field_to_r", field_ptr, PACKAGE = "RSimpleFFI")
+}
+
+#' Get field pointer from struct (internal helper)
+#'
+#' Returns an external pointer to a field within a struct, tagged with the
+#' field's FFI type information for later type-aware operations.
+#'
+#' @param struct_ptr External pointer to the struct
+#' @param field_name Name of the field to access
+#' @param struct_type Struct type metadata (contains field offsets and types)
+#' @return External pointer to the field, tagged with FFI type
+#' @keywords internal
+ffi_get_field_ptr <- function(struct_ptr, field_name, struct_type) {
+  if (!inherits(struct_ptr, "externalptr")) {
+    stop("struct_ptr must be an external pointer")
+  }
+  
+  if (!is.list(struct_type) || !("fields" %in% names(struct_type))) {
+    stop("struct_type must contain 'fields' element")
+  }
+  
+  field_info <- struct_type$fields[[field_name]]
+  if (is.null(field_info)) {
+    stop("Unknown field: ", field_name)
+  }
+  
+  offset <- as.numeric(field_info$offset)
+  field_type <- field_info$type
+  
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else if (inherits(field_type, "externalptr")) {
+    field_type_ptr <- field_type
+  } else {
+    stop("field_type must be an FFIType or external pointer")
+  }
+  
+  .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type_ptr, PACKAGE = "RSimpleFFI")
 }
 
 #' Convert field pointer to R value
