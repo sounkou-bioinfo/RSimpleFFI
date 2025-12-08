@@ -1,5 +1,12 @@
 # RSimpleFFI 1.2.90000 (Development)
 
+## New Features
+
+* **API mode for bitfield structs**: Added compiler-based struct helpers using `offsetof()` to handle structures with bitfields. Use `ffi_create_helpers()` to generate constructor and accessor functions with correct compiler-computed offsets. Supports complex structs like htslib's `hFILE` that mix pointers, bitfields, and regular members.
+
+## Internal Changes
+
+* Converted `ffi_set_field()` and `ffi_get_field()` to S7 generics with multiple method signatures to support both reflection-based (StructType/UnionType) and compiler-based (API mode) approaches simultaneously.
 
 
 # RSimpleFFI 1.2.0 Release

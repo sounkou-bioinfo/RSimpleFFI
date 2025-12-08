@@ -278,6 +278,42 @@ ffi_sizeof(Pack4)  # 12 bytes
 ```
 
 Use `ffi_all_offsets()` to see the complete layout
+```
+
+### Compiler-Based Struct Helpers
+
+For structs with bitfields or complex alignment, use `ffi_create_helpers()` to generate accessor functions with compiler-computed offsets via `offsetof()`:
+
+```{r}
+# Define struct with bitfields (like htslib's hFILE)
+hfile_fields <- list(
+  buffer = ffi_pointer(),
+  begin = ffi_pointer(),
+  end = ffi_pointer(),
+  limit = ffi_pointer(),
+  offset = ffi_long(),
+  has_errno = ffi_int()
+)
+
+# Generate constructor and accessors
+helpers <- ffi_create_helpers("hFILE_like", hfile_fields)
+
+# Create instance
+obj <- helpers$new()
+
+# Set field using compiled accessor
+helpers$set(obj, "has_errno", 42L)
+
+# Get field
+helpers$get(obj, "has_errno")
+
+# Field metadata
+helpers$fields$has_errno$offset
+```
+
+The generated code compiles with `R CMD SHLIB` and uses the C compiler's layout calculations, handling bitfields and platform-specific alignment automatically.
+
+### Struct Arrays
 
 ```{r}
 # Compare layouts
@@ -1234,16 +1270,17 @@ ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 
 Struct/union passing by value may be unreliable across platforms. Packed structs cannot be passed by value (libffi limitation). Prefer pointers.
 
-### Structs with mixed bit-fields and other members
+### Structs with Bitfields
 
-Some C structs have members that are bit-fields. An example is hFile from htslib. Code generation won't work now for this type of structure.
+Structs with bitfields require compiler-based helpers since bitfield addresses cannot be computed via reflection. Use `ffi_create_helpers()` as shown in the "Compiler-Based Struct Helpers" section.
 
 ```c
+// Example: htslib's hFILE with bitfields
 typedef struct hFILE {
     char *buffer, *begin, *end, *limit;
     const struct hFILE_backend *backend;
     off_t offset;
-    unsigned at_eof:1, mobile:1, readonly:1, preserve:1;
+    unsigned at_eof:1, mobile:1, readonly:1, preserve:1;  // bitfields
     int has_errno;
 } hFILE;
 ```
