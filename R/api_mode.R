@@ -102,19 +102,44 @@ S7::method(ffi_set_field, list(S7::class_any, S7::class_any, S7::class_any, Stru
 #'
 #' @param struct_ptr External pointer to the struct
 #' @param field_name Name of the field to get (character or integer index)
-#' @param struct_type Struct type (list or StructType object)
-#' @return Field value converted to appropriate R type
+#' @param struct_type Struct type information (list or StructType)
+#' @return The field value
 #' @export
 ffi_get_field <- S7::new_generic("ffi_get_field", c("struct_ptr", "field_name", "struct_type"))
 
 #' @export
 S7::method(ffi_get_field, list(S7::class_any, S7::class_character, S7::class_list)) <- function(struct_ptr, field_name, struct_type) {
   # New API mode: (ptr, field_name, struct_type_list)
-  # Get field pointer (tagged with type)
-  field_ptr <- ffi_get_field_ptr(struct_ptr, field_name, struct_type)
+  if (!inherits(struct_ptr, "externalptr")) {
+    stop("struct_ptr must be an external pointer")
+  }
+  
+  if (!is.list(struct_type) || !("fields" %in% names(struct_type))) {
+    stop("struct_type must contain 'fields' element")
+  }
+  
+  field_info <- struct_type$fields[[field_name]]
+  if (is.null(field_info)) {
+    stop("Unknown field: ", field_name)
+  }
+  
+  offset <- as.numeric(field_info$offset)
+  field_type <- field_info$type
+  
+  # Extract external pointer ref from S7 FFIType object
+  if (S7::S7_inherits(field_type, RSimpleFFI::FFIType)) {
+    field_type_ptr <- field_type@ref
+  } else if (inherits(field_type, "externalptr")) {
+    field_type_ptr <- field_type
+  } else {
+    stop("field_type must be an FFIType or external pointer")
+  }
+  
+  # Get pointer to field (tagged with type)
+  field_ptr <- .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type_ptr, PACKAGE = "RSimpleFFI")
   
   # Convert to R value
-  ffi_field_to_r(field_ptr)
+  .Call("R_field_to_r", field_ptr, PACKAGE = "RSimpleFFI")
 }
 
 #' @export
@@ -148,7 +173,10 @@ S7::method(ffi_get_field, list(S7::class_any, S7::class_any, StructType)) <- fun
     stop("field_type must be an FFIType")
   }
   
+  # Get pointer to field (tagged with type)
   field_ptr <- .Call("R_struct_get_field_ptr", struct_ptr, offset, field_type_ptr, PACKAGE = "RSimpleFFI")
+  
+  # Convert to R value
   .Call("R_field_to_r", field_ptr, PACKAGE = "RSimpleFFI")
 }
 

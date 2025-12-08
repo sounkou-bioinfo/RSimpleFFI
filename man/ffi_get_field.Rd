@@ -13,7 +13,7 @@ ffi_get_field(struct_ptr, field_name, struct_type, ...)
 
 \item{field_name}{Name of the field to get (character or integer index)}
 
-\item{struct_type}{Struct type (list or StructType object)}
+\item{struct_type}{Struct type information (list or StructType)}
 
 \item{...}{Additional arguments (not used)}
 
@@ -24,7 +24,7 @@ ffi_get_field(struct_ptr, field_name, struct_type, ...)
 \value{
 Field value
 
-Field value converted to appropriate R type
+The field value
 }
 \description{
 S7 generic for getting struct field values. Supports both:
