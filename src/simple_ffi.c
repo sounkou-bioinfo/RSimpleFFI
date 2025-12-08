@@ -2200,3 +2200,91 @@ SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width) 
     uint64_t result = (packed & clear_mask) | set_val;
     return ScalarReal((double)result);
 }
+
+/*
+ * ===========================================================================
+ * Generic Field Accessors for API Mode
+ * 
+ * These functions provide type-aware field access for structs with bitfields.
+ * They leverage the existing FFI type system and use tagged external pointers.
+ * ===========================================================================
+ */
+
+// Generic field accessor - returns SEXP external pointer to field location
+// The field pointer is TAGGED with the FFI type for later conversion
+// This leverages RSimpleFFI's existing type system instead of generating N×M functions
+SEXP R_struct_get_field_ptr(SEXP struct_ptr, SEXP r_offset, SEXP field_type) {
+    // Validate struct pointer
+    if (TYPEOF(struct_ptr) != EXTPTRSXP) {
+        Rf_error("Expected external pointer for struct");
+    }
+    void* struct_addr = R_ExternalPtrAddr(struct_ptr);
+    if (!struct_addr) {
+        Rf_error("NULL struct pointer");
+    }
+    
+    // Get offset
+    if (!IS_NUMERIC(r_offset) || LENGTH(r_offset) != 1) {
+        Rf_error("offset must be a single numeric value");
+    }
+    size_t offset = (size_t)REAL(r_offset)[0];
+    
+    // Calculate field address
+    void* field_addr = (char*)struct_addr + offset;
+    
+    // Return external pointer TAGGED with FFI type information
+    // Tag stores the field's FFI type for later type-aware operations
+    // Prot stores the parent struct to prevent premature GC
+    SEXP field_ptr = PROTECT(R_MakeExternalPtr(field_addr, field_type, struct_ptr));
+    UNPROTECT(1);
+    return field_ptr;
+}
+
+// Generic field setter - uses FFI type system to write value
+// This is called from R with type information already attached
+SEXP R_struct_set_field(SEXP struct_ptr, SEXP r_offset, SEXP field_type, SEXP value) {
+    // Get field pointer (tagged with type)
+    SEXP field_ptr = R_struct_get_field_ptr(struct_ptr, r_offset, field_type);
+    void* field_addr = R_ExternalPtrAddr(field_ptr);
+    
+    // Get the ffi_type* from field_type external pointer
+    if (TYPEOF(field_type) != EXTPTRSXP) {
+        Rf_error("field_type must be an FFI type external pointer");
+    }
+    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(field_type);
+    if (!type) {
+        Rf_error("NULL FFI type pointer");
+    }
+    
+    // Write value based on type
+    write_typed_value(field_addr, type, value);
+    
+    return R_NilValue;
+}
+
+// Helper to convert field pointer to R value
+// Extracts type information from tag and uses FFI type system
+SEXP R_field_to_r(SEXP field_ptr) {
+    if (TYPEOF(field_ptr) != EXTPTRSXP) {
+        Rf_error("Expected external pointer for field");
+    }
+    
+    void* field_addr = R_ExternalPtrAddr(field_ptr);
+    if (!field_addr) {
+        Rf_error("NULL field pointer");
+    }
+    
+    // Extract FFI type from tag - this is the field's type info!
+    SEXP field_type = R_ExternalPtrTag(field_ptr);
+    if (TYPEOF(field_type) != EXTPTRSXP) {
+        Rf_error("Field pointer tag must contain FFI type");
+    }
+    
+    ffi_type* type = (ffi_type*)R_ExternalPtrAddr(field_type);
+    if (!type) {
+        Rf_error("NULL FFI type in field pointer tag");
+    }
+    
+    // Use existing read_typed_value function
+    return read_typed_value(field_addr, type);
+}

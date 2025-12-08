@@ -66,6 +66,11 @@ SEXP R_ffi_extract_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
 SEXP R_ffi_extract_signed_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
 SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width);
 
+/* Generic field accessors for API mode */
+SEXP R_struct_get_field_ptr(SEXP struct_ptr, SEXP r_offset, SEXP field_type);
+SEXP R_struct_set_field(SEXP struct_ptr, SEXP r_offset, SEXP field_type, SEXP value);
+SEXP R_field_to_r(SEXP field_ptr);
+
 /* SEXP pointer helpers */
 SEXP R_sexp_ptr(SEXP x);
 SEXP R_data_ptr(SEXP x);
@@ -222,6 +227,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_ffi_extract_bits64",      (DL_FUNC) &R_ffi_extract_bits64,      3},
     {"R_ffi_extract_signed_bits64",(DL_FUNC) &R_ffi_extract_signed_bits64, 3},
     {"R_ffi_set_bits64",          (DL_FUNC) &R_ffi_set_bits64,          4},
+    /* Generic field accessors for API mode */
+    {"R_struct_get_field_ptr",    (DL_FUNC) &R_struct_get_field_ptr,    3},
+    {"R_struct_set_field",        (DL_FUNC) &R_struct_set_field,        4},
+    {"R_field_to_r",              (DL_FUNC) &R_field_to_r,              1},
     /* SEXP pointer helpers */
     {"R_sexp_ptr",                (DL_FUNC) &R_sexp_ptr,                1},
     {"R_data_ptr",                (DL_FUNC) &R_data_ptr,                1},
