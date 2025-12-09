@@ -2,7 +2,7 @@
 % Please edit documentation in R/code_generation.R
 \name{generate_api_constructor}
 \alias{generate_api_constructor}
-\title{Generate constructor function for a struct (API mode)}
+\title{Constructor function for a struct (API mode)}
 \usage{
 generate_api_constructor(struct_name, prefix = "rffi_")
 }

@@ -19,8 +19,8 @@ test_that("API mode generic field accessors work with simple struct", {
   )
   
   # Test setting fields via API mode
-  ffi_set_field(ptr, "x", Point2D_type, 42L)
-  ffi_set_field(ptr, "y", Point2D_type, 100L)
+  ffi_set_field(ptr, "x", 42L, Point2D_type)
+  ffi_set_field(ptr, "y", 100L, Point2D_type)
   
   # Test getting fields via API mode
   x_val <- ffi_get_field(ptr, "x", Point2D_type)
@@ -80,8 +80,8 @@ test_that("API mode works with different types", {
     )
   )
   
-  ffi_set_field(ptr, "x", PointD_type, 3.14)
-  ffi_set_field(ptr, "y", PointD_type, 2.71)
+  ffi_set_field(ptr, "x", 3.14, PointD_type)
+  ffi_set_field(ptr, "y", 2.71, PointD_type)
   
   expect_equal(ffi_get_field(ptr, "x", PointD_type), 3.14)
   expect_equal(ffi_get_field(ptr, "y", PointD_type), 2.71)

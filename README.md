@@ -779,10 +779,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1435565041
+#> [1] 1775538581
 rand_value <- rand_func()
 rand_value
-#> [1] 616956541
+#> [1] 955888248
 dll_unload(libc_path)
 ```
 
@@ -806,7 +806,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x62740d3becd0>
+#> <pointer: 0x63591a230cf0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -904,8 +904,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      479µs    547µs     1567.     781KB     15.8
-#> 2 ffi_call      727µs    829µs     1089.     782KB     22.2
+#> 1 native_r      470µs    548µs     1701.     781KB     17.2
+#> 2 ffi_call      816µs    969µs      917.     782KB     18.7
 dll_unload(lib_path)
 ```
 
@@ -988,7 +988,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x627411904dc0>
+#> <pointer: 0x63591e8ec0e0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -1020,8 +1020,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            47.7ms  54.97ms      18.3     781KB     15.0
-#> 2 c_ffi         789µs   1.24ms     821.      782KB      0
+#> 1 r            54.7ms  62.65ms      15.3     781KB     12.5
+#> 2 c_ffi       965.6µs   1.08ms     882.      782KB      0
 
 dll_unload(lib_path)
 ```
@@ -1103,7 +1103,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1765203809
+#> [1] 1765257890
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1133,7 +1133,7 @@ parsed <- ffi_parse_header(header_file)
 #> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
-#> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
+#> tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1171,7 +1171,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-08 18:23:28.742222\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-09 09:24:50.129158\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1228,8 +1228,8 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
-#> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
-#> -> /tmp/RtmpY33Wya/file726984f9afdcf.h
+#> tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)
+#> -> /tmp/RtmpHboUuc/file8716a1c15dd25.h
 #> Preprocessed file size: 209 bytes
 #> Preprocessed file lines: 9 lines
 #> Preprocessed file total characters: 200 characters
@@ -1237,9 +1237,9 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> preprocessing produced suspiciously small output (209 bytes, 9 lines). This may
 #> indicate incomplete preprocessing.
 #> Last 10 lines of preprocessed output:
-#> # 1 "/tmp/RtmpY33Wya/file726984f9afdcf.h"
+#> # 1 "/tmp/RtmpHboUuc/file8716a1c15dd25.h"
 #> # 1 "<command line>" 1
-#> # 1 "/tmp/RtmpY33Wya/file726984f9afdcf.h" 2
+#> # 1 "/tmp/RtmpHboUuc/file8716a1c15dd25.h" 2
 #> 
 #> unsigned long strlen(const char* s);
 #> int strcmp(const char* s1, const char* s2);
@@ -1250,8 +1250,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file726984f9afdcf.h
-#> # Generated on: 2025-12-08 18:23:28.836156
+#> # Auto-generated R bindings for file8716a1c15dd25.h
+#> # Generated on: 2025-12-09 09:24:50.212169
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1368,7 +1368,7 @@ result <- bindgen_r_api(headers = c("Rinternals.h", "Rmath.h"))
 #> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
-#> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
+#> tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)
 #> -> /usr/share/R/include/Rinternals.h
 #> Preprocessed file size: 65825 bytes
 #> Preprocessed file lines: 2667 lines
@@ -1376,7 +1376,7 @@ result <- bindgen_r_api(headers = c("Rinternals.h", "Rmath.h"))
 #> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
-#> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
+#> tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)
 #> -> /usr/share/R/include/Rmath.h
 #> Preprocessed file size: 34939 bytes
 #> Preprocessed file lines: 1353 lines
@@ -1398,12 +1398,12 @@ bindgen_r_api(output_file = outfile, headers = "Rmath.h")
 #> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
-#> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
+#> tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)
 #> -> /usr/share/R/include/Rmath.h
 #> Preprocessed file size: 34939 bytes
 #> Preprocessed file lines: 1353 lines
 #> Preprocessed file total characters: 33586 characters
-#> Generated R bindings written to: /tmp/RtmpY33Wya/file7269870190ff7.R
+#> Generated R bindings written to: /tmp/RtmpHboUuc/file8716a15bb8e45.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1431,10 +1431,14 @@ unlink(outfile)
 
 ### Create R Packages
 
-We can create R package scafolds from some headers
+Package generation supports two modes: ABI mode (default) with runtime
+offset calculation, and API mode with compiled struct helpers.
+
+ABI mode generates lightweight packages using `ffi_struct()` for struct
+definitions. Field offsets are computed at runtime using platform ABI
+rules. This works for most structs but cannot handle bitfields.
 
 ``` r
-# Generate complete package scaffolding
 tmpdir <- tempfile()
 dir.create(tmpdir)
 
@@ -1449,7 +1453,7 @@ generate_package_from_headers(
 #> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
 #> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
 #> TCC diagnostic output:
-#> tcc version 0.9.28rc 2025-12-08 api_mode@7cfe0e5 (x86_64 Linux)
+#> tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1469,7 +1473,6 @@ generate_package_from_headers(
 #> double multiply(double x, double y);
 #> void process_point(struct Point *p);
 
-# Check what was created - proper R package structure
 list.files(tmpdir)
 #> [1] "DESCRIPTION" "LICENSE"     "NAMESPACE"   "R"
 list.files(file.path(tmpdir, "R"))
@@ -1477,7 +1480,60 @@ list.files(file.path(tmpdir, "R"))
 #> [3] "zzz.R"
 ```
 
-### Binding Generation
+API mode generates packages with compiled C code. The compiler computes
+struct offsets using `offsetof()`, correctly handling bitfields and
+complex alignment. This produces standard R packages with `src/init.c`
+for function registration and `src/struct_helpers.c` with accessor
+functions. No runtime compilation is needed.
+
+``` r
+tmpdir2 <- tempfile()
+dir.create(tmpdir2)
+
+generate_package_from_headers(
+  header_files = header_file,
+  package_name = "MyAPIPackage",
+  library_name = "mylib",
+  output_dir = tmpdir2,
+  use_api_mode = TRUE,
+  use_system_lib = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
+)
+#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
+#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
+#> TCC diagnostic output:
+#> tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)
+#> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
+#> Preprocessed file size: 375 bytes
+#> Preprocessed file lines: 13 lines
+#> Preprocessed file total characters: 362 characters
+#> Warning in tcc_preprocess(header_file, includes = includes): TinyCC
+#> preprocessing produced suspiciously small output (375 bytes, 13 lines). This
+#> may indicate incomplete preprocessing.
+#> Last 10 lines of preprocessed output:
+#> # 10 "/usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h"
+#> struct Point {
+#>     int x;
+#>     int y;
+#> };
+#> 
+#> 
+#> int add(int a, int b);
+#> double multiply(double x, double y);
+#> void process_point(struct Point *p);
+
+list.files(tmpdir2)
+#> [1] "DESCRIPTION" "LICENSE"     "NAMESPACE"   "R"           "src"
+list.files(file.path(tmpdir2, "R"))
+#> [1] "helpers.R"               "Point_api.R"            
+#> [3] "simple_types_bindings.R" "zzz.R"
+list.files(file.path(tmpdir2, "src"))
+#> [1] "init.c"           "Makevars"         "Makevars.win"     "struct_helpers.c"
+```
+
+The generated package with API mode includes proper R package
+infrastructure and can be installed with `R CMD INSTALL` on any system.
+\#\#\# Binding Generation
 
 The `bindgen_r_api()` function parses R’s C headers and generates
 wrapper functions automatically. This is for testing the parser mostly,
@@ -1527,7 +1583,7 @@ automatically released when the pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x62740f2dc218>
+#> <pointer: 0x63591ba89db8>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())

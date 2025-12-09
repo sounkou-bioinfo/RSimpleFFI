@@ -31,15 +31,19 @@ generate_api_offset_extractor <- function(struct_name, field_names, prefix = "rf
   
   func_name <- paste0(prefix, struct_name, "_offsets")
   
-  # Build field names array
+  # Strip bitfield syntax (e.g., "enabled : 1" -> "enabled")
+  # offsetof() only needs the field name, not the bitfield width
+  clean_field_names <- gsub("\\s*:.*$", "", field_names)
+  
+  # Build field names array (use original names for R)
   names_array <- paste0(
-    '        "', field_names, '"',
+    '        "', clean_field_names, '"',
     collapse = ",\n"
   )
   
-  # Build offsetof() calls array
+  # Build offsetof() calls array (use clean names without bitfield syntax)
   offsets_array <- paste0(
-    '        offsetof(', struct_name, ', ', field_names, ')',
+    '        offsetof(', struct_name, ', ', clean_field_names, ')',
     collapse = ",\n"
   )
   
@@ -77,7 +81,138 @@ SEXP %s(void) {
   return(c_code)
 }
 
-#' Generate constructor function for a struct (API mode)
+#' Generate compile-time bitfield offset/size detection macros
+#' 
+#' Uses the Reddit r/cpp technique with __builtin_ctzll/__builtin_clzll
+#' Works on GCC/Clang (which R always uses)
+#' 
+#' @keywords internal
+generate_bitfield_detection_macros <- function() {
+  '
+/* Compile-time bitfield offset and size detection
+ * Based on: https://www.reddit.com/r/cpp/comments/rz1m1w/sizeofoffsetof_for_bitfields/
+ * Works with GCC/Clang (R always uses these compilers)
+ */
+#define BITOFFSETOF(type, field) \\
+  ({ union { unsigned long long raw; type typ; } _x = {0}; \\
+     ++_x.typ.field; __builtin_ctzll(_x.raw); })
+
+#define BITSIZEOF(type, field) \\
+  ({ union { unsigned long long raw; type typ; } _x = {0}; \\
+     --_x.typ.field; \\
+     8*sizeof(_x.raw) - __builtin_clzll(_x.raw) - __builtin_ctzll(_x.raw); })
+'
+}
+
+#' Generate bitfield accessor functions for a struct (API mode)
+#'
+#' Creates C code for getting/setting bitfield values using compile-time
+#' offset detection and bit operations.
+#'
+#' @param struct_name Name of the C struct
+#' @param bitfield_info List with elements: name, clean_name, width
+#' @param prefix Prefix for generated function names
+#' @return Character string containing C code
+#' @keywords internal
+generate_api_bitfield_accessors <- function(struct_name, bitfield_info, prefix = "rffi_") {
+  if (length(bitfield_info) == 0) {
+    return("")
+  }
+  
+  func_base <- paste0(prefix, struct_name)
+  accessors <- character()
+  
+  for (info in bitfield_info) {
+    field_name <- info$clean_name
+    
+    # Generate getter using compile-time offset detection
+    getter <- sprintf('
+// Get bitfield %s from %s (detected at compile time)
+SEXP %s_get_%s(SEXP ptr) {
+    if (TYPEOF(ptr) != EXTPTRSXP) {
+        Rf_error("ptr must be an external pointer");
+    }
+    
+    %s *s = (%s *)R_ExternalPtrAddr(ptr);
+    if (s == NULL) {
+        Rf_error("NULL pointer");
+    }
+    
+    // Compile-time bitfield detection
+    const int bit_offset = BITOFFSETOF(%s, %s);
+    const int bit_size = BITSIZEOF(%s, %s);
+    const int byte_offset = bit_offset / 8;
+    const int bit_shift = bit_offset %% 8;
+    
+    // Read container
+    unsigned char *base = (unsigned char *)s + byte_offset;
+    unsigned long long container = 0;
+    memcpy(&container, base, sizeof(unsigned int));
+    
+    // Extract bitfield value
+    unsigned int value = (container >> bit_shift) & ((1ULL << bit_size) - 1);
+    
+    return Rf_ScalarInteger((int)value);
+}
+', field_name, struct_name,
+      func_base, field_name,
+      struct_name, struct_name,
+      struct_name, field_name,
+      struct_name, field_name)
+    
+    # Generate setter using compile-time offset detection
+    setter <- sprintf('
+// Set bitfield %s in %s (detected at compile time)
+SEXP %s_set_%s(SEXP ptr, SEXP value) {
+    if (TYPEOF(ptr) != EXTPTRSXP) {
+        Rf_error("ptr must be an external pointer");
+    }
+    if (!Rf_isInteger(value) && !Rf_isReal(value)) {
+        Rf_error("value must be numeric");
+    }
+    
+    %s *s = (%s *)R_ExternalPtrAddr(ptr);
+    if (s == NULL) {
+        Rf_error("NULL pointer");
+    }
+    
+    // Compile-time bitfield detection
+    const int bit_offset = BITOFFSETOF(%s, %s);
+    const int bit_size = BITSIZEOF(%s, %s);
+    const int byte_offset = bit_offset / 8;
+    const int bit_shift = bit_offset %% 8;
+    
+    unsigned int new_val = (unsigned int)Rf_asInteger(value);
+    unsigned long long mask = (1ULL << bit_size) - 1;
+    
+    if (new_val > mask) {
+        Rf_error("Value %%u exceeds bitfield width of %%d bits", new_val, bit_size);
+    }
+    
+    // Read-modify-write container
+    unsigned char *base = (unsigned char *)s + byte_offset;
+    unsigned long long container = 0;
+    memcpy(&container, base, sizeof(unsigned int));
+    
+    container = (container & ~(mask << bit_shift)) | ((unsigned long long)(new_val & mask) << bit_shift);
+    
+    memcpy(base, &container, sizeof(unsigned int));
+    
+    return R_NilValue;
+}
+', field_name, struct_name,
+      func_base, field_name,
+      struct_name, struct_name,
+      struct_name, field_name,
+      struct_name, field_name)
+    
+    accessors <- c(accessors, getter, setter)
+  }
+  
+  return(paste(accessors, collapse = "\n"))
+}
+
+#' Constructor function for a struct (API mode)
 #'
 #' Creates C code for allocating and initializing a struct with default values.
 #'

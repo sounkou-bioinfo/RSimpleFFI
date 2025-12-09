@@ -1118,10 +1118,11 @@ unlink(outfile)
 
 ### Create R Packages
 
-We can create R package scafolds from some headers
+Package generation supports two modes: ABI mode (default) with runtime offset calculation, and API mode with compiled struct helpers.
+
+ABI mode generates lightweight packages using `ffi_struct()` for struct definitions. Field offsets are computed at runtime using platform ABI rules. This works for most structs but cannot handle bitfields.
 
 ```{r}
-# Generate complete package scaffolding
 tmpdir <- tempfile()
 dir.create(tmpdir)
 
@@ -1134,10 +1135,32 @@ generate_package_from_headers(
   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
 
-# Check what was created - proper R package structure
 list.files(tmpdir)
 list.files(file.path(tmpdir, "R"))
 ```
+
+API mode generates packages with compiled C code. The compiler computes struct offsets using `offsetof()`, correctly handling bitfields and complex alignment. This produces standard R packages with `src/init.c` for function registration and `src/struct_helpers.c` with accessor functions. No runtime compilation is needed.
+
+```{r}
+tmpdir2 <- tempfile()
+dir.create(tmpdir2)
+
+generate_package_from_headers(
+  header_files = header_file,
+  package_name = "MyAPIPackage",
+  library_name = "mylib",
+  output_dir = tmpdir2,
+  use_api_mode = TRUE,
+  use_system_lib = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
+)
+
+list.files(tmpdir2)
+list.files(file.path(tmpdir2, "R"))
+list.files(file.path(tmpdir2, "src"))
+```
+
+The generated package with API mode includes proper R package infrastructure and can be installed with `R CMD INSTALL` on any system.
 ### Binding Generation
 
 The `bindgen_r_api()` function parses R's C headers and generates wrapper functions automatically. This is for testing the parser mostly, using this is discourage !
@@ -1306,14 +1329,25 @@ Struct/union passing by value may be unreliable across platforms. Packed structs
 Structs with bitfields require compiler-based helpers since bitfield addresses cannot be computed via reflection. Use `ffi_create_helpers()` as shown in the "Compiler-Based Struct Helpers" section.
 
 ```c
-// Example: htslib's hFILE with bitfields
-typedef struct hFILE {
-    char *buffer, *begin, *end, *limit;
-    const struct hFILE_backend *backend;
-    off_t offset;
-    unsigned at_eof:1, mobile:1, readonly:1, preserve:1;  // bitfields
-    int has_errno;
-} hFILE;
+// Struct with bitfields mixed with regular fields
+struct hFILE_like {
+    char* buffer;
+    char* begin;
+    char* end;
+    char* limit;
+    
+    // Bitfield flags - can't take their address!
+    unsigned has_errno : 1;
+    unsigned is_pipe : 1;
+    unsigned mobile : 1;
+    unsigned readonly : 1;
+    unsigned at_eof : 1;
+    unsigned reserved_bits : 3;
+    
+    // Regular fields after bitfields
+    int offset;
+    void* backend;
+};
 ```
 
 When working with such structs, you can only access non-bitfield members via ABI mode:
@@ -1325,15 +1359,14 @@ hFILE <- ffi_struct(
   begin = ffi_pointer(),
   end = ffi_pointer(),
   limit = ffi_pointer(),
-  backend = ffi_pointer(),
-  offset = ffi_long(),
-  # Skip bitfields: at_eof, mobile, readonly, preserve
-  has_errno = ffi_int()
+  # Skip bitfields: has_errno, is_pipe, mobile, readonly, at_eof, reserved_bits
+  offset = ffi_int(),
+  backend = ffi_pointer()
 )
 
 ptr <- ffi_alloc(hFILE)
-ffi_set_field(ptr, "has_errno", 5L, hFILE)
-ffi_get_field(ptr, "has_errno", hFILE)
+ffi_set_field(ptr, "offset", 42L, hFILE)
+ffi_get_field(ptr, "offset", hFILE)
 ```
 
 For complete access including bitfields, use API mode:
@@ -1345,16 +1378,24 @@ helpers <- ffi_create_helpers("hFILE_like", list(
   begin = ffi_pointer(),
   end = ffi_pointer(),
   limit = ffi_pointer(),
-  backend = ffi_pointer(),
-  offset = ffi_long(),
-  has_errno = ffi_int()
-))
+  has_errno = ffi_uint(),
+  is_pipe = ffi_uint(),
+  mobile = ffi_uint(),
+  readonly = ffi_uint(),
+  at_eof = ffi_uint(),
+  reserved_bits = ffi_uint(),
+  offset = ffi_int(),
+  backend = ffi_pointer()
+), include_dirs = system.file("extdata", package = "RSimpleFFI"))
 
 ptr <- helpers$new()
-helpers$set(ptr, "has_errno", 5L)
+helpers$set(ptr, "has_errno", 1L)
 helpers$get(ptr, "has_errno")
-# Offsets account for bitfields even though not listed
-helpers$fields$has_errno$offset
+helpers$set(ptr, "offset", 12345L)
+helpers$get(ptr, "offset")
+# Offsets account for bitfields
+helpers$fields$offset$offset
+helpers$fields$backend$offset
 ```
 
 

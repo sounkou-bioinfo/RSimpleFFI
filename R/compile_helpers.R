@@ -117,9 +117,10 @@ ffi_get_symbol <- function(lib, symbol_name) {
   }
   
   # Return a wrapper function that uses .Call with the symbol address
-  # We need to use the address directly, not the DLL
+  # Store address in local variable to avoid evaluation issues during R CMD check
+  sym_addr <- addr$address
   function(...) {
-    .Call(addr$address, ...)
+    .Call(sym_addr, ...)
   }
 }
 

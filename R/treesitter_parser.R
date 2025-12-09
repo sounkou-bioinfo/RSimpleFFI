@@ -172,6 +172,21 @@ ts_extract_structs <- function(root_node, source_text) {
     }
   )
 
+  # Filter out implementation-reserved structs (names starting with __)
+  # and problematic system structs (stat, etc.)
+  # Per C standard, __ prefixes are reserved for implementation use
+  if (length(structs) > 0) {
+    original_count <- length(structs)
+    # Filter: __ prefix or exact match for problematic system structs
+    structs <- structs[!grepl("^__", names(structs)) & !names(structs) %in% c("stat")]
+    
+    n_filtered <- original_count - length(structs)
+    if (n_filtered > 0) {
+      message(sprintf("Filtered out %d system/reserved struct%s", 
+                     n_filtered, if (n_filtered != 1) "s" else ""))
+    }
+  }
+
   structs
 }
 

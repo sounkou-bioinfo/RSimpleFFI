@@ -17,6 +17,14 @@ args <- commandArgs(trailingOnly = TRUE)
 output_dir <- if (length(args) > 0) args[1] else "/tmp/htslibFFI"
 htslib_root <- if (length(args) > 1) args[2] else "/usr"
 
+# Normalize paths to absolute paths
+htslib_root <- normalizePath(htslib_root, mustWork = TRUE)
+output_dir <- if (dir.exists(output_dir)) {
+  normalizePath(output_dir, mustWork = TRUE)
+} else {
+  output_dir  # Will be created later
+}
+
 message("=== htslib FFI Bindings Generator ===\n\n")
 
 # Find htslib headers
@@ -68,8 +76,8 @@ message("  Headers:  ", htslib_dir)
 message("  Library:  ", file.path(lib_path, library_name))
 message()
 
-# Get all header files
-headers <- list.files(htslib_dir, pattern = "\\.h$", full.names = TRUE)
+# Get all header files recursively
+headers <- list.files(htslib_dir, pattern = "\\.h$", full.names = TRUE, recursive = TRUE)
 
 message("Found ", length(headers), " headers:\n")
 for (h in headers) {
@@ -97,10 +105,11 @@ result <- generate_package_from_headers(
   library_path = full_lib_path,
   output_dir = output_dir,
   use_system_lib = use_system_lib,
+  use_api_mode = TRUE,
   include_helpers = TRUE,
   authors_r = 'person("RSimpleFFI", "Generator", email = "auto@generated.com", role = c("aut", "cre"))',
   title = "FFI Bindings to htslib (SAM/BAM/VCF/BCF)",
-  description = "Auto-generated FFI bindings to htslib for reading and writing high-throughput sequencing data formats (SAM, BAM, CRAM, VCF, BCF)."
+  description = "Auto-generated FFI bindings to htslib with compiled struct helpers for correct bitfield handling. Supports SAM, BAM, CRAM, VCF, and BCF formats."
 )
 
 message("\n=== Generation Complete ===\n")

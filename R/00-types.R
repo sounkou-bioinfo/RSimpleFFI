@@ -817,11 +817,9 @@ ffi_enum <- function(..., underlying_type = ffi_int()) {
 
 
 #' Get field value from FFI structure
-#' @name ffi_get_field
 #' @param ptr External pointer to structure
 #' @param field Character field name or integer field index
 #' @param struct_type StructType object
-#' @param ... Additional arguments (not used)
 #' @return Field value
 #' @keywords Types
 #' @export
@@ -933,12 +931,10 @@ S7::method(
 }
 
 #' Set field value in FFI structure
-#' @name ffi_set_field
 #' @param ptr External pointer to structure
 #' @param field Character field name or integer field index
 #' @param value Value to set
 #' @param struct_type StructType object
-#' @param ... Additional arguments (not used)
 #' @return Updated pointer
 #' @keywords Types
 #' @export
