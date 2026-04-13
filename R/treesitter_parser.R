@@ -257,6 +257,32 @@ ts_extract_struct_fields <- function(body_node, source_text) {
           bitfield_info_detailed <- c(bitfield_info_detailed, detailed_spec)
         }
       }
+    } else if (treesitter::node_type(child) == "ERROR") {
+      # Fallback: some grammar versions produce ERROR nodes for bitfield
+      # declarations instead of proper field_declaration nodes. Try to
+      # extract bitfield info from the raw text.
+      error_text <- treesitter::node_text(child)
+      # Match e.g. "unsigned int flag_a : 1" or "unsigned has_errno : 1"
+      bf_match <- regmatches(
+        error_text,
+        regexec("^\\s*(.+?)\\s+(\\w+)\\s*:\\s*(\\d+)\\s*;?\\s*$", error_text)
+      )[[1]]
+      if (length(bf_match) == 4) {
+        bf_type <- trimws(bf_match[2])
+        bf_name <- bf_match[3]
+        bf_width <- bf_match[4]
+        field_name_with_bf <- paste0(bf_name, " : ", bf_width)
+        fields[[length(fields) + 1]] <- list(
+          name = field_name_with_bf,
+          type = bf_type
+        )
+        is_unsigned <- grepl("unsigned", bf_type)
+        sign_tag <- if (is_unsigned) "unsigned" else "signed"
+        simple_spec <- sprintf("'%s'", field_name_with_bf)
+        detailed_spec <- sprintf("'%s : %s : %s : %s'", field_name_with_bf, bf_width, sign_tag, bf_type)
+        bitfield_info <- c(bitfield_info, simple_spec)
+        bitfield_info_detailed <- c(bitfield_info_detailed, detailed_spec)
+      }
     }
   }
 
@@ -273,6 +299,12 @@ ts_extract_struct_fields <- function(body_node, source_text) {
   }
 
   fields
+}
+
+#' Escape a string for use in a regular expression
+#' @keywords internal
+regexec_escape <- function(x) {
+  gsub("([.\\\\|^$?*+{}()\\[\\]])", "\\\\\\1", x)
 }
 
 #' Parse a field declaration node
@@ -316,12 +348,46 @@ ts_parse_field_declaration <- function(field_node, source_text) {
     }
   }
 
-  if (is.null(declarator_node)) {
-    return(NULL)
+  # --- Regex fallback for bitfield detection ---
+
+  # Some versions of the treesitter.c grammar do not produce `bitfield_clause`
+
+  # nodes.  When that happens, the `: N` portion of a bitfield declaration
+  # (e.g. `unsigned int flag_a : 1;`) is either absorbed into an ERROR node or
+  # simply ignored by the grammar.  We fall back to matching the raw text of the
+
+  # field_declaration node with a regex that captures the bitfield width.
+  if (is.null(bitfield_size)) {
+    field_text <- treesitter::node_text(field_node)
+    # Match pattern: <identifier> : <number> at end of declaration
+    # e.g. "unsigned int flag_a : 1" or "unsigned has_errno : 1"
+    bf_match <- regmatches(
+      field_text,
+      regexec("\\b(\\w+)\\s*:\\s*(\\d+)\\s*;?\\s*$", field_text)
+    )[[1]]
+    if (length(bf_match) == 3) {
+      # bf_match[2] is the field name, bf_match[3] is the bitfield width
+      bitfield_size <- bf_match[3]
+      # If the AST didn't find a declarator_node, synthesize the field name
+      # from the regex match so the field isn't silently dropped.
+      if (is.null(declarator_node)) {
+        field_name_fallback <- bf_match[2]
+      }
+    }
   }
 
-  # Get field name and type
-  field_name <- ts_get_declarator_name(declarator_node, source_text)
+  if (is.null(declarator_node)) {
+    # If we have a regex-detected bitfield but no AST declarator, use the
+    # fallback name we extracted above (if any).
+    if (!is.null(bitfield_size) && exists("field_name_fallback", inherits = FALSE)) {
+      field_name <- field_name_fallback
+    } else {
+      return(NULL)
+    }
+  } else {
+    # Get field name and type
+    field_name <- ts_get_declarator_name(declarator_node, source_text)
+  }
 
   # Skip anonymous fields (e.g., anonymous bitfields for padding)
   if (is.null(field_name) || nchar(field_name) == 0) {
@@ -329,27 +395,53 @@ ts_parse_field_declaration <- function(field_node, source_text) {
   }
 
   if (is.null(type_node)) {
-    # No type node found - skip this field
-    return(NULL)
+    # No type node found – try regex fallback for the type as well.
+    # This handles grammars that produce ERROR nodes for bitfield declarations.
+    if (!is.null(bitfield_size)) {
+      field_text <- treesitter::node_text(field_node)
+      # Extract type portion: everything before the field name in the text
+      # e.g. from "unsigned int flag_a : 1" extract "unsigned int"
+      type_match <- regmatches(
+        field_text,
+        regexec(
+          sprintf("^\\s*(.+?)\\s+%s\\s*:", regexec_escape(field_name)),
+          field_text
+        )
+      )[[1]]
+      if (length(type_match) >= 2 && nzchar(type_match[2])) {
+        base_type <- trimws(type_match[2])
+      } else {
+        # Last resort: use "int" as the default C bitfield type
+        base_type <- "int"
+      }
+    } else {
+      # No type node found - skip this field
+      return(NULL)
+    }
   }
 
   # Handle struct_specifier specially - extract just the struct name
-  # to avoid including the full struct body in the type string
-  base_type <- if (treesitter::node_type(type_node) == "struct_specifier") {
-    ts_get_struct_type_name(type_node)
-  } else {
-    treesitter::node_text(type_node)
+  # to avoid including the full struct body in the type string.
+  # When type_node is NULL the regex fallback already set base_type above.
+  if (!is.null(type_node)) {
+    base_type <- if (treesitter::node_type(type_node) == "struct_specifier") {
+      ts_get_struct_type_name(type_node)
+    } else {
+      treesitter::node_text(type_node)
+    }
   }
 
   # Handle pointer declarators - include * in type
-  if (treesitter::node_type(declarator_node) == "pointer_declarator") {
+  if (!is.null(declarator_node) &&
+      treesitter::node_type(declarator_node) == "pointer_declarator") {
     # Count asterisks by traversing AST nodes
     ptr_count <- ts_count_pointer_stars(declarator_node)
     base_type <- paste0(base_type, strrep("*", ptr_count))
   }
 
   # Check if it's an array
-  if (treesitter::node_type(declarator_node) == "array_declarator") {
+  if (!is.null(declarator_node) &&
+      treesitter::node_type(declarator_node) == "array_declarator") {
     dimensions <- ts_get_array_dimensions(declarator_node, source_text)
     field_type <- paste0(base_type, dimensions)
   } else {

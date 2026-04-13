@@ -5,7 +5,7 @@ args <- commandArgs(trailingOnly = TRUE)
 mode <- if (length(args) > 0) args[[1]] else "download"
 
 # Use specific commit hash
-commit_hash <- "831c3fa184e3b4a93f09c7fd04170b022596aafd"
+commit_hash <- "34eed88a70fc8238cd5b623cc96b8bf0e40392ed"
 url <- paste0(
   "https://github.com/TinyCC/tinycc/archive/",
   commit_hash,

@@ -78,6 +78,12 @@ SEXP R_data_ptr_ro(SEXP x);
 SEXP R_is_protected_ptr(SEXP ptr);
 SEXP R_release_protected_ptr(SEXP ptr);
 SEXP R_ptr_to_sexp(SEXP ptr);
+/* rsit converters (API-mode helpers) exported for other packages */
+SEXP rsit_convert_from_native(SEXP r_ptr, SEXP r_type_meta);
+SEXP rsit_convert_to_native(SEXP r_val, SEXP r_type_meta);
+SEXP rsit_read_global(SEXP sym_name, SEXP r_type_meta);
+SEXP rsit_write_global(SEXP sym_name, SEXP r_type_meta, SEXP r_value);
+SEXP rsit_make_typed_ptr(SEXP r_val, SEXP r_type_meta);
 
 /* Declare test functions */
 double test_add_double(double a, double b);
@@ -210,6 +216,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_get_pointer_type",        (DL_FUNC) &R_get_pointer_type,        1},
     {"R_deref_pointer",           (DL_FUNC) &R_deref_pointer,           1},
     {"R_read_global",             (DL_FUNC) &R_read_global,             2},
+    {"rsit_convert_from_native",  (DL_FUNC) &rsit_convert_from_native,  2},
+    {"rsit_convert_to_native",    (DL_FUNC) &rsit_convert_to_native,    2},
+    {"rsit_read_global",          (DL_FUNC) &rsit_read_global,          2},
+    {"rsit_write_global",         (DL_FUNC) &rsit_write_global,         3},
+    {"rsit_make_typed_ptr",       (DL_FUNC) &rsit_make_typed_ptr,       2},
     {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
     {"R_get_ffi_type_size",       (DL_FUNC) &R_get_ffi_type_size,       1},
     {"R_alloc_buffer",            (DL_FUNC) &R_alloc_buffer,            1},
@@ -217,6 +228,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_fill_typed_buffer",       (DL_FUNC) &R_fill_typed_buffer,       3},
     {"R_ffi_free",                (DL_FUNC) &R_ffi_free,                1},
     {"R_libffi_version",          (DL_FUNC) &R_libffi_version,          0},
+    {"rsit_pointer_to_string",    (DL_FUNC) &rsit_pointer_to_string,    2},
+    {"rsit_make_c_string",        (DL_FUNC) &rsit_make_c_string,        1},
     /* closure API */
     {"R_ffi_closures_supported",  (DL_FUNC) &R_ffi_closures_supported,  0},
     {"R_create_closure",          (DL_FUNC) &R_create_closure,          2},
@@ -238,6 +251,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_is_protected_ptr",        (DL_FUNC) &R_is_protected_ptr,        1},
     {"R_release_protected_ptr",   (DL_FUNC) &R_release_protected_ptr,   1},
     {"R_ptr_to_sexp",             (DL_FUNC) &R_ptr_to_sexp,             1},
+    {NULL, NULL, 0}
+};
+ /* Add our rsit converters to the registration table */
+static const R_CallMethodDef CallEntries_rsit[] = {
+    {"rsit_convert_from_native", (DL_FUNC) &rsit_convert_from_native, 2},
+    {"rsit_convert_to_native", (DL_FUNC) &rsit_convert_to_native, 2},
+    {"rsit_read_global", (DL_FUNC) &rsit_read_global, 2},
+    {"rsit_write_global", (DL_FUNC) &rsit_write_global, 3},
+    {"rsit_make_typed_ptr", (DL_FUNC) &rsit_make_typed_ptr, 2},
     {NULL, NULL, 0}
 };
 
@@ -326,5 +348,7 @@ static const R_CMethodDef CEntries[] = {
 void R_init_SimpleFFI(DllInfo *dll)
 {
     R_registerRoutines(dll, CEntries, CallEntries, NULL, NULL);
+    /* Register rsit converters (make sure they are visible to other packages) */
+    R_registerRoutines(dll, NULL, CallEntries_rsit, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
