@@ -87,6 +87,26 @@ struct Flags {
     unsigned int mode : 8;
 };
 
+/* hFILE-like struct with mixed bitfields and regular fields */
+struct hFILE_like {
+    char* buffer;
+    char* begin;
+    char* end;
+    char* limit;
+    
+    /* Bitfield flags - can't take their address! */
+    unsigned has_errno : 1;
+    unsigned is_pipe : 1;
+    unsigned mobile : 1;
+    unsigned readonly : 1;
+    unsigned at_eof : 1;
+    unsigned reserved_bits : 3;
+    
+    /* Regular fields after bitfields */
+    int offset;
+    void* backend;
+};
+
 /* Const and volatile */
 struct ConstData {
     const int* readonly;

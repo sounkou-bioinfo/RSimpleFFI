@@ -66,6 +66,11 @@ SEXP R_ffi_extract_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
 SEXP R_ffi_extract_signed_bits64(SEXP r_packed, SEXP r_offset, SEXP r_width);
 SEXP R_ffi_set_bits64(SEXP r_packed, SEXP r_value, SEXP r_offset, SEXP r_width);
 
+/* Generic field accessors for API mode */
+SEXP R_struct_get_field_ptr(SEXP struct_ptr, SEXP r_offset, SEXP field_type);
+SEXP R_struct_set_field(SEXP struct_ptr, SEXP r_offset, SEXP field_type, SEXP value);
+SEXP R_field_to_r(SEXP field_ptr);
+
 /* SEXP pointer helpers */
 SEXP R_sexp_ptr(SEXP x);
 SEXP R_data_ptr(SEXP x);
@@ -73,7 +78,6 @@ SEXP R_data_ptr_ro(SEXP x);
 SEXP R_is_protected_ptr(SEXP ptr);
 SEXP R_release_protected_ptr(SEXP ptr);
 SEXP R_ptr_to_sexp(SEXP ptr);
-
 /* Declare test functions */
 double test_add_double(double a, double b);
 double test_square(double x);
@@ -205,8 +209,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_get_pointer_type",        (DL_FUNC) &R_get_pointer_type,        1},
     {"R_deref_pointer",           (DL_FUNC) &R_deref_pointer,           1},
     {"R_read_global",             (DL_FUNC) &R_read_global,             2},
-    {"R_get_builtin_ffi_type",    (DL_FUNC) &R_get_builtin_ffi_type,    1},
-    {"R_get_ffi_type_size",       (DL_FUNC) &R_get_ffi_type_size,       1},
     {"R_alloc_buffer",            (DL_FUNC) &R_alloc_buffer,            1},
     {"R_alloc_typed_buffer",      (DL_FUNC) &R_alloc_typed_buffer,      2},
     {"R_fill_typed_buffer",       (DL_FUNC) &R_fill_typed_buffer,       3},
@@ -222,6 +224,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"R_ffi_extract_bits64",      (DL_FUNC) &R_ffi_extract_bits64,      3},
     {"R_ffi_extract_signed_bits64",(DL_FUNC) &R_ffi_extract_signed_bits64, 3},
     {"R_ffi_set_bits64",          (DL_FUNC) &R_ffi_set_bits64,          4},
+    /* Generic field accessors for API mode */
+    {"R_struct_get_field_ptr",    (DL_FUNC) &R_struct_get_field_ptr,    3},
+    {"R_struct_set_field",        (DL_FUNC) &R_struct_set_field,        4},
+    {"R_field_to_r",              (DL_FUNC) &R_field_to_r,              1},
     /* SEXP pointer helpers */
     {"R_sexp_ptr",                (DL_FUNC) &R_sexp_ptr,                1},
     {"R_data_ptr",                (DL_FUNC) &R_data_ptr,                1},

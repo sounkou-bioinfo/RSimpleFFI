@@ -278,6 +278,73 @@ ffi_sizeof(Pack4)  # 12 bytes
 ```
 
 Use `ffi_all_offsets()` to see the complete layout
+```
+
+### ABI Mode vs API Mode
+
+RSimpleFFI supports two approaches for working with structs:
+
+**ABI Mode (Reflection-Based)**: Uses `ffi_struct()` to create struct types where field offsets are computed at runtime using platform ABI rules. Access fields with `ffi_get_field()` and `ffi_set_field()` passing the struct type object. This works for most structs but cannot handle bitfields since bitfield addresses cannot be taken.
+
+```{r}
+# ABI mode: runtime offset calculation
+Point <- ffi_struct(x = ffi_int(), y = ffi_double())
+ptr <- ffi_alloc(Point)
+ffi_set_field(ptr, "x", 42L, Point)  # Pass struct type
+ffi_get_field(ptr, "x", Point)
+```
+
+**API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C code with `offsetof()`, compile it with `R CMD SHLIB`, and extract accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with `$new()`, `$get()`, and `$set()` methods.
+
+
+```{r}
+# API mode: compiler-computed offsets
+helpers <- ffi_create_helpers("Point", list(x = ffi_int(), y = ffi_double()))
+ptr <- helpers$new()
+helpers$set(ptr, "x", 42L)  # No struct type needed
+helpers$get(ptr, "x")
+
+# Field metadata shows compiler-computed offset
+helpers$fields$x$offset
+helpers$fields$y$offset
+```
+
+
+Use ABI mode for simple structs and quick prototyping. Use API mode for structs with bitfields or when you need guaranteed correct layout matching the C compiler's output.
+
+### Compiler-Based Struct Helpers
+
+For structs with bitfields or complex alignment, use `ffi_create_helpers()` to generate accessor functions with compiler-computed offsets via `offsetof()`. The struct definition is written in C and compiled, so the compiler handles bitfield layout:
+
+```{r}
+# Define fields matching htslib's hFILE (bitfields handled by compiler)
+hfile_fields <- list(
+  buffer = ffi_pointer(),
+  begin = ffi_pointer(),
+  end = ffi_pointer(),
+  limit = ffi_pointer(),
+  backend = ffi_pointer(),
+  offset = ffi_long(),
+  has_errno = ffi_int()
+)
+
+# Generate constructor and accessors with correct compiler-computed offsets
+helpers <- ffi_create_helpers("hFILE_like", hfile_fields)
+
+# Create instance
+obj <- helpers$new()
+
+# Set and get fields
+helpers$set(obj, "has_errno", 42L)
+helpers$get(obj, "has_errno")
+
+# Compiler-computed offset accounts for all padding and bitfields
+helpers$fields$has_errno$offset
+```
+
+The generated C code uses `offsetof()` so the compiler handles alignment, padding, and bitfields automatically. This is the only way to correctly access structs with bitfields since their layout is compiler and platform-specific.
+
+### Struct Arrays
 
 ```{r}
 # Compare layouts
@@ -1051,10 +1118,11 @@ unlink(outfile)
 
 ### Create R Packages
 
-We can create R package scafolds from some headers
+Package generation supports two modes: ABI mode (default) with runtime offset calculation, and API mode with compiled struct helpers.
+
+ABI mode generates lightweight packages using `ffi_struct()` for struct definitions. Field offsets are computed at runtime using platform ABI rules. This works for most structs but cannot handle bitfields.
 
 ```{r}
-# Generate complete package scaffolding
 tmpdir <- tempfile()
 dir.create(tmpdir)
 
@@ -1067,10 +1135,32 @@ generate_package_from_headers(
   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
 
-# Check what was created - proper R package structure
 list.files(tmpdir)
 list.files(file.path(tmpdir, "R"))
 ```
+
+API mode generates packages with compiled C code. The compiler computes struct offsets using `offsetof()`, correctly handling bitfields and complex alignment. This produces standard R packages with `src/init.c` for function registration and `src/struct_helpers.c` with accessor functions. No runtime compilation is needed.
+
+```{r}
+tmpdir2 <- tempfile()
+dir.create(tmpdir2)
+
+generate_package_from_headers(
+  header_files = header_file,
+  package_name = "MyAPIPackage",
+  library_name = "mylib",
+  output_dir = tmpdir2,
+  use_api_mode = TRUE,
+  use_system_lib = TRUE,
+  authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
+)
+
+list.files(tmpdir2)
+list.files(file.path(tmpdir2, "R"))
+list.files(file.path(tmpdir2, "src"))
+```
+
+The generated package with API mode includes proper R package infrastructure and can be installed with `R CMD INSTALL` on any system.
 ### Binding Generation
 
 The `bindgen_r_api()` function parses R's C headers and generates wrapper functions automatically. This is for testing the parser mostly, using this is discourage !
@@ -1234,18 +1324,78 @@ ffi_extract_signed_bits64(as.double(packed), 0L, 4L)
 
 Struct/union passing by value may be unreliable across platforms. Packed structs cannot be passed by value (libffi limitation). Prefer pointers.
 
-### Structs with mixed bit-fields and other members
+### Structs with Bitfields
 
-Some C structs have members that are bit-fields. An example is hFile from htslib. Code generation won't work now for this type of structure.
+Structs with bitfields require compiler-based helpers since bitfield addresses cannot be computed via reflection. Use `ffi_create_helpers()` as shown in the "Compiler-Based Struct Helpers" section.
 
 ```c
-typedef struct hFILE {
-    char *buffer, *begin, *end, *limit;
-    const struct hFILE_backend *backend;
-    off_t offset;
-    unsigned at_eof:1, mobile:1, readonly:1, preserve:1;
-    int has_errno;
-} hFILE;
+// Struct with bitfields mixed with regular fields
+struct hFILE_like {
+    char* buffer;
+    char* begin;
+    char* end;
+    char* limit;
+    
+    // Bitfield flags - can't take their address!
+    unsigned has_errno : 1;
+    unsigned is_pipe : 1;
+    unsigned mobile : 1;
+    unsigned readonly : 1;
+    unsigned at_eof : 1;
+    unsigned reserved_bits : 3;
+    
+    // Regular fields after bitfields
+    int offset;
+    void* backend;
+};
+```
+
+When working with such structs, you can only access non-bitfield members via ABI mode:
+
+```{r}
+# ABI mode: can only access non-bitfield members
+hFILE <- ffi_struct(
+  buffer = ffi_pointer(),
+  begin = ffi_pointer(),
+  end = ffi_pointer(),
+  limit = ffi_pointer(),
+  # Skip bitfields: has_errno, is_pipe, mobile, readonly, at_eof, reserved_bits
+  offset = ffi_int(),
+  backend = ffi_pointer()
+)
+
+ptr <- ffi_alloc(hFILE)
+ffi_set_field(ptr, "offset", 42L, hFILE)
+ffi_get_field(ptr, "offset", hFILE)
+```
+
+For complete access including bitfields, use API mode:
+
+```{r}
+# API mode: compiler handles all fields including bitfields
+helpers <- ffi_create_helpers("hFILE_like", list(
+  buffer = ffi_pointer(),
+  begin = ffi_pointer(),
+  end = ffi_pointer(),
+  limit = ffi_pointer(),
+  has_errno = ffi_uint(),
+  is_pipe = ffi_uint(),
+  mobile = ffi_uint(),
+  readonly = ffi_uint(),
+  at_eof = ffi_uint(),
+  reserved_bits = ffi_uint(),
+  offset = ffi_int(),
+  backend = ffi_pointer()
+), include_dirs = system.file("extdata", package = "RSimpleFFI"))
+
+ptr <- helpers$new()
+helpers$set(ptr, "has_errno", 1L)
+helpers$get(ptr, "has_errno")
+helpers$set(ptr, "offset", 12345L)
+helpers$get(ptr, "offset")
+# Offsets account for bitfields
+helpers$fields$offset$offset
+helpers$fields$backend$offset
 ```
 
 

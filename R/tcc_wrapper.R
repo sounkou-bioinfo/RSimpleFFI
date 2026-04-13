@@ -1,6 +1,9 @@
 # TCC Wrapper - Preprocessing utilities only
 # All parsing functions removed - use tree-sitter via ffi_parse_header()
 
+#' @importFrom utils tail
+NULL
+
 remove_c_comments <- function(code) {
   code <- gsub("(?s)/\\*.*?\\*/", " ", code, perl = TRUE)
   code <- gsub("//[^\n]*", "", code, perl = TRUE)

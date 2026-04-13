@@ -122,6 +122,10 @@ generate_package_init <- function(
 #' @param library_path Optional: full path to shared library (for custom installs)
 #' @param use_system_lib Logical: search system library paths
 #' @param include_helpers Logical: include allocation helper functions
+#' @param use_api_mode Logical: use API mode (compile struct helpers into package). 
+#'   When TRUE, generates src/ directory with init.c and struct_helpers.c for 
+#'   compiled struct accessors. When FALSE (default), uses ABI mode with runtime
+#'   offset calculation. API mode is required for structs with bitfields.
 #' @param authors_r Authors@@R field for DESCRIPTION (R code string). Default creates a placeholder person().
 #' @param title Package title (default: auto-generated)
 #' @param description Package description (default: auto-generated)
@@ -129,17 +133,26 @@ generate_package_init <- function(
 #' @export
 #' @examples
 #' \dontrun{
+#' # ABI mode (default) - runtime offset calculation
+#' generate_package_from_headers(
+#'   header_files = "mylib.h",
+#'   package_name = "MyRPackage",
+#'   library_name = "mylib",
+#'   use_api_mode = FALSE
+#' )
+#' 
+#' # API mode - compiled struct helpers (better for bitfields)
 #' generate_package_from_headers(
 #'   header_files = c("mylib.h", "mylib_utils.h"),
 #'   package_name = "MyRPackage",
 #'   library_name = "mylib",
 #'   output_dir = "MyRPackage",
-#'   library_path = "/custom/path/libmylib.so",
+#'   use_api_mode = TRUE,
 #'   use_system_lib = TRUE,
 #'   include_helpers = TRUE,
 #'   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))',
 #'   title = "FFI Bindings to mylib",
-#'   description = "Auto-generated FFI bindings for mylib."
+#'   description = "Auto-generated FFI bindings for mylib with compiled struct helpers."
 #' )
 #' }
 generate_package_from_headers <- function(
@@ -150,6 +163,7 @@ generate_package_from_headers <- function(
   library_path = NULL,
   use_system_lib = TRUE,
   include_helpers = TRUE,
+  use_api_mode = FALSE,
   authors_r = NULL,
   title = NULL,
   description = NULL
@@ -163,6 +177,15 @@ generate_package_from_headers <- function(
   r_dir <- file.path(output_dir, "R")
   if (!dir.exists(r_dir)) {
     dir.create(r_dir, recursive = TRUE)
+  }
+
+  # Create src/ subdirectory if using API mode
+  src_dir <- NULL
+  if (use_api_mode) {
+    src_dir <- file.path(output_dir, "src")
+    if (!dir.exists(src_dir)) {
+      dir.create(src_dir, recursive = TRUE)
+    }
   }
 
   generated_files <- character()
@@ -199,7 +222,8 @@ generate_package_from_headers <- function(
   namespace_content <- fill_template(
     "NAMESPACE.template",
     list(
-      LIBRARY_NAME = library_name
+      LIBRARY_NAME = library_name,
+      PACKAGE_NAME = package_name
     )
   )
   namespace_file <- file.path(output_dir, "NAMESPACE")
@@ -220,6 +244,7 @@ generate_package_from_headers <- function(
   # 4. Parse each header and generate bindings (in R/ subfolder)
   all_bindings <- list()
   all_exports <- character()
+  all_parsed_headers <- list()
 
   for (header_file in header_files) {
     if (!file.exists(header_file)) {
@@ -229,8 +254,38 @@ generate_package_from_headers <- function(
 
     parsed <- ffi_parse_header(header_file)
     base_name <- tools::file_path_sans_ext(basename(header_file))
+    all_parsed_headers[[base_name]] <- parsed
 
-    # Generate bindings
+    if (use_api_mode && !is.null(parsed$structs) && length(parsed$structs) > 0) {
+      # API mode: generate .Call() wrappers for structs
+      struct_names <- names(parsed$structs)
+      
+      # Generate R wrappers for each struct
+      for (struct_name in struct_names) {
+        r_wrapper_code <- generate_api_r_wrappers(
+          struct_name,
+          vapply(parsed$structs[[struct_name]], function(f) f$name, character(1)),
+          prefix = "rffi_",
+          package_name = package_name
+        )
+        
+        wrapper_file <- file.path(r_dir, paste0(struct_name, "_api.R"))
+        writeLines(r_wrapper_code, wrapper_file)
+        generated_files <- c(generated_files, wrapper_file)
+        
+        # Add exports
+        escaped_name <- gsub("[^a-zA-Z0-9_]", "_", struct_name)
+        all_exports <- c(
+          all_exports,
+          paste0(escaped_name, "_new"),
+          paste0(escaped_name, "_offsets"),
+          paste0(escaped_name, "_get"),
+          paste0(escaped_name, "_set")
+        )
+      }
+    }
+    
+    # Generate standard bindings (for functions, constants, etc.)
     bindings_code <- generate_r_bindings(parsed)
     bindings_file <- file.path(r_dir, paste0(base_name, "_bindings.R"))
     writeLines(bindings_code, bindings_file)
@@ -243,6 +298,35 @@ generate_package_from_headers <- function(
     }
 
     all_bindings[[base_name]] <- parsed
+  }
+
+  # Generate C code if using API mode
+  if (use_api_mode && length(all_parsed_headers) > 0) {
+    # Generate src/struct_helpers.c
+    struct_helpers_c <- generate_package_struct_helpers_c(
+      all_parsed_headers,
+      header_includes = NULL,
+      prefix = "rffi_"
+    )
+    struct_helpers_file <- file.path(src_dir, "struct_helpers.c")
+    writeLines(struct_helpers_c, struct_helpers_file)
+    generated_files <- c(generated_files, struct_helpers_file)
+    
+    # Collect all struct names
+    all_struct_names <- character()
+    for (parsed in all_parsed_headers) {
+      if (!is.null(parsed$structs)) {
+        all_struct_names <- c(all_struct_names, names(parsed$structs))
+      }
+    }
+    
+    # Generate src/init.c
+    init_c <- generate_package_init_c(all_struct_names, prefix = "rffi_")
+    # Replace PACKAGENAME placeholder with actual package name
+    init_c <- gsub("PACKAGENAME", package_name, init_c)
+    init_c_file <- file.path(src_dir, "init.c")
+    writeLines(init_c, init_c_file)
+    generated_files <- c(generated_files, init_c_file)
   }
 
   # 5. Generate helper functions if requested (in R/ subfolder)
@@ -276,6 +360,25 @@ generate_package_from_headers <- function(
   license_file <- file.path(output_dir, "LICENSE")
   writeLines(license_content, license_file)
   generated_files <- c(generated_files, license_file)
+
+  # 7. Generate Makevars if using API mode
+  if (use_api_mode) {
+    makevars_content <- fill_template(
+      "Makevars.template",
+      list(PACKAGE_NAME = package_name)
+    )
+    makevars_file <- file.path(src_dir, "Makevars")
+    writeLines(makevars_content, makevars_file)
+    generated_files <- c(generated_files, makevars_file)
+    
+    makevars_win_content <- fill_template(
+      "Makevars.win.template",
+      list(PACKAGE_NAME = package_name)
+    )
+    makevars_win_file <- file.path(src_dir, "Makevars.win")
+    writeLines(makevars_win_content, makevars_win_file)
+    generated_files <- c(generated_files, makevars_win_file)
+  }
 
   invisible(list(
     files = generated_files,

@@ -12,8 +12,6 @@ ffi_get_field(ptr, field, struct_type, ...)
 \item{field}{Character field name or integer field index}
 
 \item{struct_type}{StructType object}
-
-\item{...}{Additional arguments (not used)}
 }
 \value{
 Field value
