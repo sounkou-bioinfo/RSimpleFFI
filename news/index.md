@@ -2,6 +2,35 @@
 
 ## RSimpleFFI 1.2.90000 (Development)
 
+### New Features
+
+- **API mode for package generation**:
+  [`generate_package_from_headers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/generate_package_from_headers.md)
+  now accepts `use_api_mode = TRUE` to generate packages with compiled
+  struct helpers instead of runtime offset calculation. Generated
+  packages include `src/init.c` for proper R function registration and
+  `src/struct_helpers.c` with accessor functions using compiler-computed
+  offsets via `offsetof()`. This enables correct handling of bitfield
+  structs and eliminates the need for runtime compilation, producing
+  standard R packages that work on systems without compilers.
+
+- **API mode for bitfield structs**: Added compiler-based struct helpers
+  using `offsetof()` to handle structures with bitfields. Use
+  [`ffi_create_helpers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_helpers.md)
+  to generate constructor and accessor functions with correct
+  compiler-computed offsets. Supports complex structs like htslib’s
+  `hFILE` that mix pointers, bitfields, and regular members.
+
+### Internal Changes
+
+- Converted
+  [`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
+  and
+  [`ffi_get_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_get_field.md)
+  to S7 generics with multiple method signatures to support both
+  reflection-based (StructType/UnionType) and compiler-based (API mode)
+  approaches simultaneously.
+
 ## RSimpleFFI 1.2.0 Release
 
 - An intermediary api Release

@@ -15,6 +15,7 @@ generate_package_from_headers(
   library_path = NULL,
   use_system_lib = TRUE,
   include_helpers = TRUE,
+  use_api_mode = FALSE,
   authors_r = NULL,
   title = NULL,
   description = NULL
@@ -51,6 +52,14 @@ generate_package_from_headers(
 
   Logical: include allocation helper functions
 
+- use_api_mode:
+
+  Logical: use API mode (compile struct helpers into package). When
+  TRUE, generates src/ directory with init.c and struct_helpers.c for
+  compiled struct accessors. When FALSE (default), uses ABI mode with
+  runtime offset calculation. API mode is required for structs with
+  bitfields.
+
 - authors_r:
 
   Authors@R field for DESCRIPTION (R code string). Default creates a
@@ -72,17 +81,26 @@ Invisibly returns list of generated files
 
 ``` r
 if (FALSE) { # \dontrun{
+# ABI mode (default) - runtime offset calculation
+generate_package_from_headers(
+  header_files = "mylib.h",
+  package_name = "MyRPackage",
+  library_name = "mylib",
+  use_api_mode = FALSE
+)
+
+# API mode - compiled struct helpers (better for bitfields)
 generate_package_from_headers(
   header_files = c("mylib.h", "mylib_utils.h"),
   package_name = "MyRPackage",
   library_name = "mylib",
   output_dir = "MyRPackage",
-  library_path = "/custom/path/libmylib.so",
+  use_api_mode = TRUE,
   use_system_lib = TRUE,
   include_helpers = TRUE,
   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))',
   title = "FFI Bindings to mylib",
-  description = "Auto-generated FFI bindings for mylib."
+  description = "Auto-generated FFI bindings for mylib with compiled struct helpers."
 )
 } # }
 ```

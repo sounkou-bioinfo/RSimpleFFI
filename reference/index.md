@@ -77,6 +77,8 @@
   : Copy array from native memory (ArrayType version)
 - [`ffi_create_bitfield_accessors()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_bitfield_accessors.md)
   : Create accessor functions for a bit-field structure
+- [`ffi_create_helpers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_helpers.md)
+  : Create High-Level API Helpers for Struct
 - [`ffi_deref_pointer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_deref_pointer.md)
   : Dereference a pointer
 - [`ffi_double()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_double.md)
@@ -238,6 +240,8 @@
   : Convert pointer to string safely
 - [`pointer_to_string_safe()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/pointer_to_string_safe.md)
   : Convert pointer to string safely
+- [`print(`*`<rffi_compiled_lib>`*`)`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/print.rffi_compiled_lib.md)
+  : Print method for compiled library
 - [`ptr_to_sexp()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ptr_to_sexp.md)
   : Get the R object from a protected SEXP pointer
 - [`release_ptr()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/release_ptr.md)

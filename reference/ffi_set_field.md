@@ -26,10 +26,6 @@ ffi_set_field(ptr, field, value, struct_type, ...)
 
   StructType object
 
-- ...:
-
-  Additional arguments (not used)
-
 ## Value
 
 Updated pointer

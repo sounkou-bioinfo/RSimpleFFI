@@ -15,14 +15,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/sounkou-bioinfo/RSimpleFFI/blob/main/DESCRIPTION)
 
-Toure S (2025). *RSimpleFFI: Simple Foreign Function Interface using
+Toure S (2026). *RSimpleFFI: Simple Foreign Function Interface using
 'S7' and 'libffi'*. R package version 1.2.0.90000,
 <https://github.com/sounkou-bioinfo/RSimpleFFI>.
 
     @Manual{,
       title = {RSimpleFFI: Simple Foreign Function Interface using 'S7' and 'libffi'},
       author = {Sounkou Mahamane Toure},
-      year = {2025},
+      year = {2026},
       note = {R package version 1.2.0.90000},
       url = {https://github.com/sounkou-bioinfo/RSimpleFFI},
     }

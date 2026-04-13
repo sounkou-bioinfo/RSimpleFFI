@@ -53,6 +53,7 @@ and R code in the R/ subfolder. Uses templates from inst/templates/.</p>
 <span>  library_path <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  use_system_lib <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  include_helpers <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  use_api_mode <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  authors_r <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  description <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -91,6 +92,13 @@ and R code in the R/ subfolder. Uses templates from inst/templates/.</p>
 <dd><p>Logical: include allocation helper functions</p></dd>
 
 
+<dt id="arg-use-api-mode">use_api_mode<a class="anchor" aria-label="anchor" href="#arg-use-api-mode"></a></dt>
+<dd><p>Logical: use API mode (compile struct helpers into package).
+When TRUE, generates src/ directory with init.c and struct_helpers.c for
+compiled struct accessors. When FALSE (default), uses ABI mode with runtime
+offset calculation. API mode is required for structs with bitfields.</p></dd>
+
+
 <dt id="arg-authors-r">authors_r<a class="anchor" aria-label="anchor" href="#arg-authors-r"></a></dt>
 <dd><p>Authors@R field for DESCRIPTION (R code string). Default creates a placeholder person().</p></dd>
 
@@ -111,17 +119,26 @@ and R code in the R/ subfolder. Uses templates from inst/templates/.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># ABI mode (default) - runtime offset calculation</span></span></span>
+<span class="r-in"><span><span class="fu">generate_package_from_headers</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  header_files <span class="op">=</span> <span class="st">"mylib.h"</span>,</span></span>
+<span class="r-in"><span>  package_name <span class="op">=</span> <span class="st">"MyRPackage"</span>,</span></span>
+<span class="r-in"><span>  library_name <span class="op">=</span> <span class="st">"mylib"</span>,</span></span>
+<span class="r-in"><span>  use_api_mode <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># API mode - compiled struct helpers (better for bitfields)</span></span></span>
 <span class="r-in"><span><span class="fu">generate_package_from_headers</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  header_files <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mylib.h"</span>, <span class="st">"mylib_utils.h"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  package_name <span class="op">=</span> <span class="st">"MyRPackage"</span>,</span></span>
 <span class="r-in"><span>  library_name <span class="op">=</span> <span class="st">"mylib"</span>,</span></span>
 <span class="r-in"><span>  output_dir <span class="op">=</span> <span class="st">"MyRPackage"</span>,</span></span>
-<span class="r-in"><span>  library_path <span class="op">=</span> <span class="st">"/custom/path/libmylib.so"</span>,</span></span>
+<span class="r-in"><span>  use_api_mode <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  use_system_lib <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  include_helpers <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  authors_r <span class="op">=</span> <span class="st">'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'</span>,</span></span>
 <span class="r-in"><span>  title <span class="op">=</span> <span class="st">"FFI Bindings to mylib"</span>,</span></span>
-<span class="r-in"><span>  description <span class="op">=</span> <span class="st">"Auto-generated FFI bindings for mylib."</span></span></span>
+<span class="r-in"><span>  description <span class="op">=</span> <span class="st">"Auto-generated FFI bindings for mylib with compiled struct helpers."</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>

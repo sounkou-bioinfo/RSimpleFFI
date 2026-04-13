@@ -34,6 +34,15 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.90000" id="rsimpleffi-1290000-development">RSimpleFFI 1.2.90000 (Development)<a class="anchor" aria-label="anchor" href="#rsimpleffi-1290000-development"></a></h2>
+<div class="section level3">
+<h3 id="new-features-1-2-90000">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-2-90000"></a></h3>
+<ul><li><p><strong>API mode for package generation</strong>: <code><a href="../reference/generate_package_from_headers.html">generate_package_from_headers()</a></code> now accepts <code>use_api_mode = TRUE</code> to generate packages with compiled struct helpers instead of runtime offset calculation. Generated packages include <code>src/init.c</code> for proper R function registration and <code>src/struct_helpers.c</code> with accessor functions using compiler-computed offsets via <code>offsetof()</code>. This enables correct handling of bitfield structs and eliminates the need for runtime compilation, producing standard R packages that work on systems without compilers.</p></li>
+<li><p><strong>API mode for bitfield structs</strong>: Added compiler-based struct helpers using <code>offsetof()</code> to handle structures with bitfields. Use <code><a href="../reference/ffi_create_helpers.html">ffi_create_helpers()</a></code> to generate constructor and accessor functions with correct compiler-computed offsets. Supports complex structs like htslib’s <code>hFILE</code> that mix pointers, bitfields, and regular members.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-changes-1-2-90000">Internal Changes<a class="anchor" aria-label="anchor" href="#internal-changes-1-2-90000"></a></h3>
+<ul><li>Converted <code><a href="../reference/ffi_set_field.html">ffi_set_field()</a></code> and <code><a href="../reference/ffi_get_field.html">ffi_get_field()</a></code> to S7 generics with multiple method signatures to support both reflection-based (StructType/UnionType) and compiler-based (API mode) approaches simultaneously.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="rsimpleffi-120-release">RSimpleFFI 1.2.0 Release<a class="anchor" aria-label="anchor" href="#rsimpleffi-120-release"></a></h2>
