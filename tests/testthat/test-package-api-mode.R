@@ -76,7 +76,7 @@ test_that("API mode package generation creates proper structure", {
   expect_true(any(grepl("Point_new <- function", point_api)))
   expect_true(any(grepl("Point_get <- function", point_api)))
   expect_true(any(grepl("Point_set <- function", point_api)))
-  expect_true(any(grepl('\\.Call\\("rffi_Point_new"', point_api)))
+  expect_true(any(grepl('\\.Call\\(rffi_Point_new', point_api)))
   
   # Clean up
   unlink(header_file)

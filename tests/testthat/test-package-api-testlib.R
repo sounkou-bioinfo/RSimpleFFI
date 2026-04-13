@@ -78,13 +78,15 @@ test_that("API mode package generation works with testlib", {
   dir.create(build_dir)
   build_log <- file.path(build_dir, "build.log")
   
+  old_wd <- setwd(build_dir)
+  on.exit(setwd(old_wd), add = TRUE)
   build_result <- system2(
     "R", 
     c("CMD", "build", shQuote(pkg_dir)),
     stdout = build_log,
-    stderr = build_log,
-    cwd = build_dir
+    stderr = build_log
   )
+  setwd(old_wd)
   
   expect_equal(build_result, 0, 
     info = sprintf("Package build failed. Check %s", build_log))
@@ -100,7 +102,7 @@ test_that("API mode package generation works with testlib", {
     
     install_result <- system2(
       "R",
-      c("CMD", "INSTALL", "--library", shQuote(install_dir), shQuote(tarball[1])),
+      c("CMD", "INSTALL", paste0("--library=", shQuote(install_dir)), shQuote(tarball[1])),
       stdout = TRUE,
       stderr = TRUE
     )

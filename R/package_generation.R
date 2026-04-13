@@ -77,10 +77,20 @@ generate_package_init <- function(
       lib_file
     )
   } else if (!is.null(library_path)) {
+    # If library_path is a directory, construct the full path to the .so/.dll file
+    if (dir.exists(library_path)) {
+      lib_file <- file.path(library_path, paste0("lib", library_name, .Platform$dynlib.ext))
+      if (!file.exists(lib_file)) {
+        # Try without "lib" prefix
+        lib_file <- file.path(library_path, paste0(library_name, .Platform$dynlib.ext))
+      }
+    } else {
+      lib_file <- library_path
+    }
     load_code <- sprintf(
       '  .%s_lib <<- dll_load("%s")',
       var_name,
-      library_path
+      lib_file
     )
   } else {
     # Package-bundled library
