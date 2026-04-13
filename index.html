@@ -324,21 +324,20 @@
 <span><span class="fu"><a href="reference/ffi_sizeof.html">ffi_sizeof</a></span><span class="op">(</span><span class="va">Pack4</span><span class="op">)</span>  <span class="co"># 12 bytes</span></span>
 <span><span class="co">#&gt; [1] 12</span></span></code></pre></div>
 <p>Use <code><a href="reference/ffi_all_offsets.html">ffi_all_offsets()</a></code> to see the complete layout</p>
-<pre><code>
-### ABI Mode vs API Mode
-
-RSimpleFFI supports two approaches for working with structs:
-
-**ABI Mode (Reflection-Based)**: Uses `ffi_struct()` to create struct types where field offsets are computed at runtime using platform ABI rules. Access fields with `ffi_get_field()` and `ffi_set_field()` passing the struct type object. This works for most structs but cannot handle bitfields since bitfield addresses cannot be taken.
-
-
-``` r
-# ABI mode: runtime offset calculation
-Point &lt;- ffi_struct(x = ffi_int(), y = ffi_double())
-ptr &lt;- ffi_alloc(Point)
-ffi_set_field(ptr, "x", 42L, Point)  # Pass struct type
-ffi_get_field(ptr, "x", Point)
-#&gt; [1] 42</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="do">### ABI Mode vs API Mode</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>RSimpleFFI supports two approaches <span class="cf">for</span> working with structs<span class="sc">:</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="er">**</span>ABI <span class="fu">Mode</span> (Reflection<span class="sc">-</span>Based)<span class="sc">**</span><span class="er">:</span> Uses <span class="st">`</span><span class="at">ffi_struct()</span><span class="st">`</span> to create struct types where field offsets are computed at runtime using platform ABI rules. Access fields with <span class="st">`</span><span class="at">ffi_get_field()</span><span class="st">`</span> and <span class="st">`</span><span class="at">ffi_set_field()</span><span class="st">`</span> passing the struct type object. This works <span class="cf">for</span> most structs but cannot handle bitfields since bitfield addresses cannot be taken.</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="st">```</span><span class="at"> r</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="at"># ABI mode: runtime offset calculation</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="at">Point &lt;- ffi_struct(x = ffi_int(), y = ffi_double())</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="at">ptr &lt;- ffi_alloc(Point)</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="at">ffi_set_field(ptr, "x", 42L, Point)  # Pass struct type</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="at">ffi_get_field(ptr, "x", Point)</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="at">#&gt; [1] 42</span></span></code></pre></div>
 <p><strong>API Mode (Compiler-Based)</strong>: Uses <code><a href="reference/ffi_create_helpers.html">ffi_create_helpers()</a></code> to generate C code with <code>offsetof()</code>, compile it with <code>R CMD SHLIB</code>, and extract accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with <code>$new()</code>, <code>$get()</code>, and <code>$set()</code> methods.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># API mode: compiler-computed offsets</span></span>
@@ -620,7 +619,8 @@ ffi_get_field(ptr, "x", Point)
 <code class="sourceCode R"><span><span class="co"># NA values cause errors by default</span></span>
 <span><span class="va">add_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"test_add_int"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">add_fn</span><span class="op">(</span><span class="cn">NA_integer_</span>, <span class="fl">5L</span><span class="op">)</span>  <span class="co"># Error: NA values in arguments</span></span>
-<span><span class="co">#&gt; Error: NA value not allowed in argument 1. Use na_check=FALSE to allow (at your own risk).</span></span></code></pre></div>
+<span><span class="co">#&gt; Error:</span></span>
+<span><span class="co">#&gt; ! NA value not allowed in argument 1. Use na_check=FALSE to allow (at your own risk).</span></span></code></pre></div>
 <p>If you know what you’re doing and want to pass NA values (e.g., when working with sentinel values), you can disable the check:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Disable NA check with na_check = FALSE</span></span>
@@ -700,10 +700,10 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="va">rand_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dll_ffi_symbol.html">dll_ffi_symbol</a></span><span class="op">(</span><span class="st">"rand"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 1775538581</span></span>
+<span><span class="co">#&gt; [1] 204578459</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 955888248</span></span>
+<span><span class="co">#&gt; [1] 1673737414</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">libc_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -726,7 +726,7 @@ ffi_get_field(ptr, "x", Point)
 <span></span>
 <span><span class="co"># Fill the buffer with ASCII 'A' (0x41)</span></span>
 <span><span class="fu">memset_fn</span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fl">0x41</span><span class="op">)</span>, <span class="fl">8L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x63591a230cf0&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x55b71127cb00&gt;</span></span>
 <span></span>
 <span><span class="co"># Read back the buffer and print as string</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rawConversion.html" class="external-link">rawToChar</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fl">8L</span>, <span class="va">raw_type</span><span class="op">)</span><span class="op">)</span></span>
@@ -815,8 +815,8 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 native_r      470µs    548µs     1701.     781KB     17.2</span></span>
-<span><span class="co">#&gt; 2 ffi_call      816µs    969µs      917.     782KB     18.7</span></span>
+<span><span class="co">#&gt; 1 native_r      276µs    300µs     3275.     781KB     33.1</span></span>
+<span><span class="co">#&gt; 2 ffi_call      408µs    426µs     2325.     782KB     47.5</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -897,7 +897,7 @@ ffi_get_field(ptr, "x", Point)
 <span>      <span class="va">out_ptr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span><span class="va">out_ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x63591e8ec0e0&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x55b716145930&gt;</span></span>
 <span><span class="va">c_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">out_ptr</span>, <span class="va">n_out</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run R convolution</span></span>
@@ -929,8 +929,8 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 r            54.7ms  62.65ms      15.3     781KB     12.5</span></span>
-<span><span class="co">#&gt; 2 c_ffi       965.6µs   1.08ms     882.      782KB      0</span></span>
+<span><span class="co">#&gt; 1 r            26.3ms   26.3ms      37.5     781KB     30.7</span></span>
+<span><span class="co">#&gt; 2 c_ffi       446.7µs  471.4µs    2065.      782KB      0</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -998,7 +998,7 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="va">call_expr</span> <span class="op">&lt;-</span> <span class="fu">rf_lang1</span><span class="op">(</span><span class="va">sys_time_sym</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">rf_eval</span><span class="op">(</span><span class="va">call_expr</span>, <span class="va">R_GlobalEnv</span><span class="op">)</span></span>
 <span><span class="fu">rf_REAL_ELT</span><span class="op">(</span><span class="va">result</span>, <span class="fl">0L</span><span class="op">)</span>  <span class="co"># Unix timestamp</span></span>
-<span><span class="co">#&gt; [1] 1765257890</span></span>
+<span><span class="co">#&gt; [1] 1776118125</span></span>
 <span></span>
 <span><span class="co"># Call abs(-42) via C API</span></span>
 <span><span class="va">abs_sym</span> <span class="op">&lt;-</span> <span class="fu">rf_install</span><span class="op">(</span><span class="st">"abs"</span><span class="op">)</span></span>
@@ -1022,7 +1022,7 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
 <span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
 <span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 375 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 13 lines</span></span>
@@ -1060,7 +1060,7 @@ ffi_get_field(ptr, "x", Point)
 <span></span>
 <span><span class="co"># Preview first part of generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">code</span>, <span class="fl">1</span>, <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2025-12-09 09:24:50.129158\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"</span></span>
+<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-04-14 00:08:45.419553\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"</span></span>
 <span></span>
 <span><span class="co"># The generated code includes:</span></span>
 <span><span class="co"># - Constants from #define</span></span>
@@ -1115,8 +1115,8 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
 <span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
 <span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)</span></span>
-<span><span class="co">#&gt; -&gt; /tmp/RtmpHboUuc/file8716a1c15dd25.h</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; -&gt; /tmp/RtmpR8y6Jo/file49e516a0b2602.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 209 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 9 lines</span></span>
 <span><span class="co">#&gt; Preprocessed file total characters: 200 characters</span></span>
@@ -1124,9 +1124,9 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; preprocessing produced suspiciously small output (209 bytes, 9 lines). This may</span></span>
 <span><span class="co">#&gt; indicate incomplete preprocessing.</span></span>
 <span><span class="co">#&gt; Last 10 lines of preprocessed output:</span></span>
-<span><span class="co">#&gt; # 1 "/tmp/RtmpHboUuc/file8716a1c15dd25.h"</span></span>
+<span><span class="co">#&gt; # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h"</span></span>
 <span><span class="co">#&gt; # 1 "&lt;command line&gt;" 1</span></span>
-<span><span class="co">#&gt; # 1 "/tmp/RtmpHboUuc/file8716a1c15dd25.h" 2</span></span>
+<span><span class="co">#&gt; # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h" 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; unsigned long strlen(const char* s);</span></span>
 <span><span class="co">#&gt; int strcmp(const char* s1, const char* s2);</span></span>
@@ -1137,8 +1137,8 @@ ffi_get_field(ptr, "x", Point)
 <span></span>
 <span><span class="co"># Preview generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">libc_code</span>, <span class="fl">1</span>, <span class="fl">600</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # Auto-generated R bindings for file8716a1c15dd25.h</span></span>
-<span><span class="co">#&gt; # Generated on: 2025-12-09 09:24:50.212169</span></span>
+<span><span class="co">#&gt; # Auto-generated R bindings for file49e516a0b2602.h</span></span>
+<span><span class="co">#&gt; # Generated on: 2026-04-14 00:08:45.457771</span></span>
 <span><span class="co">#&gt; # Source hash: 2b4c2eff17ca02fc5e637d979740174c</span></span>
 <span><span class="co">#&gt; #</span></span>
 <span><span class="co">#&gt; # NOTE: These functions expect symbols to be available in the current process.</span></span>
@@ -1186,6 +1186,7 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Rscript tools/generate_htslib_package.R /tmp/htslibFFI %s"</span>, <span class="va">htslib_root</span><span class="op">)</span>,</span>
 <span>           ignore.stdout <span class="op">=</span> <span class="cn">TRUE</span>, ignore.stderr <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required namespace: htslibFFI</span></span>
+<span><span class="co">#&gt; Loading system library from: /usr/lib/x86_64-linux-gnu/libhts.so.3</span></span>
 <span></span>
 <span><span class="co"># Clean up name conflicts from earlier examples</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span>list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"double_t"</span>, <span class="st">"r_abs"</span>, <span class="st">"r_strcmp"</span>, <span class="st">"r_strlen"</span><span class="op">)</span>, envir <span class="op">=</span> <span class="va">.GlobalEnv</span><span class="op">)</span></span>
@@ -1245,19 +1246,21 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
 <span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
 <span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/share/R/include/Rinternals.h</span></span>
-<span><span class="co">#&gt; Preprocessed file size: 65825 bytes</span></span>
-<span><span class="co">#&gt; Preprocessed file lines: 2667 lines</span></span>
-<span><span class="co">#&gt; Preprocessed file total characters: 63158 characters</span></span>
+<span><span class="co">#&gt; Preprocessed file size: 66773 bytes</span></span>
+<span><span class="co">#&gt; Preprocessed file lines: 2739 lines</span></span>
+<span><span class="co">#&gt; Preprocessed file total characters: 64034 characters</span></span>
+<span><span class="co">#&gt; Filtered out 4 system/reserved structs</span></span>
 <span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
 <span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
 <span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/share/R/include/Rmath.h</span></span>
-<span><span class="co">#&gt; Preprocessed file size: 34939 bytes</span></span>
+<span><span class="co">#&gt; Preprocessed file size: 34889 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 1353 lines</span></span>
-<span><span class="co">#&gt; Preprocessed file total characters: 33586 characters</span></span>
+<span><span class="co">#&gt; Preprocessed file total characters: 33536 characters</span></span>
+<span><span class="co">#&gt; Filtered out 1 system/reserved struct</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Rinternals" "Rmath"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">Rinternals</span><span class="op">$</span><span class="va">functions</span><span class="op">)</span></span>
@@ -1272,12 +1275,13 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
 <span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
 <span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/share/R/include/Rmath.h</span></span>
-<span><span class="co">#&gt; Preprocessed file size: 34939 bytes</span></span>
+<span><span class="co">#&gt; Preprocessed file size: 34889 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 1353 lines</span></span>
-<span><span class="co">#&gt; Preprocessed file total characters: 33586 characters</span></span>
-<span><span class="co">#&gt; Generated R bindings written to: /tmp/RtmpHboUuc/file8716a15bb8e45.R</span></span>
+<span><span class="co">#&gt; Preprocessed file total characters: 33536 characters</span></span>
+<span><span class="co">#&gt; Filtered out 1 system/reserved struct</span></span>
+<span><span class="co">#&gt; Generated R bindings written to: /tmp/RtmpR8y6Jo/file49e51742d1c28.R</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="va">outfile</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">r_Rf_dnorm4</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0L</span><span class="op">)</span></span>
@@ -1322,7 +1326,7 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
 <span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
 <span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 375 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 13 lines</span></span>
@@ -1364,7 +1368,7 @@ ffi_get_field(ptr, "x", Point)
 <span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
 <span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
 <span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2025-12-08 api_mode@93b2b6f* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 375 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 13 lines</span></span>
@@ -1433,7 +1437,7 @@ ffi_get_field(ptr, "x", Point)
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">2L</span>, <span class="fl">3L</span>, <span class="fl">4L</span>, <span class="fl">5L</span><span class="op">)</span></span>
 <span><span class="va">ptr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sexp_ptr.html">sexp_ptr</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x63591ba89db8&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x55b714d928a8&gt;</span></span>
 <span></span>
 <span><span class="co"># Call Rf_length via FFI</span></span>
 <span><span class="va">rf_length</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_length"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -1564,14 +1568,25 @@ ffi_get_field(ptr, "x", Point)
 <h3 id="structs-with-bitfields">Structs with Bitfields<a class="anchor" aria-label="anchor" href="#structs-with-bitfields"></a>
 </h3>
 <p>Structs with bitfields require compiler-based helpers since bitfield addresses cannot be computed via reflection. Use <code><a href="reference/ffi_create_helpers.html">ffi_create_helpers()</a></code> as shown in the “Compiler-Based Struct Helpers” section.</p>
-<div class="sourceCode" id="cb58"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb58-1"><a href="#cb58-1" tabindex="-1"></a><span class="co">// Example: htslib's hFILE with bitfields</span></span>
-<span id="cb58-2"><a href="#cb58-2" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> hFILE <span class="op">{</span></span>
-<span id="cb58-3"><a href="#cb58-3" tabindex="-1"></a>    <span class="dt">char</span> <span class="op">*</span>buffer<span class="op">,</span> <span class="op">*</span>begin<span class="op">,</span> <span class="op">*</span>end<span class="op">,</span> <span class="op">*</span>limit<span class="op">;</span></span>
-<span id="cb58-4"><a href="#cb58-4" tabindex="-1"></a>    <span class="dt">const</span> <span class="kw">struct</span> hFILE_backend <span class="op">*</span>backend<span class="op">;</span></span>
-<span id="cb58-5"><a href="#cb58-5" tabindex="-1"></a>    off_t offset<span class="op">;</span></span>
-<span id="cb58-6"><a href="#cb58-6" tabindex="-1"></a>    <span class="dt">unsigned</span> at_eof<span class="op">:</span><span class="dv">1</span><span class="op">,</span> mobile<span class="op">:</span><span class="dv">1</span><span class="op">,</span> readonly<span class="op">:</span><span class="dv">1</span><span class="op">,</span> preserve<span class="op">:</span><span class="dv">1</span><span class="op">;</span>  <span class="co">// bitfields</span></span>
-<span id="cb58-7"><a href="#cb58-7" tabindex="-1"></a>    <span class="dt">int</span> has_errno<span class="op">;</span></span>
-<span id="cb58-8"><a href="#cb58-8" tabindex="-1"></a><span class="op">}</span> hFILE<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb58-1"><a href="#cb58-1" tabindex="-1"></a><span class="co">// Struct with bitfields mixed with regular fields</span></span>
+<span id="cb58-2"><a href="#cb58-2" tabindex="-1"></a><span class="kw">struct</span> hFILE_like <span class="op">{</span></span>
+<span id="cb58-3"><a href="#cb58-3" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> buffer<span class="op">;</span></span>
+<span id="cb58-4"><a href="#cb58-4" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> begin<span class="op">;</span></span>
+<span id="cb58-5"><a href="#cb58-5" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> end<span class="op">;</span></span>
+<span id="cb58-6"><a href="#cb58-6" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> limit<span class="op">;</span></span>
+<span id="cb58-7"><a href="#cb58-7" tabindex="-1"></a>    </span>
+<span id="cb58-8"><a href="#cb58-8" tabindex="-1"></a>    <span class="co">// Bitfield flags - can't take their address!</span></span>
+<span id="cb58-9"><a href="#cb58-9" tabindex="-1"></a>    <span class="dt">unsigned</span> has_errno <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb58-10"><a href="#cb58-10" tabindex="-1"></a>    <span class="dt">unsigned</span> is_pipe <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb58-11"><a href="#cb58-11" tabindex="-1"></a>    <span class="dt">unsigned</span> mobile <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb58-12"><a href="#cb58-12" tabindex="-1"></a>    <span class="dt">unsigned</span> readonly <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb58-13"><a href="#cb58-13" tabindex="-1"></a>    <span class="dt">unsigned</span> at_eof <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb58-14"><a href="#cb58-14" tabindex="-1"></a>    <span class="dt">unsigned</span> reserved_bits <span class="op">:</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb58-15"><a href="#cb58-15" tabindex="-1"></a>    </span>
+<span id="cb58-16"><a href="#cb58-16" tabindex="-1"></a>    <span class="co">// Regular fields after bitfields</span></span>
+<span id="cb58-17"><a href="#cb58-17" tabindex="-1"></a>    <span class="dt">int</span> offset<span class="op">;</span></span>
+<span id="cb58-18"><a href="#cb58-18" tabindex="-1"></a>    <span class="dt">void</span><span class="op">*</span> backend<span class="op">;</span></span>
+<span id="cb58-19"><a href="#cb58-19" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
 <p>When working with such structs, you can only access non-bitfield members via ABI mode:</p>
 <div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># ABI mode: can only access non-bitfield members</span></span>
@@ -1580,16 +1595,15 @@ ffi_get_field(ptr, "x", Point)
 <span>  begin <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  end <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  limit <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  backend <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  offset <span class="op">=</span> <span class="fu"><a href="reference/ffi_long.html">ffi_long</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  <span class="co"># Skip bitfields: at_eof, mobile, readonly, preserve</span></span>
-<span>  has_errno <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="co"># Skip bitfields: has_errno, is_pipe, mobile, readonly, at_eof, reserved_bits</span></span>
+<span>  offset <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  backend <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ptr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/alloc.html">ffi_alloc</a></span><span class="op">(</span><span class="va">hFILE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/ffi_set_field.html">ffi_set_field</a></span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"has_errno"</span>, <span class="fl">5L</span>, <span class="va">hFILE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/ffi_get_field.html">ffi_get_field</a></span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"has_errno"</span>, <span class="va">hFILE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 5</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/ffi_set_field.html">ffi_set_field</a></span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"offset"</span>, <span class="fl">42L</span>, <span class="va">hFILE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ffi_get_field.html">ffi_get_field</a></span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"offset"</span>, <span class="va">hFILE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 42</span></span></code></pre></div>
 <p>For complete access including bitfields, use API mode:</p>
 <div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># API mode: compiler handles all fields including bitfields</span></span>
@@ -1598,18 +1612,28 @@ ffi_get_field(ptr, "x", Point)
 <span>  begin <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  end <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  limit <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  backend <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  offset <span class="op">=</span> <span class="fu"><a href="reference/ffi_long.html">ffi_long</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  has_errno <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span><span class="op">)</span></span>
+<span>  has_errno <span class="op">=</span> <span class="fu"><a href="reference/ffi_uint.html">ffi_uint</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  is_pipe <span class="op">=</span> <span class="fu"><a href="reference/ffi_uint.html">ffi_uint</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  mobile <span class="op">=</span> <span class="fu"><a href="reference/ffi_uint.html">ffi_uint</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  readonly <span class="op">=</span> <span class="fu"><a href="reference/ffi_uint.html">ffi_uint</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  at_eof <span class="op">=</span> <span class="fu"><a href="reference/ffi_uint.html">ffi_uint</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  reserved_bits <span class="op">=</span> <span class="fu"><a href="reference/ffi_uint.html">ffi_uint</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  offset <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  backend <span class="op">=</span> <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span>, include_dirs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, package <span class="op">=</span> <span class="st">"RSimpleFFI"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ptr</span> <span class="op">&lt;-</span> <span class="va">helpers</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">helpers</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"has_errno"</span>, <span class="fl">5L</span><span class="op">)</span></span>
+<span><span class="va">helpers</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"has_errno"</span>, <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="va">helpers</span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"has_errno"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 5</span></span>
-<span><span class="co"># Offsets account for bitfields even though not listed</span></span>
-<span><span class="va">helpers</span><span class="op">$</span><span class="va">fields</span><span class="op">$</span><span class="va">has_errno</span><span class="op">$</span><span class="va">offset</span></span>
-<span><span class="co">#&gt; [1] 48</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 1</span></span>
+<span><span class="va">helpers</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"offset"</span>, <span class="fl">12345L</span><span class="op">)</span></span>
+<span><span class="va">helpers</span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="va">ptr</span>, <span class="st">"offset"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 12345</span></span>
+<span><span class="co"># Offsets account for bitfields</span></span>
+<span><span class="va">helpers</span><span class="op">$</span><span class="va">fields</span><span class="op">$</span><span class="va">offset</span><span class="op">$</span><span class="va">offset</span></span>
+<span><span class="co">#&gt; [1] 56</span></span>
+<span><span class="va">helpers</span><span class="op">$</span><span class="va">fields</span><span class="op">$</span><span class="va">backend</span><span class="op">$</span><span class="va">offset</span></span>
+<span><span class="co">#&gt; [1] 64</span></span></code></pre></div>
 </div>
 </div>
 </div>
