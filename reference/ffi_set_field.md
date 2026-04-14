@@ -26,6 +26,10 @@ ffi_set_field(ptr, field, value, struct_type, ...)
 
   StructType object
 
+- ...:
+
+  Not used; required for S7 generic dispatch.
+
 ## Value
 
 Updated pointer
