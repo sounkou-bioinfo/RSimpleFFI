@@ -820,6 +820,7 @@ ffi_enum <- function(..., underlying_type = ffi_int()) {
 #' @param ptr External pointer to structure
 #' @param field Character field name or integer field index
 #' @param struct_type StructType object
+#' @param ... Not used; required for S7 generic dispatch.
 #' @return Field value
 #' @keywords Types
 #' @export
@@ -935,6 +936,7 @@ S7::method(
 #' @param field Character field name or integer field index
 #' @param value Value to set
 #' @param struct_type StructType object
+#' @param ... Not used; required for S7 generic dispatch.
 #' @return Updated pointer
 #' @keywords Types
 #' @export

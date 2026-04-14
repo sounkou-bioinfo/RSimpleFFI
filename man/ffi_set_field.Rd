@@ -14,6 +14,8 @@ ffi_set_field(ptr, field, value, struct_type, ...)
 \item{value}{Value to set}
 
 \item{struct_type}{StructType object}
+
+\item{...}{Not used; required for S7 generic dispatch.}
 }
 \value{
 Updated pointer
