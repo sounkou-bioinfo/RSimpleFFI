@@ -35,7 +35,7 @@ dev-install:
 	R CMD INSTALL --preclean .
 
 test:
-	R -e 'devtools::test()'
+	R -e 'tinytest::test_package("$(PKGNAME)")'
 
 rdm: dev-install
 	R -e "rmarkdown::render('README.Rmd')"

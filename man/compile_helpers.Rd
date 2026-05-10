@@ -4,6 +4,6 @@
 \alias{compile_helpers}
 \title{Compilation Helpers for API Mode}
 \description{
-Compile generated C code using R CMD SHLIB and load the resulting shared library.
+Compile generated C code in-memory with `Rtinycc`.
 }
 \keyword{internal}

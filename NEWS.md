@@ -8,6 +8,10 @@
 
 ## Internal Changes
 
+* TinyCC support now comes from `Rtinycc`; `RSimpleFFI` no longer builds or vendors its own TinyCC copy during `configure`.
+
+* The test suite now runs under `tinytest` instead of `testthat`.
+
 * Converted `ffi_set_field()` and `ffi_get_field()` to S7 generics with multiple method signatures to support both reflection-based (StructType/UnionType) and compiler-based (API mode) approaches simultaneously.
 
 

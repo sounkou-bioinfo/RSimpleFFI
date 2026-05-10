@@ -1,5 +1,6 @@
 # TCC Wrapper - Preprocessing utilities only
-# All parsing functions removed - use tree-sitter via ffi_parse_header()
+# Parsing functions use tree-sitter via ffi_parse_header(). TinyCC itself is
+# provided by Rtinycc so RSimpleFFI does not build or vendor its own TinyCC.
 
 #' @importFrom utils tail
 NULL
@@ -10,42 +11,40 @@ remove_c_comments <- function(code) {
   code
 }
 
-#' Get path to embedded TCC binary
-#' @return Path to tcc executable in installed package
-#' @export
-tcc_binary_path <- function() {
-  if (.Platform$OS.type == "windows") {
-    # On Windows, tcc.exe is in inst/tinycc/ (root of tinycc dir)
-    tcc_path <- system.file("tinycc", "tcc.exe", package = "RSimpleFFI")
-    if (nzchar(tcc_path) && file.exists(tcc_path)) {
-      tcc_path <- normalizePath(tcc_path)
-    }
-  } else {
-    # On Unix, tcc is in inst/tinycc/bin/
-    tcc_path <- system.file("tinycc", "bin", "tcc", package = "RSimpleFFI")
-    if (nzchar(tcc_path) && file.exists(tcc_path)) {
-      tcc_path <- normalizePath(tcc_path)
-    }
-  }
-
-  if (!nzchar(tcc_path) || !file.exists(tcc_path)) {
-    stop("TCC binary not found. Package may not be installed correctly.")
-  }
-  # replace tcc_path with gcc/clang from R CMD confic CC
-  # if we can find them
-  R_CC <- system2("R", c("CMD", "config", "CC"), stdout = TRUE)
-  if (nzchar(R_CC) && file.exists(R_CC)) {
-    # remove stuff like 'gcc -std=gnu11' to just get the binary path
-    R_CC <- strsplit(R_CC, " ")[[1]][1]
-    if (file.exists(R_CC)) {
-      tcc_path <- normalizePath(R_CC)
-    }
-  }
-
-  tcc_path
+rtinycc_loader_env <- function() {
+  lib_paths <- Rtinycc::tcc_lib_paths()
+  sysname <- Sys.info()[["sysname"]]
+  env_key <- switch(
+    sysname,
+    "Darwin" = "DYLD_LIBRARY_PATH",
+    "Windows" = "PATH",
+    "LD_LIBRARY_PATH"
+  )
+  env_sep <- if (.Platform$OS.type == "windows") ";" else ":"
+  sprintf(
+    "%s=%s",
+    env_key,
+    paste(c(lib_paths, Sys.getenv(env_key)), collapse = env_sep)
+  )
 }
 
-#' Preprocess C header file using embedded TCC
+#' Get path to the TinyCC binary supplied by Rtinycc
+#' @return Path to tcc executable from the Rtinycc package
+#' @export
+tcc_binary_path <- function() {
+  if (!requireNamespace("Rtinycc", quietly = TRUE)) {
+    stop("Rtinycc is required for TinyCC support.", call. = FALSE)
+  }
+
+  tcc_path <- Rtinycc::tcc_path()
+  if (!nzchar(tcc_path) || !file.exists(tcc_path)) {
+    stop("TinyCC binary not found via Rtinycc. Is Rtinycc installed correctly?", call. = FALSE)
+  }
+
+  normalizePath(tcc_path, winslash = "/", mustWork = TRUE)
+}
+
+#' Preprocess C header file using TinyCC from Rtinycc
 #' @param header_file Path to C header file
 #' @param includes Additional include directories
 #' @param keep_defines Keep #define directives (not supported by -E alone)
@@ -57,29 +56,22 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
   }
 
   tcc <- tcc_binary_path()
+  tcc_includes <- Rtinycc::tcc_include_paths()
+  tcc_prefix <- Rtinycc::tcc_prefix()
 
-  # Diagnostic: Check TinyCC include path (differs between Windows and Unix)
-  if (.Platform$OS.type == "windows") {
-    # Windows: inst/tinycc/include/
-    tcc_include <- file.path(dirname(tcc), "include")
-  } else {
-    # Unix: inst/tinycc/lib/tcc/include/
-    tcc_lib_path <- file.path(dirname(dirname(tcc)), "lib", "tcc")
-    tcc_include <- file.path(tcc_lib_path, "include")
-  }
-
-  if (!dir.exists(tcc_include)) {
-    warning("TinyCC include path not found: ", tcc_include)
-  } else {
-    message("TinyCC include path: ", tcc_include)
-    message("TinyCC builtin headers: ", paste(list.files(tcc_include), collapse = ", "))
+  if (length(tcc_includes) > 0) {
+    message("Rtinycc TinyCC include paths: ", paste(tcc_includes, collapse = ", "))
   }
 
   tmp_out <- tempfile(fileext = ".i")
   tmp_err <- tempfile(fileext = ".err")
   on.exit(unlink(c(tmp_out, tmp_err)), add = TRUE)
 
-  args <- c("-E", "-v") # Add -v for verbose output
+  args <- c("-E", "-v", "-B", tcc_prefix)
+
+  if (length(tcc_includes) > 0) {
+    args <- c(args, paste0("-I", tcc_includes))
+  }
 
   if (!is.null(includes)) {
     args <- c(args, paste0("-I", includes))
@@ -87,36 +79,42 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
 
   args <- c(args, header_file, "-o", tmp_out)
 
-  # Capture both stdout and stderr separately
-  result <- system2(tcc, args, stdout = tmp_err, stderr = tmp_err)
+  # Capture both stdout and stderr separately. TinyCC diagnostics normally go
+  # to stderr; some builds may emit verbose output to stdout.
+  result <- system2(
+    tcc,
+    args,
+    stdout = tmp_err,
+    stderr = tmp_err,
+    env = rtinycc_loader_env()
+  )
 
-  # Read error/diagnostic output
   err_output <- if (file.exists(tmp_err)) readLines(tmp_err, warn = FALSE) else character(0)
 
   if (length(err_output) > 0) {
-    message("TCC diagnostic output:")
+    message("TinyCC diagnostic output:")
     message(paste(head(err_output, 20), collapse = "\n"))
   }
 
-  if (!file.exists(tmp_out)) {
-    stop("TCC preprocessing failed:\n", paste(err_output, collapse = "\n"))
+  if (!identical(result, 0L)) {
+    stop("TinyCC preprocessing failed with exit status ", result, ":\n", paste(err_output, collapse = "\n"))
   }
 
-  # Check if output seems truncated
+  if (!file.exists(tmp_out)) {
+    stop("TinyCC preprocessing failed: no output file was created.\n", paste(err_output, collapse = "\n"))
+  }
+
   file_size <- file.info(tmp_out)$size
   lines <- readLines(tmp_out, warn = FALSE)
   num_lines <- length(lines)
 
-  # message size of the temp file  and number of characters
   message("Preprocessed file size: ", file_size, " bytes")
   message("Preprocessed file lines: ", num_lines, " lines")
 
-  # count bytes of each line and sum them
   line_sizes <- nchar(lines, type = "bytes")
   total_chars <- sum(line_sizes)
   message("Preprocessed file total characters: ", total_chars, " characters")
 
-  # Check for suspiciously small output
   if (file_size < 5000 && num_lines < 100) {
     warning(
       "TinyCC preprocessing produced suspiciously small output (",
@@ -124,7 +122,7 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
       "This may indicate incomplete preprocessing."
     )
     message("Last 10 lines of preprocessed output:")
-    message(paste(tail(lines, 10), collapse = "\n"))
+    message(paste(utils::tail(lines, 10), collapse = "\n"))
   }
 
   lines
@@ -202,7 +200,7 @@ tcc_extract_defines <- function(header_file = NULL, preprocessed_lines = NULL) {
   defines
 }
 
-#' Compile and run C code using embedded TCC
+#' Compile and run C code using TinyCC from Rtinycc
 #' @param code C source code as string
 #' @param args Arguments to pass to compiled program
 #' @return Output from program
@@ -214,22 +212,28 @@ tcc_run <- function(code, args = character()) {
 
   writeLines(code, tmp_src)
 
-  tcc_args <- c("-run", tmp_src)
+  tcc_args <- c(
+    "-B",
+    Rtinycc::tcc_prefix(),
+    paste0("-I", Rtinycc::tcc_include_paths()),
+    "-run",
+    tmp_src
+  )
   if (length(args) > 0) {
     tcc_args <- c(tcc_args, "--", args)
   }
 
-  system2(tcc, tcc_args, stdout = TRUE, stderr = TRUE)
+  system2(tcc, tcc_args, stdout = TRUE, stderr = TRUE, env = rtinycc_loader_env())
 }
 
-#' Check if TCC is available
-#' @return Logical indicating if TCC is available
+#' Check if TinyCC is available through Rtinycc
+#' @return Logical indicating if TinyCC is available
 #' @export
 tcc_available <- function() {
   tryCatch(
     {
-      path <- tcc_binary_path()
-      file.exists(path)
+      requireNamespace("Rtinycc", quietly = TRUE) &&
+        file.exists(Rtinycc::tcc_path())
     },
     error = function(e) FALSE
   )

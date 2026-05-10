@@ -352,8 +352,8 @@ Use `ffi_all_offsets()` to see the complete layout
     #> [1] 42
 
 **API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C
-code with `offsetof()`, compile it with `R CMD SHLIB`, and extract
-accessor functions. The compiler computes all offsets, handling
+code with `offsetof()`, compiles it in-process via `Rtinycc`, and
+extracts accessor functions. The compiler computes all offsets, handling
 bitfields and complex alignment. Returns a helper object with `$new()`,
 `$get()`, and `$set()` methods.
 
@@ -778,10 +778,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 204578459
+#> [1] 1887415833
 rand_value <- rand_func()
 rand_value
-#> [1] 1673737414
+#> [1] 789653074
 dll_unload(libc_path)
 ```
 
@@ -805,7 +805,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x55b71127cb00>
+#> <pointer: 0x61bb7ef44ff0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -903,8 +903,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      276µs    300µs     3275.     781KB     33.1
-#> 2 ffi_call      408µs    426µs     2325.     782KB     47.5
+#> 1 native_r      739µs    814µs     1125.     781KB     11.4
+#> 2 ffi_call      399µs    415µs     2379.     782KB     48.5
 dll_unload(lib_path)
 ```
 
@@ -987,7 +987,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x55b716145930>
+#> <pointer: 0x61bb84761ce0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -1019,8 +1019,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            26.3ms   26.3ms      37.5     781KB     30.7
-#> 2 c_ffi       446.7µs  471.4µs    2065.      782KB      0
+#> 1 r            24.9ms   26.1ms      38.6     781KB     31.6
+#> 2 c_ffi       453.8µs  470.2µs    1957.      782KB    103.
 
 dll_unload(lib_path)
 ```
@@ -1102,7 +1102,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1776118125
+#> [1] 1778416719
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1129,10 +1129,9 @@ are of no interest or clash with tinycc’s standard library
 # Parse a C header file using tinycc preprocessor
 header_file <- system.file("extdata", "simple_types.h", package = "RSimpleFFI")
 parsed <- ffi_parse_header(header_file)
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1170,7 +1169,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-04-14 00:08:45.419553\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-05-10 14:38:39.409222\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1224,11 +1223,10 @@ writeLines(c(
 
 # Parse and generate bindings
 libc_parsed <- ffi_parse_header(libc_header)
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
-#> -> /tmp/RtmpR8y6Jo/file49e516a0b2602.h
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
+#> -> /tmp/RtmpgiY8pp/file11c85b7685d2f.h
 #> Preprocessed file size: 209 bytes
 #> Preprocessed file lines: 9 lines
 #> Preprocessed file total characters: 200 characters
@@ -1236,9 +1234,9 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> preprocessing produced suspiciously small output (209 bytes, 9 lines). This may
 #> indicate incomplete preprocessing.
 #> Last 10 lines of preprocessed output:
-#> # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h"
+#> # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h"
 #> # 1 "<command line>" 1
-#> # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h" 2
+#> # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h" 2
 #> 
 #> unsigned long strlen(const char* s);
 #> int strcmp(const char* s1, const char* s2);
@@ -1249,8 +1247,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file49e516a0b2602.h
-#> # Generated on: 2026-04-14 00:08:45.457771
+#> # Auto-generated R bindings for file11c85b7685d2f.h
+#> # Generated on: 2026-05-10 14:38:39.444415
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1365,31 +1363,29 @@ will provide more interesting examples.
 
 ``` r
 result <- bindgen_r_api(headers = c("Rinternals.h", "Rmath.h"))
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/share/R/include/Rinternals.h
-#> Preprocessed file size: 66773 bytes
-#> Preprocessed file lines: 2739 lines
-#> Preprocessed file total characters: 64034 characters
+#> Preprocessed file size: 65050 bytes
+#> Preprocessed file lines: 2670 lines
+#> Preprocessed file total characters: 62380 characters
 #> Filtered out 4 system/reserved structs
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/share/R/include/Rmath.h
-#> Preprocessed file size: 34889 bytes
-#> Preprocessed file lines: 1353 lines
-#> Preprocessed file total characters: 33536 characters
+#> Preprocessed file size: 34897 bytes
+#> Preprocessed file lines: 1350 lines
+#> Preprocessed file total characters: 33547 characters
 #> Filtered out 1 system/reserved struct
 names(result)
 #> [1] "Rinternals" "Rmath"
 length(result$Rinternals$functions)
 #> [1] 5
 names(result$Rinternals$enums)
-#> [1] "Rboolean"           "NativeSymbolType"   "nchar_type"        
-#> [4] "cetype_t"           "R_pstream_format_t"
+#> [1] "Rboolean"           "NativeSymbolType"   "cetype_t"          
+#> [4] "R_BindingType_t"    "R_DotType_t"        "R_pstream_format_t"
 ```
 
 Generate bindings and call statistical distribution functions directly
@@ -1397,16 +1393,15 @@ Generate bindings and call statistical distribution functions directly
 ``` r
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/share/R/include/Rmath.h
-#> Preprocessed file size: 34889 bytes
-#> Preprocessed file lines: 1353 lines
-#> Preprocessed file total characters: 33536 characters
+#> Preprocessed file size: 34897 bytes
+#> Preprocessed file lines: 1350 lines
+#> Preprocessed file total characters: 33547 characters
 #> Filtered out 1 system/reserved struct
-#> Generated R bindings written to: /tmp/RtmpR8y6Jo/file49e51742d1c28.R
+#> Generated R bindings written to: /tmp/RtmpgiY8pp/file11c85b3e6e5bea.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1453,10 +1448,9 @@ generate_package_from_headers(
   use_system_lib = TRUE,
   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1502,10 +1496,9 @@ generate_package_from_headers(
   use_system_lib = TRUE,
   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1586,7 +1579,7 @@ automatically released when the pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x55b714d928a8>
+#> <pointer: 0x61bb831e4718>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())

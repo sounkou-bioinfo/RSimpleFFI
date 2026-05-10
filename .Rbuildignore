@@ -13,8 +13,11 @@
 ^Thumbs\.db$
 ^.*\.tmp$
 ^.*\.log$
+^.*\.gch$
 #^tests/testthat\.R$
 ^\.github$
+^\.claude$
+^inst/extdata/.*\.(o|so|dll|dylib)$
 ^\.inst/libffi$
 ^src/libffi/build$
 ^_pkgdown\.yml$

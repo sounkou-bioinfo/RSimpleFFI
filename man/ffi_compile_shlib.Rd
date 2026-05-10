@@ -2,7 +2,7 @@
 % Please edit documentation in R/compile_helpers.R
 \name{ffi_compile_shlib}
 \alias{ffi_compile_shlib}
-\title{Compile C code using R CMD SHLIB}
+\title{Compile C code with Rtinycc}
 \usage{
 ffi_compile_shlib(c_source, include_dirs = NULL, verbose = FALSE)
 }
@@ -16,14 +16,14 @@ ffi_compile_shlib(c_source, include_dirs = NULL, verbose = FALSE)
 \value{
 List with elements:
 \itemize{
-\item dll: DLL handle from dyn.load()
-\item path: Path to the compiled .so/.dll file
-\item tmpdir: Temporary directory (kept alive for DLL lifetime)
+\item state: Rtinycc compilation state
+\item path: Path to the diagnostic source file
+\item tmpdir: Temporary directory kept alive for compiler state
 }
 }
+
 \description{
-Takes C source code, writes it to a temporary file, compiles it with R CMD SHLIB,
-and loads the resulting shared library. Uses the system compiler (gcc/clang/MSVC)
-for reliability and full language support.
+Takes C source code, writes it to a temporary file for diagnostics, compiles it in
+memory with Rtinycc, and returns a handle that can resolve `.Call()` symbols.
 }
 \keyword{internal}

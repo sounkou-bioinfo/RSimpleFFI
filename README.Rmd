@@ -294,7 +294,7 @@ ffi_set_field(ptr, "x", 42L, Point)  # Pass struct type
 ffi_get_field(ptr, "x", Point)
 ```
 
-**API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C code with `offsetof()`, compile it with `R CMD SHLIB`, and extract accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with `$new()`, `$get()`, and `$set()` methods.
+**API Mode (Compiler-Based)**: Uses `ffi_create_helpers()` to generate C code with `offsetof()`, compiles it in-process via `Rtinycc`, and extracts accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with `$new()`, `$get()`, and `$set()` methods.
 
 
 ```{r}

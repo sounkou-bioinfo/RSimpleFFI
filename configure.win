@@ -1,13 +1,12 @@
 #!/bin/sh
-# configure.win — build TinyCC on Windows via Rtools (MSYS2/mingw)
-# Based on RtinyCC's proven Windows build approach.
+# configure.win — use Rtools libffi; TinyCC is provided by Rtinycc.
 
-# we are on rtools so we have libffi
-# and pkg-config available
+# We are on Rtools, so libffi and pkg-config should be available.
 if ! pkg-config --exists libffi; then
     echo "libffi not found. Please ensure Rtools45 is installed and libffi is available." >&2
     exit 1
 fi
+
 echo "Using system libffi from Rtools"
 REQUIRED_VERSION="3.0.0"
 INSTALLED_VERSION=$(pkg-config --modversion libffi 2>/dev/null)
@@ -17,154 +16,4 @@ if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$INSTALLED_VERSION" | sort -V | head 
   echo "use the package at your own risk !!!"
 fi
 
-# Get R's build configuration
-MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
-CC=`"${R_HOME}/bin/R" CMD config CC`
-CC=$(echo "${CC}" | awk '{print $1}')
-AR=`"${R_HOME}/bin/R" CMD config AR`
-
-# Build TinyCC
-THISDir=$(dirname "$0")
-THISDir=$(cd "$THISDir" && pwd)
-TINYCC_SRC="${THISDir}/src/tinycc"
-TINYCC_DEST="${THISDir}/inst/tinycc"
-echo "Package source directory: $THISDir"
-echo "TinyCC will be installed to: $TINYCC_DEST"
-
-# per tinycc mob ci – use UCRT64 for R 4.2+
-set MSYSTEM=UCRT64
-
-echo "Unpacking tinycc tarball to ${TINYCC_SRC} ..."
-"${R_HOME}/bin/Rscript" "${THISDir}/tools/vendortinycc.R" unpack
-
-if [ -d "$TINYCC_SRC" ]; then
-    cd "$TINYCC_SRC"
-    echo "Configuring and building tinycc ..."
-
-    # TCC's configure detects WIN32 from the compiler target and
-    # defaults to building libtcc.dll (CONFIG_static=no).
-    ./configure --prefix="$TINYCC_DEST" \
-        --cc="$CC" \
-        --ar="$AR"
-
-    mkdir -p "$TINYCC_DEST/lib"
-    mkdir -p "$TINYCC_DEST/include"
-
-    echo "Building libtcc.dll, libtcc.a and tcc.exe ..."
-    # Build the shared library (libtcc.dll) + static archive + CLI.
-    # Redirect make output to config.log to avoid R CMD check picking up
-    # upstream TCC compiler warnings (e.g. -Woverflow in i386-asm.c).
-    "$MAKE" libtcc.dll libtcc.a tcc.exe libtcc1.a >> "${THISDir}/config.log" 2>&1 \
-        || { echo "Failed to build TinyCC" >&2; exit 1; }
-
-    # --- install tcc.exe ---
-    # TCC searches for include/lib relative to the executable, so keep it
-    # at the root of inst/tinycc/ (not in bin/).
-    if [ -f "tcc.exe" ]; then
-        cp -f "tcc.exe" "$TINYCC_DEST/"
-    else
-        echo "tcc.exe not found after build" >&2
-        exit 1
-    fi
-
-    # --- install TCC system headers (for preprocessing) ---
-    echo "Installing TCC include files..."
-    cp -f include/*.h "$TINYCC_DEST/include/" 2>/dev/null || true
-    cp -f tcclib.h "$TINYCC_DEST/include/" 2>/dev/null || true
-    mkdir -p "$TINYCC_DEST/include/winapi"
-    cp -rf win32/include/* "$TINYCC_DEST/include/" 2>/dev/null || true
-
-    # --- install libraries ---
-    echo "Installing TCC library files..."
-    # DLL needed at runtime by tcc.exe (which links against libtcc.dll)
-    cp -f libtcc.dll "$TINYCC_DEST/lib/" 2>/dev/null || true
-    cp -f libtcc.a "$TINYCC_DEST/lib/" 2>/dev/null || true
-    # tcc.exe needs libtcc.dll next to it
-    cp -f libtcc.dll "$TINYCC_DEST/" 2>/dev/null || true
-
-    # libtcc1.a is the runtime support library (needed by the CLI)
-    LIBTCC1_SRC=$(find . -name "libtcc1.a" 2>/dev/null | head -n 1)
-    if [ -n "$LIBTCC1_SRC" ]; then
-        mkdir -p "$TINYCC_DEST/lib/tcc"
-        cp -f "$LIBTCC1_SRC" "$TINYCC_DEST/lib/tcc/" 2>/dev/null || true
-    else
-        echo "WARNING: libtcc1.a not found during build; CLI may fail"
-    fi
-
-    # Windows .def files for system libraries
-    cp -f win32/lib/*.def "$TINYCC_DEST/lib/" 2>/dev/null || true
-
-    # Generate R.def so TCC can resolve R API symbols if needed.
-    R_DLL=$(find "${R_HOME}/bin" -name "R.dll" 2>/dev/null | head -n 1)
-    if [ -n "$R_DLL" ] && [ -f "tcc.exe" ]; then
-        echo "Generating R.def from $R_DLL ..."
-        ./tcc.exe -impdef "$R_DLL" -o "$TINYCC_DEST/lib/R.def" \
-            || echo "WARNING: tcc -impdef failed; TCC JIT may not resolve R symbols"
-    fi
-
-    # Build TinyCC with proper UCRT support.
-    # R 4.2+ uses UCRT; TCC defaults to msvcrt.  Replacing msvcrt.def
-    # with ucrt.def (named msvcrt.def so TCC picks it up automatically)
-    # ensures TCC-compiled code uses the same CRT as R.
-    UCRT_DLL=$(find /c/Windows/System32 -maxdepth 1 -iname "ucrtbase.dll" 2>/dev/null | head -n 1)
-    if [ -n "$UCRT_DLL" ] && [ -f "tcc.exe" ]; then
-        echo "Generating ucrtbase.def from $UCRT_DLL ..."
-        ./tcc.exe -impdef "$UCRT_DLL" -o "$TINYCC_DEST/lib/ucrtbase.def" \
-            || echo "WARNING: tcc -impdef ucrtbase.dll failed"
-        echo "Generating ucrt.def (as msvcrt.def) from $UCRT_DLL ..."
-        ./tcc.exe -impdef "$UCRT_DLL" -o "$TINYCC_DEST/lib/msvcrt.def" \
-            || echo "WARNING: tcc -impdef ucrtbase.dll -> msvcrt.def failed; keeping original"
-    else
-        echo "WARNING: ucrtbase.dll not found; keeping original msvcrt.def"
-    fi
-
-    echo "TinyCC installed to $TINYCC_DEST"
-
-    # Test TinyCC preprocessing with difficult_structs.h
-    cd "${THISDir}"
-    echo ""
-    echo "=== Testing TinyCC preprocessing ==="
-    TCC_BIN="${TINYCC_DEST}/tcc.exe"
-    TEST_HEADER="${THISDir}/inst/extdata/difficult_structs.h"
-
-    if [ -f "$TCC_BIN" ] && [ -f "$TEST_HEADER" ]; then
-        echo "TinyCC binary: $TCC_BIN"
-        echo "Test header: $TEST_HEADER"
-
-        # Get TinyCC version
-        "$TCC_BIN" -v 2>&1 | head -1
-
-        # Test preprocessing
-        TMP_OUT=$(mktemp)
-        echo "Running: $TCC_BIN -E $TEST_HEADER -o $TMP_OUT"
-        if "$TCC_BIN" -E -v "$TEST_HEADER" -o "$TMP_OUT" 2>&1; then
-            OUTPUT_SIZE=$(wc -c < "$TMP_OUT")
-            OUTPUT_LINES=$(wc -l < "$TMP_OUT")
-            echo "Preprocessing SUCCESS: $OUTPUT_SIZE bytes, $OUTPUT_LINES lines"
-
-            # Check if output is suspiciously small
-            if [ "$OUTPUT_SIZE" -lt 5000 ]; then
-                echo "WARNING: Preprocessed output is suspiciously small ($OUTPUT_SIZE bytes)"
-                echo "This may indicate TinyCC cannot process system headers properly"
-                echo "Last 20 lines of preprocessed output:"
-                tail -20 "$TMP_OUT"
-            else
-                echo "Preprocessing appears successful (output size is reasonable)"
-            fi
-        else
-            echo "ERROR: TinyCC preprocessing failed"
-            echo "This may cause test failures related to header parsing"
-        fi
-        rm -f "$TMP_OUT"
-    else
-        echo "Cannot test TinyCC: binary or test header not found"
-    fi
-    echo "=== End TinyCC preprocessing test ==="
-    echo ""
-
-    # Always remove TCC source after build
-    rm -rf "${TINYCC_SRC}" || true
-else
-    echo "Error: tinycc source directory $TINYCC_SRC does not exist."
-    exit 1
-fi
+echo "TinyCC build skipped; RSimpleFFI uses Rtinycc for TinyCC preprocessing/JIT support."

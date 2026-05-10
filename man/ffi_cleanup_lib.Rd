@@ -13,6 +13,6 @@ ffi_cleanup_lib(lib)
 NULL (invisible)
 }
 \description{
-Unload library and remove temporary files.
+Remove diagnostic temporary files used by in-memory compilation.
 }
 \keyword{internal}
