@@ -334,8 +334,8 @@ ffi_offsetof(Packed, "b")   # 4 (immediately after int)
 #> [1] 4
 ```
 
-Pack values work like GCC/Clang/MSVC meaning each field’s alignment is
-`min(natural_alignment, pack)`
+Pack values work like clang/gcc (including GCC via RTools on Windows)
+meaning each field’s alignment is `min(natural_alignment, pack)`
 
 ``` r
 
@@ -356,15 +356,22 @@ Use
 [`ffi_all_offsets()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_all_offsets.md)
 to see the complete layout
 
-``` R
 ### ABI Mode vs API Mode
 
 RSimpleFFI supports two approaches for working with structs:
 
-**ABI Mode (Reflection-Based)**: Uses `ffi_struct()` to create struct types where field offsets are computed at runtime using platform ABI rules. Access fields with `ffi_get_field()` and `ffi_set_field()` passing the struct type object. This works for most structs but cannot handle bitfields since bitfield addresses cannot be taken.
-
+**ABI Mode (Reflection-Based)**: Uses
+[`ffi_struct()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_struct.md)
+to create struct types where field offsets are computed at runtime using
+platform ABI rules. Access fields with
+[`ffi_get_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_get_field.md)
+and
+[`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
+passing the struct type object. This works for most structs but cannot
+handle bitfields since bitfield addresses cannot be taken.
 
 ``` r
+
 # ABI mode: runtime offset calculation
 Point <- ffi_struct(x = ffi_int(), y = ffi_double())
 ptr <- ffi_alloc(Point)
@@ -824,10 +831,10 @@ libc_path <- dll_load_system("libc.so.6")
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 1887415833
+#> [1] 413639649
 rand_value <- rand_func()
 rand_value
-#> [1] 789653074
+#> [1] 521307387
 dll_unload(libc_path)
 ```
 
@@ -852,7 +859,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x61bb7ef44ff0>
+#> <pointer: 0x5de755c542b0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -867,7 +874,8 @@ dll_unload(lib_path)
 ### Compile and Load C Code
 
 The package provides facilities to load C code on the fly. The
-compilation uses `R CMD SHLIB` under the hood
+compilation uses R’s configured compiler toolchain (`clang`/`gcc`, with
+GCC from RTools on Windows).
 
 ``` r
 
@@ -953,8 +961,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      739µs    814µs     1125.     781KB     11.4
-#> 2 ffi_call      399µs    415µs     2379.     782KB     48.5
+#> 1 native_r      782µs    825µs     1205.     781KB     12.2
+#> 2 ffi_call      403µs    427µs     2322.     782KB     47.4
 dll_unload(lib_path)
 ```
 
@@ -1038,7 +1046,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x61bb84761ce0>
+#> <pointer: 0x5de7590f9b40>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -1070,8 +1078,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            24.9ms   26.1ms      38.6     781KB     31.6
-#> 2 c_ffi       453.8µs  470.2µs    1957.      782KB    103.
+#> 1 r              25ms   25.7ms      39.0     781KB     31.9
+#> 2 c_ffi         447µs  482.7µs    1963.      782KB    103.
 
 dll_unload(lib_path)
 ```
@@ -1159,7 +1167,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1778416719
+#> [1] 1778417069
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1228,7 +1236,7 @@ code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-05-10 14:38:39.409222\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-05-10 14:44:29.35212\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_point"
 
 # The generated code includes:
 # - Constants from #define
@@ -1287,17 +1295,17 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
 #> TinyCC diagnostic output:
 #> tcc version 0.9.28rc (x86_64 Linux)
-#> -> /tmp/RtmpgiY8pp/file11c85b7685d2f.h
-#> Preprocessed file size: 209 bytes
+#> -> /tmp/RtmpH73iq0/file1213c919d0cca2.h
+#> Preprocessed file size: 211 bytes
 #> Preprocessed file lines: 9 lines
-#> Preprocessed file total characters: 200 characters
+#> Preprocessed file total characters: 202 characters
 #> Warning in tcc_preprocess(header_file, includes = includes): TinyCC
-#> preprocessing produced suspiciously small output (209 bytes, 9 lines). This may
+#> preprocessing produced suspiciously small output (211 bytes, 9 lines). This may
 #> indicate incomplete preprocessing.
 #> Last 10 lines of preprocessed output:
-#> # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h"
+#> # 1 "/tmp/RtmpH73iq0/file1213c919d0cca2.h"
 #> # 1 "<command line>" 1
-#> # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h" 2
+#> # 1 "/tmp/RtmpH73iq0/file1213c919d0cca2.h" 2
 #> 
 #> unsigned long strlen(const char* s);
 #> int strcmp(const char* s1, const char* s2);
@@ -1308,8 +1316,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file11c85b7685d2f.h
-#> # Generated on: 2026-05-10 14:38:39.444415
+#> # Auto-generated R bindings for file1213c919d0cca2.h
+#> # Generated on: 2026-05-10 14:44:29.392529
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1319,7 +1327,7 @@ cat(substr(libc_code, 1, 600))
 #> #  - Primitives (int, double, etc.): passed by value, auto-converted
 #> #  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string
 #> #  - struct Foo*: use ffi_pointer(), allocate with ffi_struct() + ffi_alloc()
-#> #  - Struct fields: access with ffi_get_field()
+#> #  - Struct fields: access with ffi_get_field(
 
 # Source the bindings
 tmpfile <- tempfile(fileext = ".R")
@@ -1468,7 +1476,7 @@ bindgen_r_api(output_file = outfile, headers = "Rmath.h")
 #> Preprocessed file lines: 1350 lines
 #> Preprocessed file total characters: 33547 characters
 #> Filtered out 1 system/reserved struct
-#> Generated R bindings written to: /tmp/RtmpgiY8pp/file11c85b3e6e5bea.R
+#> Generated R bindings written to: /tmp/RtmpH73iq0/file1213c97da9d7db.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1659,7 +1667,7 @@ pointer is garbage collected.
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x61bb831e4718>
+#> <pointer: 0x5de754f158a8>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
