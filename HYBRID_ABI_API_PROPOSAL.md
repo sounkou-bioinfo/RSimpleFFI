@@ -18,6 +18,7 @@ using TinyCC or R CMD SHLIB for JIT compilation of helper functions.
 ### What Works (Pure ABI Mode)
 
 ``` r
+
 # Simple structs work fine
 Point <- ffi_struct(x = ffi_int(), y = ffi_int())
 ptr <- ffi_alloc(Point)
@@ -50,6 +51,7 @@ The layout doesn’t match reality.
 #### 2. No Safe Constructors
 
 ``` r
+
 # Current: Manual allocation + field-by-field setting (error-prone!)
 ptr <- ffi_alloc(ComplexStruct)
 ffi_set_field(ptr, "field1", value1)  # Tedious
@@ -122,6 +124,7 @@ interactive/iterative development
 Use **TinyCC for development**, **R CMD SHLIB for production**:
 
 ``` r
+
 # Development mode - fast iteration
 ffi_compile_helpers(header, mode = "tinycc")  # Fast, immediate feedback
 
@@ -137,6 +140,7 @@ ffi_compile_helpers(header, mode = "auto")    # Best of both worlds
 ### 1. Code Generation Pipeline
 
 ``` r
+
 ffi_generate_helpers <- function(header_file, functions = c("new", "free", "getters", "setters")) {
   # Parse header to extract struct definitions
   parsed <- ffi_parse_header(header_file)
@@ -368,6 +372,7 @@ hFILE* rffi_hFILE_get_ptr(SEXP ext_ptr) {
 ### 3. TinyCC JIT Implementation
 
 ``` r
+
 ffi_compile_tinycc <- function(c_source, include_dirs = NULL) {
   # Load libtcc (platform-specific)
   if (.Platform$OS.type == "windows") {
@@ -458,6 +463,7 @@ ffi_get_symbol_tcc <- function(program, symbol_name) {
 ### 4. R CMD SHLIB Implementation
 
 ``` r
+
 ffi_compile_shlib <- function(c_source, include_dirs = NULL) {
   # Write C source to temp file
   tmp_dir <- tempfile()
@@ -505,6 +511,7 @@ ffi_get_symbol_shlib <- function(dll, symbol_name) {
 ### 5. High-Level User API
 
 ``` r
+
 # Parse header and generate helper library
 helpers <- ffi_create_helpers(
   header = "htslib/hfile.h",
@@ -570,6 +577,7 @@ gc()  # Finalizers will be called
 ### 6. Code Generation Functions
 
 ``` r
+
 generate_constructor <- function(struct_info, prefix = "rffi_") {
   struct_name <- struct_info$name
   func_prefix <- paste0(prefix, struct_name)
@@ -718,6 +726,7 @@ layout automatically!
 **Example Comparison**:
 
 ``` r
+
 # Old approach: 20 fields = 40 generated C functions
 helpers$rffi_hFILE_get_buffer(ptr)
 helpers$rffi_hFILE_set_buffer(ptr, val)
@@ -785,6 +794,7 @@ ffi_set_field(ptr, "begin", hFILE_type, val)
 ### Use Case 1: htslib Integration
 
 ``` r
+
 # Current: Cannot model hFILE struct properly
 # Proposed:
 helpers <- ffi_create_helpers("htslib/hfile.h", structs = "hFILE", prefix = "rffi_")
@@ -811,6 +821,7 @@ result <- hclose_fn(hfile_ptr)
 ### Use Case 2: GTK+ Widget Creation
 
 ``` r
+
 # Current: Manual struct manipulation
 # Proposed:
 helpers <- ffi_create_helpers("gtk/gtk.h", structs = "GtkWidget", prefix = "rffi_")
@@ -832,6 +843,7 @@ gtk_show_fn(widget_ptr)
 ### Use Case 3: Protocol Buffer Structs
 
 ``` r
+
 # Complex nested structs with bitfields
 helpers <- ffi_create_helpers("protocol.h", structs = c("Header", "Packet"), prefix = "rffi_")
 

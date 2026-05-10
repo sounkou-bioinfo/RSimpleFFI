@@ -42,6 +42,7 @@ with pkg-config : this is always the case with recent
 On Unix-alikes libffi is always built from source.
 
 ``` r
+
 # r-universe
 install.packages('RSimpleFFI', repos = c('https://sounkou-bioinfo.r-universe.dev', 'https://cloud.r-project.org'))
 # remotes
@@ -51,6 +52,7 @@ remotes::install_git("sounkou-bioinfo/RSimpleFFI")
 ## Quick Start
 
 ``` r
+
 library(RSimpleFFI)
 # lib ffi version
 libffi_version()
@@ -83,6 +85,7 @@ are used when we call C functions.
 These are C basic types mostly mirroring libffi types
 
 ``` r
+
 void_type <- ffi_void()
 int_type <- ffi_int() 
 double_type <- ffi_double()
@@ -121,6 +124,7 @@ and
 [`ffi_fill_typed_buffer()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_fill_typed_buffer.md)
 
 ``` r
+
 # Allocate a buffer for 10 integers
 int_type <- ffi_int()
 int_buf <- ffi_alloc(int_type, 10L)
@@ -148,6 +152,7 @@ They is a way to handle fixed-size arrays and passed them to C functions
 via pointers
 
 ``` r
+
 # Allocate an array of 4 integers
 int_type <- ffi_int()
 arr_type <- ffi_array_type(int_type, 4L)
@@ -174,6 +179,7 @@ You can define and use C struct types using
 and allied
 
 ``` r
+
 
 # Define a struct type: struct Point { int x; double y; }
 point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
@@ -207,6 +213,7 @@ ffi_get_field(point_ptr, 1L, point_type)
 structs can be nested
 
 ``` r
+
 # Define inner and outer struct types
 inner_type <- ffi_struct(x = ffi_int32(), y = ffi_double())
 outer_type <- ffi_struct(id = ffi_int32(), point = inner_type, label = ffi_string())
@@ -250,6 +257,7 @@ You can allocate contiguous arrays of structs and access elements by
 index
 
 ``` r
+
 # Define a Point struct
 Point <- ffi_struct(x = ffi_int(), y = ffi_int())
 
@@ -280,6 +288,7 @@ Use
 and the packed struct versions to inspect struct types’ layout
 
 ``` r
+
 # Struct with alignment padding: int (4) + padding (4) + double (8) = 16 bytes
 Mixed <- ffi_struct(a = ffi_int(), b = ffi_double())
 ffi_sizeof(Mixed)
@@ -307,6 +316,7 @@ By default, structs use natural alignment (platform ABI). Use the `pack`
 parameter to control alignment, matching C’s `#pragma pack(n)`
 
 ``` r
+
 # Natural alignment: int (4) + padding (4) + double (8) = 16 bytes
 Natural <- ffi_struct(a = ffi_int(), b = ffi_double())
 ffi_sizeof(Natural)
@@ -328,6 +338,7 @@ Pack values work like GCC/Clang/MSVC meaning each field’s alignment is
 `min(natural_alignment, pack)`
 
 ``` r
+
 # .pack=2: fields aligned to at most 2-byte boundaries
 Pack2 <- ffi_struct(a = ffi_int(), b = ffi_double(), .pack = 2)
 ffi_sizeof(Pack2)   # 12 bytes
@@ -364,12 +375,13 @@ ffi_get_field(ptr, "x", Point)
 
 **API Mode (Compiler-Based)**: Uses
 [`ffi_create_helpers()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_create_helpers.md)
-to generate C code with `offsetof()`, compile it with `R CMD SHLIB`, and
-extract accessor functions. The compiler computes all offsets, handling
-bitfields and complex alignment. Returns a helper object with `$new()`,
-`$get()`, and `$set()` methods.
+to generate C code with `offsetof()`, compiles it in-process via
+`Rtinycc`, and extracts accessor functions. The compiler computes all
+offsets, handling bitfields and complex alignment. Returns a helper
+object with `$new()`, `$get()`, and `$set()` methods.
 
 ``` r
+
 # API mode: compiler-computed offsets
 helpers <- ffi_create_helpers("Point", list(x = ffi_int(), y = ffi_double()))
 ptr <- helpers$new()
@@ -397,6 +409,7 @@ to generate accessor functions with compiler-computed offsets via
 compiler handles bitfield layout:
 
 ``` r
+
 # Define fields matching htslib's hFILE (bitfields handled by compiler)
 hfile_fields <- list(
   buffer = ffi_pointer(),
@@ -432,6 +445,7 @@ and platform-specific.
 ### Struct Arrays
 
 ``` r
+
 # Compare layouts
 ffi_all_offsets(Natural)  # a=0, b=8
 #> a b 
@@ -447,6 +461,7 @@ Packed structs cannot be passed by value to C functions (libffi
 limitation). Use pointers instead.
 
 ``` r
+
 PackedPoint <- ffi_struct(x = ffi_uint8(), y = ffi_int32(), .pack = 1L)
 tryCatch(
   ffi_cif(PackedPoint, ffi_int()),
@@ -461,6 +476,7 @@ Enums map named constants to integer values, useful for flags, status
 codes, or options:
 
 ``` r
+
 # Define an enum type
 Color <- ffi_enum(RED = 0L, GREEN = 1L, BLUE = 2L)
 
@@ -494,6 +510,7 @@ Unions allow multiple fields to share the same memory location, useful
 for variant types or memory-efficient data structures:
 
 ``` r
+
 # Define a union (all fields share the same memory)
 Value <- ffi_union(
   as_int = ffi_int(),
@@ -548,6 +565,7 @@ are defined in
 and are accessible when the package is loaded.
 
 ``` r
+
 void_func <- ffi_symbol("test_void_function")
 void_cif <- ffi_cif(void_type)
 ffi_call(void_cif, void_func)
@@ -563,6 +581,7 @@ factorial_result
 #### Some Integer Types examples
 
 ``` r
+
 # test_int8_func: returns input + 1
 int8_func <- ffi_symbol("test_int8_func")
 int8_cif <- ffi_cif(int8_type, int8_type)
@@ -588,6 +607,7 @@ int64_result  # 999 * 4 = 3996
 #### Floating-Point Types
 
 ``` r
+
 add_func <- ffi_symbol("test_add_int")
 add_cif <- ffi_cif(int_type, int_type, int_type)
 int_result <- ffi_call(add_cif, add_func, 10L, 5L)
@@ -616,6 +636,7 @@ is advised to use `ffi_pointer` and explicitly convert them after. Care
 should be taken to the lifetime of the return external pointers
 
 ``` r
+
 string_func <- ffi_symbol("test_return_string")
 string_cif <- ffi_cif(string_type)
 string_result <- ffi_call(string_cif, string_func)
@@ -630,6 +651,7 @@ struct after defining the types. They allocated data are managed by R
 finalizers so there should be no special concerns around their lifetime.
 
 ``` r
+
 # Define struct type: struct Point { int x; double y; }
 point_type <- ffi_struct(x = ffi_int(), y = ffi_double())
 
@@ -655,6 +677,7 @@ negative values convert to unsigned types via two’s complement (e.g
 may lose precision beyond 2^53.
 
 ``` r
+
 # Integer truncation: 5.7 -> 5
 int_type <- ffi_int()
 add_fn <- ffi_function("test_add_int", int_type, int_type, int_type)
@@ -689,6 +712,7 @@ corruption (`NA_integer_` becomes `INT_MIN`, `NA_real_` becomes a NaN
 that C doesn’t recognize as missing).
 
 ``` r
+
 # NA values cause errors by default
 add_fn <- ffi_function("test_add_int", ffi_int(), ffi_int(), ffi_int())
 add_fn(NA_integer_, 5L)  # Error: NA values in arguments
@@ -700,6 +724,7 @@ If you know what you’re doing and want to pass NA values (e.g., when
 working with sentinel values), you can disable the check:
 
 ``` r
+
 # Disable NA check with na_check = FALSE
 add_fn_unsafe <- ffi_function("test_add_int", ffi_int(), ffi_int(), ffi_int(), na_check = FALSE)
 add_fn_unsafe(NA_integer_, 5L)  # Passes NA as INT_MIN
@@ -716,6 +741,7 @@ Note that `NaN` (Not a Number) values are allowed through because they
 have well-defined IEEE 754 semantics that C understands:
 
 ``` r
+
 # NaN passes through - it has IEEE semantics
 double_fn <- ffi_function("test_add_double", ffi_double(), ffi_double(), ffi_double())
 double_fn(NaN, 5.0)  # NaN + 5 = NaN
@@ -729,6 +755,7 @@ when C code expects a function pointer (e.g., qsort comparator, event
 handlers) and you want to use an R function
 
 ``` r
+
 # Create an R function to use as callback
 add_ten <- function(x) {
  print(paste0("adding " , x, " to 10"))
@@ -757,6 +784,7 @@ test_callback_fn(callback_ptr, 5L)
 Closures work with any signature RSimpleFFI supports
 
 ``` r
+
 # double (*transform)(double)
 square <- function(x) x * x
 square_closure <- ffi_closure(square, ffi_double(), ffi_double())
@@ -789,16 +817,17 @@ On some systems libc symbols are not already accessible in the R
 process’ adress space, so this example loads it
 
 ``` r
+
 # Example: call the C standard library rand() function
 libc_path <- dll_load_system("libc.so.6")
 #> Loading system library from: /usr/lib/x86_64-linux-gnu/libc.so.6
 rand_func <- dll_ffi_symbol("rand", ffi_int())
 rand_value <- rand_func()
 rand_value
-#> [1] 204578459
+#> [1] 1887415833
 rand_value <- rand_func()
 rand_value
-#> [1] 1673737414
+#> [1] 789653074
 dll_unload(libc_path)
 ```
 
@@ -807,6 +836,7 @@ dll_unload(libc_path)
 This is the preferred method to load libraries
 
 ``` r
+
 # Find the libc shared object (libc is always present)
 so_files <- list.files("/lib/x86_64-linux-gnu", pattern = "^libc[.]so[.]6$", full.names = TRUE)
 if (length(so_files) == 0) stop("libc.so.6 not found")
@@ -822,7 +852,7 @@ memset_fn <- dll_ffi_symbol("memset", ffi_pointer(), ffi_pointer(), ffi_int(), f
 
 # Fill the buffer with ASCII 'A' (0x41)
 memset_fn(buf_ptr, as.integer(0x41), 8L)
-#> <pointer: 0x55b71127cb00>
+#> <pointer: 0x61bb7ef44ff0>
 
 # Read back the buffer and print as string
 rawToChar(ffi_copy_array(buf_ptr, 8L, raw_type))
@@ -840,6 +870,7 @@ The package provides facilities to load C code on the fly. The
 compilation uses `R CMD SHLIB` under the hood
 
 ``` r
+
 c_code <- '
 int add_numbers(int a, int b) {
     return a + b;
@@ -857,6 +888,7 @@ dll_unload(lib_path)
 ```
 
 ``` r
+
 math_code <- '
 #include <math.h>
 double compute_distance(double x1, double y1, double x2, double y2) {
@@ -892,6 +924,7 @@ Here we compare to the builtin R C functions
 
 ``` r
 
+
 set.seed(1995)
 n <- 100000
 x_vec <- runif(n, 1, 100)
@@ -920,8 +953,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 native_r      276µs    300µs     3275.     781KB     33.1
-#> 2 ffi_call      408µs    426µs     2325.     782KB     47.5
+#> 1 native_r      739µs    814µs     1125.     781KB     11.4
+#> 2 ffi_call      399µs    415µs     2379.     782KB     48.5
 dll_unload(lib_path)
 ```
 
@@ -931,6 +964,7 @@ Let’s compare a pure C convolution to a simple R implementation. This is
 classic benchmark due to the loop overhead in R even with the JIT
 
 ``` r
+
 # Slow R convolution
 slow_convolve <- function(a, b) {
   ab <- double(length(a) + length(b) - 1)
@@ -1004,7 +1038,7 @@ c_conv_fn(
       out_ptr)
 #> NULL
 out_ptr
-#> <pointer: 0x55b716145930>
+#> <pointer: 0x61bb84761ce0>
 c_result <- ffi_copy_array(out_ptr, n_out, ffi_double())
 
 # Run R convolution
@@ -1036,8 +1070,8 @@ benchmark_result
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 r            26.3ms   26.3ms      37.5     781KB     30.7
-#> 2 c_ffi       446.7µs  471.4µs    2065.      782KB      0
+#> 1 r            24.9ms   26.1ms      38.6     781KB     31.6
+#> 2 c_ffi       453.8µs  470.2µs    1957.      782KB    103.
 
 dll_unload(lib_path)
 ```
@@ -1051,6 +1085,7 @@ is for educational purposes only! Calling R internals incorrectly can
 crash R or corrupt memory.
 
 ``` r
+
 # Rf_ScalarInteger - create an R integer scalar (returns SEXP pointer)
 rf_ScalarInteger <- ffi_function("Rf_ScalarInteger", ffi_pointer(), ffi_int())
 rf_ScalarReal <- ffi_function("Rf_ScalarReal", ffi_pointer(), ffi_double())
@@ -1072,6 +1107,7 @@ rf_REAL_ELT(dbl_sexp, 0L)
 We can also create and extract strings:
 
 ``` r
+
 # Rf_mkString creates a STRSXP (character vector)
 rf_mkString <- ffi_function("Rf_mkString", ffi_pointer(), ffi_string())
 rf_STRING_ELT <- ffi_function("STRING_ELT", ffi_pointer(), ffi_pointer(), ffi_long())
@@ -1089,6 +1125,7 @@ and
 [`ffi_read_global()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_read_global.md):
 
 ``` r
+
 # Read global variables from our test library
 int_addr <- getNativeSymbolInfo("test_global_int", "RSimpleFFI")$address
 ffi_read_global(int_addr, ffi_int())
@@ -1107,6 +1144,7 @@ pointer_to_string(ffi_deref_pointer(str_ptr_addr))
 Now let’s call R functions entirely through the C API:
 
 ``` r
+
 # Get R_GlobalEnv - it's a global pointer variable
 R_GlobalEnv <- ffi_deref_pointer(getNativeSymbolInfo("R_GlobalEnv")$address)
 
@@ -1121,7 +1159,7 @@ sys_time_sym <- rf_install("Sys.time")
 call_expr <- rf_lang1(sys_time_sym)
 result <- rf_eval(call_expr, R_GlobalEnv)
 rf_REAL_ELT(result, 0L)  # Unix timestamp
-#> [1] 1776118125
+#> [1] 1778416719
 
 # Call abs(-42) via C API
 abs_sym <- rf_install("abs")
@@ -1145,13 +1183,13 @@ are of no interest or clash with tinycc’s standard library
 ### Parse Headers
 
 ``` r
+
 # Parse a C header file using tinycc preprocessor
 header_file <- system.file("extdata", "simple_types.h", package = "RSimpleFFI")
 parsed <- ffi_parse_header(header_file)
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1184,12 +1222,13 @@ parsed$functions$name
 ### Generate R Bindings
 
 ``` r
+
 # Generate complete R code
 code <- generate_r_bindings(parsed)
 
 # Preview first part of generated code
 substr(code, 1, 500)
-#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-04-14 00:08:45.419553\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
+#> [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-05-10 14:38:39.409222\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"
 
 # The generated code includes:
 # - Constants from #define
@@ -1200,6 +1239,7 @@ substr(code, 1, 500)
 ### Source Generated Code
 
 ``` r
+
 # Write to temp file and source it
 tmpfile <- tempfile(fileext = ".R")
 writeLines(code, tmpfile)
@@ -1230,6 +1270,7 @@ Let’s create bindings for real C library functions. This is the prefered
 way to avoid extraneous includes.
 
 ``` r
+
 # Create a simple header with libc function signatures
 libc_header <- tempfile(fileext = ".h")
 writeLines(c(
@@ -1243,11 +1284,10 @@ writeLines(c(
 
 # Parse and generate bindings
 libc_parsed <- ffi_parse_header(libc_header)
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
-#> -> /tmp/RtmpR8y6Jo/file49e516a0b2602.h
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
+#> -> /tmp/RtmpgiY8pp/file11c85b7685d2f.h
 #> Preprocessed file size: 209 bytes
 #> Preprocessed file lines: 9 lines
 #> Preprocessed file total characters: 200 characters
@@ -1255,9 +1295,9 @@ libc_parsed <- ffi_parse_header(libc_header)
 #> preprocessing produced suspiciously small output (209 bytes, 9 lines). This may
 #> indicate incomplete preprocessing.
 #> Last 10 lines of preprocessed output:
-#> # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h"
+#> # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h"
 #> # 1 "<command line>" 1
-#> # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h" 2
+#> # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h" 2
 #> 
 #> unsigned long strlen(const char* s);
 #> int strcmp(const char* s1, const char* s2);
@@ -1268,8 +1308,8 @@ libc_code <- generate_r_bindings(libc_parsed)
 
 # Preview generated code
 cat(substr(libc_code, 1, 600))
-#> # Auto-generated R bindings for file49e516a0b2602.h
-#> # Generated on: 2026-04-14 00:08:45.457771
+#> # Auto-generated R bindings for file11c85b7685d2f.h
+#> # Generated on: 2026-05-10 14:38:39.444415
 #> # Source hash: 2b4c2eff17ca02fc5e637d979740174c
 #> #
 #> # NOTE: These functions expect symbols to be available in the current process.
@@ -1314,6 +1354,7 @@ libcurl support and stream VCF data from the 1000 Genomes Project. We’ve
 installed htslib version 1.22 and generate the bindings
 
 ``` r
+
 # Generate htslibFFI package from custom htslib installation with libcurl support
 htslib_root <- "../htslib-install"
 if(!requireNamespace("htslibFFI"))
@@ -1386,49 +1427,48 @@ code logic ! Scripts in
 more interesting examples.
 
 ``` r
+
 result <- bindgen_r_api(headers = c("Rinternals.h", "Rmath.h"))
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/share/R/include/Rinternals.h
-#> Preprocessed file size: 66773 bytes
-#> Preprocessed file lines: 2739 lines
-#> Preprocessed file total characters: 64034 characters
+#> Preprocessed file size: 65050 bytes
+#> Preprocessed file lines: 2670 lines
+#> Preprocessed file total characters: 62380 characters
 #> Filtered out 4 system/reserved structs
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/share/R/include/Rmath.h
-#> Preprocessed file size: 34889 bytes
-#> Preprocessed file lines: 1353 lines
-#> Preprocessed file total characters: 33536 characters
+#> Preprocessed file size: 34897 bytes
+#> Preprocessed file lines: 1350 lines
+#> Preprocessed file total characters: 33547 characters
 #> Filtered out 1 system/reserved struct
 names(result)
 #> [1] "Rinternals" "Rmath"
 length(result$Rinternals$functions)
 #> [1] 5
 names(result$Rinternals$enums)
-#> [1] "Rboolean"           "NativeSymbolType"   "nchar_type"        
-#> [4] "cetype_t"           "R_pstream_format_t"
+#> [1] "Rboolean"           "NativeSymbolType"   "cetype_t"          
+#> [4] "R_BindingType_t"    "R_DotType_t"        "R_pstream_format_t"
 ```
 
 Generate bindings and call statistical distribution functions directly
 
 ``` r
+
 outfile <- tempfile(fileext = ".R")
 bindgen_r_api(output_file = outfile, headers = "Rmath.h")
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/share/R/include/Rmath.h
-#> Preprocessed file size: 34889 bytes
-#> Preprocessed file lines: 1353 lines
-#> Preprocessed file total characters: 33536 characters
+#> Preprocessed file size: 34897 bytes
+#> Preprocessed file lines: 1350 lines
+#> Preprocessed file total characters: 33547 characters
 #> Filtered out 1 system/reserved struct
-#> Generated R bindings written to: /tmp/RtmpR8y6Jo/file49e51742d1c28.R
+#> Generated R bindings written to: /tmp/RtmpgiY8pp/file11c85b3e6e5bea.R
 source(outfile)
 
 r_Rf_dnorm4(0, 0, 1, 0L)
@@ -1466,6 +1506,7 @@ platform ABI rules. This works for most structs but cannot handle
 bitfields.
 
 ``` r
+
 tmpdir <- tempfile()
 dir.create(tmpdir)
 
@@ -1477,10 +1518,9 @@ generate_package_from_headers(
   use_system_lib = TRUE,
   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1514,6 +1554,7 @@ for function registration and `src/struct_helpers.c` with accessor
 functions. No runtime compilation is needed.
 
 ``` r
+
 tmpdir2 <- tempfile()
 dir.create(tmpdir2)
 
@@ -1526,10 +1567,9 @@ generate_package_from_headers(
   use_system_lib = TRUE,
   authors_r = 'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'
 )
-#> TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include
-#> TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h
-#> TCC diagnostic output:
-#> tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)
+#> Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include
+#> TinyCC diagnostic output:
+#> tcc version 0.9.28rc (x86_64 Linux)
 #> -> /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h
 #> Preprocessed file size: 375 bytes
 #> Preprocessed file lines: 13 lines
@@ -1569,6 +1609,7 @@ automatically. This is for testing the parser mostly, using this is
 discourage !
 
 ``` r
+
 # Generate bindings for all R headers
 bindgen_r_api(output_file = "r_bindings.R", verbose = TRUE)
 ```
@@ -1576,6 +1617,7 @@ bindgen_r_api(output_file = "r_bindings.R", verbose = TRUE)
 ### Helper Functions
 
 ``` r
+
 # Convert struct to/from R lists
 Point <- ffi_struct(x = ffi_int(), y = ffi_int())
 
@@ -1613,10 +1655,11 @@ helpers extract pointers while preventing garbage collection via
 pointer is garbage collected.
 
 ``` r
+
 x <- c(1L, 2L, 3L, 4L, 5L)
 ptr <- sexp_ptr(x)
 ptr
-#> <pointer: 0x55b714d928a8>
+#> <pointer: 0x61bb831e4718>
 
 # Call Rf_length via FFI
 rf_length <- ffi_function("Rf_length", ffi_int(), ffi_pointer())
@@ -1660,6 +1703,7 @@ Model bit-field structs as their packed integer type. Sum bit widths
 here).
 
 ``` r
+
 # C functions that take/return SettingsFlags (32-bit bit-field struct)
 # Model the struct as uint32_t in the FFI signature
 
@@ -1689,6 +1733,7 @@ get_priority_fn(incremented) # After increment: 11
 Bit-field structs passed by pointer:
 
 ``` r
+
 # C functions that take SettingsFlags* (pointer to bit-field struct)
 
 # Allocate buffer for 32-bit bit-field struct
@@ -1714,6 +1759,7 @@ ptr_get_fn(buf)  # Verify: now 5
 For convenient access, use bitfield helpers:
 
 ``` r
+
 settings <- ffi_create_bitfield_accessors(
   list(enabled = 1L, mode = 3L, priority = 4L)
 )
@@ -1738,6 +1784,7 @@ For bitfields exceeding 32 bits or requiring full 64-bit range, use the
 64-bit variants:
 
 ``` r
+
 # Pack fields totaling more than 32 bits
 packed64 <- ffi_pack_bits64(c(1L, 0x7FFFFFFFL), c(1L, 31L))
 packed64
@@ -1760,6 +1807,7 @@ For signed integer fields (common in hardware registers), use signed
 extraction:
 
 ``` r
+
 # Pack value 13 (0xD) which represents -3 in signed 4-bit
 packed <- ffi_pack_bits(c(13L), c(4L))
 
@@ -1814,6 +1862,7 @@ When working with such structs, you can only access non-bitfield members
 via ABI mode:
 
 ``` r
+
 # ABI mode: can only access non-bitfield members
 hFILE <- ffi_struct(
   buffer = ffi_pointer(),
@@ -1834,6 +1883,7 @@ ffi_get_field(ptr, "offset", hFILE)
 For complete access including bitfields, use API mode:
 
 ``` r
+
 # API mode: compiler handles all fields including bitfields
 helpers <- ffi_create_helpers("hFILE_like", list(
   buffer = ffi_pointer(),

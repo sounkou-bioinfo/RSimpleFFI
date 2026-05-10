@@ -7,9 +7,6 @@
 - **Anthony Green, Red Hat, Inc and others**. Contributor.  
   libffi authors and COPYRIGHT holders
 
-- **Fabrice Bellard and tinycc Authors**. Contributor.  
-  Tinycc Compiler (tinycc) authors and COPYRIGHT holders
-
 ## Citation
 
 Source:

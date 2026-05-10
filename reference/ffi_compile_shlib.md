@@ -1,8 +1,8 @@
-# Compile C code using R CMD SHLIB
+# Compile C code with Rtinycc
 
-Takes C source code, writes it to a temporary file, compiles it with R
-CMD SHLIB, and loads the resulting shared library. Uses the system
-compiler (gcc/clang/MSVC) for reliability and full language support.
+Takes C source code, writes it to a temporary file for diagnostics,
+compiles it in memory with Rtinycc, and returns a handle that can
+resolve \`.Call()\` symbols.
 
 ## Usage
 
@@ -28,8 +28,8 @@ ffi_compile_shlib(c_source, include_dirs = NULL, verbose = FALSE)
 
 List with elements:
 
-- dll: DLL handle from dyn.load()
+- state: Rtinycc compilation state
 
-- path: Path to the compiled .so/.dll file
+- path: Path to the diagnostic source file
 
-- tmpdir: Temporary directory (kept alive for DLL lifetime)
+- tmpdir: Temporary directory kept alive for compiler state

@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Simple Foreign Function Interface using S7 and libffi">
-<meta name="description" content="Simple Foreign Function Interface for R using libffi and S7 classes. Supports calling C functions with type conversion and struct handling. Includes standard C types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), floating point types, and complex struct types. Experimental header parsing using tinycc as `C` preprocessor enables automatic generation of R bindings from C header files, simplifying package development for C libraries.">
-<meta property="og:description" content="Simple Foreign Function Interface for R using libffi and S7 classes. Supports calling C functions with type conversion and struct handling. Includes standard C types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), floating point types, and complex struct types. Experimental header parsing using tinycc as `C` preprocessor enables automatic generation of R bindings from C header files, simplifying package development for C libraries.">
+<meta name="description" content="Simple Foreign Function Interface for R using libffi and S7 classes. Supports calling C functions with type conversion and struct handling. Includes standard C types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), floating point types, and complex struct types. Header parsing uses Rtinycc for TinyCC-backed preprocessing and enables automatic generation of R bindings from C header files, simplifying package development for C libraries.">
+<meta property="og:description" content="Simple Foreign Function Interface for R using libffi and S7 classes. Supports calling C functions with type conversion and struct handling. Includes standard C types (int8, int16, int32, int64, uint variants), platform types (size_t, bool), floating point types, and complex struct types. Header parsing uses Rtinycc for TinyCC-backed preprocessing and enables automatic generation of R bindings from C header files, simplifying package development for C libraries.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -338,7 +338,7 @@
 <span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="at">ffi_set_field(ptr, "x", 42L, Point)  # Pass struct type</span></span>
 <span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="at">ffi_get_field(ptr, "x", Point)</span></span>
 <span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="at">#&gt; [1] 42</span></span></code></pre></div>
-<p><strong>API Mode (Compiler-Based)</strong>: Uses <code><a href="reference/ffi_create_helpers.html">ffi_create_helpers()</a></code> to generate C code with <code>offsetof()</code>, compile it with <code>R CMD SHLIB</code>, and extract accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with <code>$new()</code>, <code>$get()</code>, and <code>$set()</code> methods.</p>
+<p><strong>API Mode (Compiler-Based)</strong>: Uses <code><a href="reference/ffi_create_helpers.html">ffi_create_helpers()</a></code> to generate C code with <code>offsetof()</code>, compiles it in-process via <code>Rtinycc</code>, and extracts accessor functions. The compiler computes all offsets, handling bitfields and complex alignment. Returns a helper object with <code>$new()</code>, <code>$get()</code>, and <code>$set()</code> methods.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># API mode: compiler-computed offsets</span></span>
 <span><span class="va">helpers</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_create_helpers.html">ffi_create_helpers</a></span><span class="op">(</span><span class="st">"Point"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -700,10 +700,10 @@
 <span><span class="va">rand_func</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dll_ffi_symbol.html">dll_ffi_symbol</a></span><span class="op">(</span><span class="st">"rand"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 204578459</span></span>
+<span><span class="co">#&gt; [1] 1887415833</span></span>
 <span><span class="va">rand_value</span> <span class="op">&lt;-</span> <span class="fu">rand_func</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">rand_value</span></span>
-<span><span class="co">#&gt; [1] 1673737414</span></span>
+<span><span class="co">#&gt; [1] 789653074</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">libc_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -726,7 +726,7 @@
 <span></span>
 <span><span class="co"># Fill the buffer with ASCII 'A' (0x41)</span></span>
 <span><span class="fu">memset_fn</span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fl">0x41</span><span class="op">)</span>, <span class="fl">8L</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x55b71127cb00&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x61bb7ef44ff0&gt;</span></span>
 <span></span>
 <span><span class="co"># Read back the buffer and print as string</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rawConversion.html" class="external-link">rawToChar</a></span><span class="op">(</span><span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">buf_ptr</span>, <span class="fl">8L</span>, <span class="va">raw_type</span><span class="op">)</span><span class="op">)</span></span>
@@ -815,8 +815,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 native_r      276µs    300µs     3275.     781KB     33.1</span></span>
-<span><span class="co">#&gt; 2 ffi_call      408µs    426µs     2325.     782KB     47.5</span></span>
+<span><span class="co">#&gt; 1 native_r      739µs    814µs     1125.     781KB     11.4</span></span>
+<span><span class="co">#&gt; 2 ffi_call      399µs    415µs     2379.     782KB     48.5</span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -897,7 +897,7 @@
 <span>      <span class="va">out_ptr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span>
 <span><span class="va">out_ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x55b716145930&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x61bb84761ce0&gt;</span></span>
 <span><span class="va">c_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_copy_array.html">ffi_copy_array</a></span><span class="op">(</span><span class="va">out_ptr</span>, <span class="va">n_out</span>, <span class="fu"><a href="reference/ffi_double.html">ffi_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run R convolution</span></span>
@@ -929,8 +929,8 @@
 <span><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span><span class="co">#&gt;   expression      min   median `itr/sec` mem_alloc `gc/sec`</span></span>
 <span><span class="co">#&gt;   &lt;bch:expr&gt; &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:byt&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 r            26.3ms   26.3ms      37.5     781KB     30.7</span></span>
-<span><span class="co">#&gt; 2 c_ffi       446.7µs  471.4µs    2065.      782KB      0</span></span>
+<span><span class="co">#&gt; 1 r            24.9ms   26.1ms      38.6     781KB     31.6</span></span>
+<span><span class="co">#&gt; 2 c_ffi       453.8µs  470.2µs    1957.      782KB    103.</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/dynamic_library_management.html">dll_unload</a></span><span class="op">(</span><span class="va">lib_path</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -998,7 +998,7 @@
 <span><span class="va">call_expr</span> <span class="op">&lt;-</span> <span class="fu">rf_lang1</span><span class="op">(</span><span class="va">sys_time_sym</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">rf_eval</span><span class="op">(</span><span class="va">call_expr</span>, <span class="va">R_GlobalEnv</span><span class="op">)</span></span>
 <span><span class="fu">rf_REAL_ELT</span><span class="op">(</span><span class="va">result</span>, <span class="fl">0L</span><span class="op">)</span>  <span class="co"># Unix timestamp</span></span>
-<span><span class="co">#&gt; [1] 1776118125</span></span>
+<span><span class="co">#&gt; [1] 1778416719</span></span>
 <span></span>
 <span><span class="co"># Call abs(-42) via C API</span></span>
 <span><span class="va">abs_sym</span> <span class="op">&lt;-</span> <span class="fu">rf_install</span><span class="op">(</span><span class="st">"abs"</span><span class="op">)</span></span>
@@ -1019,10 +1019,9 @@
 <code class="sourceCode R"><span><span class="co"># Parse a C header file using tinycc preprocessor</span></span>
 <span><span class="va">header_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"simple_types.h"</span>, package <span class="op">=</span> <span class="st">"RSimpleFFI"</span><span class="op">)</span></span>
 <span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_parse_header.html">ffi_parse_header</a></span><span class="op">(</span><span class="va">header_file</span><span class="op">)</span></span>
-<span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
-<span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
-<span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include</span></span>
+<span><span class="co">#&gt; TinyCC diagnostic output:</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 375 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 13 lines</span></span>
@@ -1060,7 +1059,7 @@
 <span></span>
 <span><span class="co"># Preview first part of generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">code</span>, <span class="fl">1</span>, <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-04-14 00:08:45.419553\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"</span></span>
+<span><span class="co">#&gt; [1] "# Auto-generated R bindings for simple_types.h\n# Generated on: 2026-05-10 14:38:39.409222\n# Source hash: d3eba819d380b57852bd0b9edb3e1f5a\n#\n# NOTE: These functions expect symbols to be available in the current process.\n# For external libraries, load them first with dll_load() or use dll_ffi_symbol().\n#\n# Type handling:\n#  - Primitives (int, double, etc.): passed by value, auto-converted\n#  - char*: use ffi_pointer(), use pointer_to_string() for conversion to string\n#  - struct Foo*: use ffi_poin"</span></span>
 <span></span>
 <span><span class="co"># The generated code includes:</span></span>
 <span><span class="co"># - Constants from #define</span></span>
@@ -1112,11 +1111,10 @@
 <span></span>
 <span><span class="co"># Parse and generate bindings</span></span>
 <span><span class="va">libc_parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_parse_header.html">ffi_parse_header</a></span><span class="op">(</span><span class="va">libc_header</span><span class="op">)</span></span>
-<span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
-<span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
-<span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
-<span><span class="co">#&gt; -&gt; /tmp/RtmpR8y6Jo/file49e516a0b2602.h</span></span>
+<span><span class="co">#&gt; Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include</span></span>
+<span><span class="co">#&gt; TinyCC diagnostic output:</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; -&gt; /tmp/RtmpgiY8pp/file11c85b7685d2f.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 209 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 9 lines</span></span>
 <span><span class="co">#&gt; Preprocessed file total characters: 200 characters</span></span>
@@ -1124,9 +1122,9 @@
 <span><span class="co">#&gt; preprocessing produced suspiciously small output (209 bytes, 9 lines). This may</span></span>
 <span><span class="co">#&gt; indicate incomplete preprocessing.</span></span>
 <span><span class="co">#&gt; Last 10 lines of preprocessed output:</span></span>
-<span><span class="co">#&gt; # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h"</span></span>
+<span><span class="co">#&gt; # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h"</span></span>
 <span><span class="co">#&gt; # 1 "&lt;command line&gt;" 1</span></span>
-<span><span class="co">#&gt; # 1 "/tmp/RtmpR8y6Jo/file49e516a0b2602.h" 2</span></span>
+<span><span class="co">#&gt; # 1 "/tmp/RtmpgiY8pp/file11c85b7685d2f.h" 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; unsigned long strlen(const char* s);</span></span>
 <span><span class="co">#&gt; int strcmp(const char* s1, const char* s2);</span></span>
@@ -1137,8 +1135,8 @@
 <span></span>
 <span><span class="co"># Preview generated code</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">libc_code</span>, <span class="fl">1</span>, <span class="fl">600</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # Auto-generated R bindings for file49e516a0b2602.h</span></span>
-<span><span class="co">#&gt; # Generated on: 2026-04-14 00:08:45.457771</span></span>
+<span><span class="co">#&gt; # Auto-generated R bindings for file11c85b7685d2f.h</span></span>
+<span><span class="co">#&gt; # Generated on: 2026-05-10 14:38:39.444415</span></span>
 <span><span class="co">#&gt; # Source hash: 2b4c2eff17ca02fc5e637d979740174c</span></span>
 <span><span class="co">#&gt; #</span></span>
 <span><span class="co">#&gt; # NOTE: These functions expect symbols to be available in the current process.</span></span>
@@ -1243,45 +1241,42 @@
 <p>The <code><a href="reference/bindgen_r_api.html">bindgen_r_api()</a></code> function parses R’s own header files (Rinternals.h, Rmath.h) and generates FFI bindings. This provides access to R’s internal C functions without writing C code. Educational purpose only and to test the parsing code logic ! Scripts in <a href="./tools">tools</a> will provide more interesting examples.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bindgen_r_api.html">bindgen_r_api</a></span><span class="op">(</span>headers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rinternals.h"</span>, <span class="st">"Rmath.h"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
-<span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
-<span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include</span></span>
+<span><span class="co">#&gt; TinyCC diagnostic output:</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/share/R/include/Rinternals.h</span></span>
-<span><span class="co">#&gt; Preprocessed file size: 66773 bytes</span></span>
-<span><span class="co">#&gt; Preprocessed file lines: 2739 lines</span></span>
-<span><span class="co">#&gt; Preprocessed file total characters: 64034 characters</span></span>
+<span><span class="co">#&gt; Preprocessed file size: 65050 bytes</span></span>
+<span><span class="co">#&gt; Preprocessed file lines: 2670 lines</span></span>
+<span><span class="co">#&gt; Preprocessed file total characters: 62380 characters</span></span>
 <span><span class="co">#&gt; Filtered out 4 system/reserved structs</span></span>
-<span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
-<span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
-<span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include</span></span>
+<span><span class="co">#&gt; TinyCC diagnostic output:</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/share/R/include/Rmath.h</span></span>
-<span><span class="co">#&gt; Preprocessed file size: 34889 bytes</span></span>
-<span><span class="co">#&gt; Preprocessed file lines: 1353 lines</span></span>
-<span><span class="co">#&gt; Preprocessed file total characters: 33536 characters</span></span>
+<span><span class="co">#&gt; Preprocessed file size: 34897 bytes</span></span>
+<span><span class="co">#&gt; Preprocessed file lines: 1350 lines</span></span>
+<span><span class="co">#&gt; Preprocessed file total characters: 33547 characters</span></span>
 <span><span class="co">#&gt; Filtered out 1 system/reserved struct</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Rinternals" "Rmath"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">Rinternals</span><span class="op">$</span><span class="va">functions</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 5</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">Rinternals</span><span class="op">$</span><span class="va">enums</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Rboolean"           "NativeSymbolType"   "nchar_type"        </span></span>
-<span><span class="co">#&gt; [4] "cetype_t"           "R_pstream_format_t"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Rboolean"           "NativeSymbolType"   "cetype_t"          </span></span>
+<span><span class="co">#&gt; [4] "R_BindingType_t"    "R_DotType_t"        "R_pstream_format_t"</span></span></code></pre></div>
 <p>Generate bindings and call statistical distribution functions directly</p>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".R"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/bindgen_r_api.html">bindgen_r_api</a></span><span class="op">(</span>output_file <span class="op">=</span> <span class="va">outfile</span>, headers <span class="op">=</span> <span class="st">"Rmath.h"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
-<span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
-<span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include</span></span>
+<span><span class="co">#&gt; TinyCC diagnostic output:</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/share/R/include/Rmath.h</span></span>
-<span><span class="co">#&gt; Preprocessed file size: 34889 bytes</span></span>
-<span><span class="co">#&gt; Preprocessed file lines: 1353 lines</span></span>
-<span><span class="co">#&gt; Preprocessed file total characters: 33536 characters</span></span>
+<span><span class="co">#&gt; Preprocessed file size: 34897 bytes</span></span>
+<span><span class="co">#&gt; Preprocessed file lines: 1350 lines</span></span>
+<span><span class="co">#&gt; Preprocessed file total characters: 33547 characters</span></span>
 <span><span class="co">#&gt; Filtered out 1 system/reserved struct</span></span>
-<span><span class="co">#&gt; Generated R bindings written to: /tmp/RtmpR8y6Jo/file49e51742d1c28.R</span></span>
+<span><span class="co">#&gt; Generated R bindings written to: /tmp/RtmpgiY8pp/file11c85b3e6e5bea.R</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="va">outfile</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">r_Rf_dnorm4</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0L</span><span class="op">)</span></span>
@@ -1323,10 +1318,9 @@
 <span>  use_system_lib <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  authors_r <span class="op">=</span> <span class="st">'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
-<span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
-<span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include</span></span>
+<span><span class="co">#&gt; TinyCC diagnostic output:</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 375 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 13 lines</span></span>
@@ -1365,10 +1359,9 @@
 <span>  use_system_lib <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  authors_r <span class="op">=</span> <span class="st">'person("John", "Doe", email = "john@example.com", role = c("aut", "cre"))'</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; TinyCC include path: /usr/local/lib/R/site-library/RSimpleFFI/tinycc/lib/tcc/include</span></span>
-<span><span class="co">#&gt; TinyCC builtin headers: float.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdnoreturn.h, tccdefs.h, tcclib.h, tgmath.h, varargs.h</span></span>
-<span><span class="co">#&gt; TCC diagnostic output:</span></span>
-<span><span class="co">#&gt; tcc version 0.9.28rc 2026-04-13 api_mode@12423c0* (x86_64 Linux)</span></span>
+<span><span class="co">#&gt; Rtinycc TinyCC include paths: /usr/local/lib/R/site-library/Rtinycc/tinycc/include, /usr/local/lib/R/site-library/Rtinycc/tinycc/lib/tcc/include</span></span>
+<span><span class="co">#&gt; TinyCC diagnostic output:</span></span>
+<span><span class="co">#&gt; tcc version 0.9.28rc (x86_64 Linux)</span></span>
 <span><span class="co">#&gt; -&gt; /usr/local/lib/R/site-library/RSimpleFFI/extdata/simple_types.h</span></span>
 <span><span class="co">#&gt; Preprocessed file size: 375 bytes</span></span>
 <span><span class="co">#&gt; Preprocessed file lines: 13 lines</span></span>
@@ -1437,7 +1430,7 @@
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">2L</span>, <span class="fl">3L</span>, <span class="fl">4L</span>, <span class="fl">5L</span><span class="op">)</span></span>
 <span><span class="va">ptr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sexp_ptr.html">sexp_ptr</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">ptr</span></span>
-<span><span class="co">#&gt; &lt;pointer: 0x55b714d928a8&gt;</span></span>
+<span><span class="co">#&gt; &lt;pointer: 0x61bb831e4718&gt;</span></span>
 <span></span>
 <span><span class="co"># Call Rf_length via FFI</span></span>
 <span><span class="va">rf_length</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ffi_function.html">ffi_function</a></span><span class="op">(</span><span class="st">"Rf_length"</span>, <span class="fu"><a href="reference/ffi_int.html">ffi_int</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="reference/ffi_pointer.html">ffi_pointer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>

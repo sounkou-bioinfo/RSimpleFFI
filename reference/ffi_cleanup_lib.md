@@ -1,6 +1,6 @@
 # Clean up compiled library
 
-Unload library and remove temporary files.
+Remove diagnostic temporary files used by in-memory compilation.
 
 ## Usage
 

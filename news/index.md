@@ -23,6 +23,11 @@
 
 ### Internal Changes
 
+- TinyCC support now comes from `Rtinycc`; `RSimpleFFI` no longer builds
+  or vendors its own TinyCC copy during `configure`.
+
+- The test suite now runs under `tinytest` instead of `testthat`.
+
 - Converted
   [`ffi_set_field()`](https://sounkou-bioinfo.github.io/RSimpleFFI/reference/ffi_set_field.md)
   and

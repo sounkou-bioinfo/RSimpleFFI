@@ -41,7 +41,9 @@
 </ul></div>
 <div class="section level3">
 <h3 id="internal-changes-1-2-90000">Internal Changes<a class="anchor" aria-label="anchor" href="#internal-changes-1-2-90000"></a></h3>
-<ul><li>Converted <code><a href="../reference/ffi_set_field.html">ffi_set_field()</a></code> and <code><a href="../reference/ffi_get_field.html">ffi_get_field()</a></code> to S7 generics with multiple method signatures to support both reflection-based (StructType/UnionType) and compiler-based (API mode) approaches simultaneously.</li>
+<ul><li><p>TinyCC support now comes from <code>Rtinycc</code>; <code>RSimpleFFI</code> no longer builds or vendors its own TinyCC copy during <code>configure</code>.</p></li>
+<li><p>The test suite now runs under <code>tinytest</code> instead of <code>testthat</code>.</p></li>
+<li><p>Converted <code><a href="../reference/ffi_set_field.html">ffi_set_field()</a></code> and <code><a href="../reference/ffi_get_field.html">ffi_get_field()</a></code> to S7 generics with multiple method signatures to support both reflection-based (StructType/UnionType) and compiler-based (API mode) approaches simultaneously.</p></li>
 </ul></div>
 </div>
     <div class="section level2">

@@ -32,6 +32,7 @@ type-safe wrappers around native pointers.
 functions:
 
 ``` r
+
 # Basic types
 int_t <- ffi_int()
 double_t <- ffi_double()
@@ -44,6 +45,7 @@ arr_type <- ffi_array_type(ffi_int(), 4L)
 **Call Pattern** - Three steps: type → CIF → call:
 
 ``` r
+
 cif <- ffi_cif(ffi_int(), ffi_int(), ffi_int())  # return, arg1, arg2
 result <- ffi_call(cif, ffi_symbol("function_name"), arg1, arg2)
 # Or use convenience wrapper:
@@ -54,6 +56,7 @@ result <- fn(arg1, arg2)
 **Memory Pattern** - Allocate → Fill/Access → (auto-free via GC):
 
 ``` r
+
 ptr <- ffi_alloc(type, n)
 ffi_fill_typed_buffer(ptr, values, type)
 result <- ffi_copy_array(ptr, n, type)
@@ -176,6 +179,7 @@ R -e "pkgdown::build_site()"     # Build documentation website
 2.  Add factory function in `R/00-types.R`:
 
 ``` r
+
 #' @export
 ffi_newtype <- function() {
   create_builtin_type("newtype")
