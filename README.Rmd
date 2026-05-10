@@ -264,7 +264,7 @@ ffi_offsetof(Natural, "b")  # 8 (aligned to 8-byte boundary)
 ffi_offsetof(Packed, "b")   # 4 (immediately after int)
 ```
 
-Pack values work like GCC/Clang/MSVC meaning each field's alignment is `min(natural_alignment, pack)`
+Pack values work like clang/gcc (including GCC via RTools on Windows) meaning each field's alignment is `min(natural_alignment, pack)`
 
 ```{r}
 # .pack=2: fields aligned to at most 2-byte boundaries
@@ -278,7 +278,6 @@ ffi_sizeof(Pack4)  # 12 bytes
 ```
 
 Use `ffi_all_offsets()` to see the complete layout
-```
 
 ### ABI Mode vs API Mode
 
@@ -677,7 +676,7 @@ dll_unload(lib_path)
 
 ### Compile and Load C Code
 
-The package provides facilities to load C code on the fly. The compilation uses `R CMD SHLIB` under the hood
+The package provides facilities to load C code on the fly. The compilation uses R's configured compiler toolchain (`clang`/`gcc`, with GCC from RTools on Windows).
 
 ```{r}
 c_code <- '
