@@ -28,6 +28,21 @@ rtinycc_loader_env <- function() {
   )
 }
 
+with_rtinycc_env <- function(expr) {
+  env_str <- rtinycc_loader_env()
+  eq_pos <- regexpr("=", env_str, fixed = TRUE)
+  env_name <- substr(env_str, 1L, eq_pos - 1L)
+  env_value <- substr(env_str, eq_pos + 1L, nchar(env_str))
+
+  old <- Sys.getenv(env_name, unset = NA)
+  Sys.setenv(env_name = env_value)
+  on.exit({
+    if (is.na(old)) Sys.unsetenv(env_name) else Sys.setenv(env_name = old)
+  }, add = TRUE)
+
+  force(expr)
+}
+
 #' Get path to the TinyCC binary supplied by Rtinycc
 #' @return Path to tcc executable from the Rtinycc package
 #' @export
@@ -81,13 +96,11 @@ tcc_preprocess <- function(header_file, includes = NULL, keep_defines = FALSE) {
 
   # Capture both stdout and stderr separately. TinyCC diagnostics normally go
   # to stderr; some builds may emit verbose output to stdout.
-  result <- system2(
-    tcc,
-    args,
-    stdout = tmp_err,
-    stderr = tmp_err,
-    env = rtinycc_loader_env()
-  )
+  # NOTE: system2(..., env =) on Windows appends VAR=VALUE as a command-line
+  # argument (only R/make understand that syntax). Use Sys.setenv instead.
+  result <- with_rtinycc_env({
+    system2(tcc, args, stdout = tmp_err, stderr = tmp_err)
+  })
 
   err_output <- if (file.exists(tmp_err)) readLines(tmp_err, warn = FALSE) else character(0)
 
@@ -223,7 +236,9 @@ tcc_run <- function(code, args = character()) {
     tcc_args <- c(tcc_args, "--", args)
   }
 
-  system2(tcc, tcc_args, stdout = TRUE, stderr = TRUE, env = rtinycc_loader_env())
+  with_rtinycc_env({
+    system2(tcc, tcc_args, stdout = TRUE, stderr = TRUE)
+  })
 }
 
 #' Check if TinyCC is available through Rtinycc
