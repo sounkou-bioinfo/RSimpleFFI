@@ -8,7 +8,10 @@ test_that("API mode package generation works with testlib", {
   skip_if(!dir.exists(testlib_dir), "testlib directory not found")
   
   header_file <- file.path(testlib_dir, "testlib.h")
-  lib_file <- file.path(testlib_dir, "libtestlib.so")
+  lib_file <- file.path(
+    testlib_dir,
+    paste0("libtestlib", .Platform$dynlib.ext)
+  )
   
   # Build testlib if not present
   if (!file.exists(lib_file)) {
@@ -107,10 +110,23 @@ test_that("API mode package generation works with testlib", {
       stdout = TRUE,
       stderr = TRUE
     )
-    
+    install_status <- attr(install_result, "status")
+    if (is.null(install_status)) {
+      install_status <- 0L
+    }
+
+    expect_equal(
+      install_status,
+      0L,
+      info = paste(
+        "Package installation failed:",
+        paste(utils::tail(install_result, 30), collapse = "\n")
+      )
+    )
+
     # Check if installation succeeded
     pkg_installed <- dir.exists(file.path(install_dir, "TestLibFFI"))
-    expect_true(pkg_installed, "Package installation failed")
+    expect_true(pkg_installed, "Package installation did not create TestLibFFI")
     
     # Clean up tarball and install dir
     unlink(tarball)

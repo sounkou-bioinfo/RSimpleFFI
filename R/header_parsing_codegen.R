@@ -463,11 +463,12 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs, typedef
   # 'name = list(width = widthL, signed = TRUE)'
   field_entries <- vapply(names(fields), function(nm) {
     v <- fields[[nm]]
+    escaped_name <- escape_r_name(nm)
     if (is.list(v) && !is.null(v$width) && isTRUE(v$signed)) {
-      sprintf("  %s = list(width = %dL, signed = TRUE)", nm, as.integer(v$width))
+      sprintf("  %s = list(width = %dL, signed = TRUE)", escaped_name, as.integer(v$width))
     } else {
       w <- if (is.list(v) && !is.null(v$width)) as.integer(v$width) else as.integer(v)
-      sprintf("  %s = %dL", nm, w)
+      sprintf("  %s = %dL", escaped_name, w)
     }
   }, FUN.VALUE = "")
   field_list <- paste(field_entries, collapse = ",\n")
@@ -499,7 +500,14 @@ generate_bitfield_accessor_code <- function(struct_name, bitfield_specs, typedef
     base_type_arg,
     struct_name,
     paste(
-      sprintf("%s = 0L", names(fields)[seq_len(min(2, length(fields)))]),
+      sprintf(
+        "%s = 0L",
+        vapply(
+          names(fields)[seq_len(min(2, length(fields)))],
+          escape_r_name,
+          character(1)
+        )
+      ),
       collapse = ", "
     ),
     struct_name,

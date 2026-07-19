@@ -30,7 +30,7 @@ if [ -d "$LIBFFI_SRC" ]; then
         echo "macOS detected: building only shared library" >> config.log
     fi
 
-    ./configure $CONFIGURE_FLAGS \
+    ./configure $CONFIGURE_FLAGS "$@" \
         CFLAGS="-fPIC -Wno-deprecated-declarations" \
         CC="$CC" AR="$AR" RANLIB="$RANLIB"
     mkdir -p "$LIBFFI_DEST/lib"

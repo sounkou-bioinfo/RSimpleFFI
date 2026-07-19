@@ -103,3 +103,14 @@ test_that("escape_r_name escapes invalid names", {
   expect_equal(escape_r_name("_bar"), "`_bar`")
   expect_equal(escape_r_name("123"), "`123`")
 })
+
+test_that("bitfield bindings escape invalid R field names", {
+  code <- generate_bitfield_accessor_code(
+    "Flags",
+    c("'_flags2 : 1 : unsigned : unsigned int'", "'next : 2'")
+  )
+
+  expect_true(grepl("`_flags2` = 1L", code, fixed = TRUE))
+  expect_true(grepl("`next` = 2L", code, fixed = TRUE))
+  expect_no_error(parse(text = code))
+})

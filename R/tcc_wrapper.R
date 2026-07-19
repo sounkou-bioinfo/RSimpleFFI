@@ -35,9 +35,13 @@ with_rtinycc_env <- function(expr) {
   env_value <- substr(env_str, eq_pos + 1L, nchar(env_str))
 
   old <- Sys.getenv(env_name, unset = NA)
-  Sys.setenv(env_name = env_value)
+  do.call(Sys.setenv, stats::setNames(list(env_value), env_name))
   on.exit({
-    if (is.na(old)) Sys.unsetenv(env_name) else Sys.setenv(env_name = old)
+    if (is.na(old)) {
+      Sys.unsetenv(env_name)
+    } else {
+      do.call(Sys.setenv, stats::setNames(list(old), env_name))
+    }
   }, add = TRUE)
 
   force(expr)

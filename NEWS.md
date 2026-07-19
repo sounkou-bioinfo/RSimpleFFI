@@ -6,6 +6,14 @@
 
 * **API mode for bitfield structs**: Added compiler-based struct helpers using `offsetof()` to handle structures with bitfields. Use `ffi_create_helpers()` to generate constructor and accessor functions with correct compiler-computed offsets. Supports complex structs like htslib's `hFILE` that mix pointers, bitfields, and regular members.
 
+## Bug Fixes
+
+* Escape non-syntactic C bit-field names in generated R bindings, including names from platform headers such as `_flags2`.
+
+* Build the API-mode test library using R's platform shared-library extension, allowing generated-package installation tests to run on Windows.
+
+* Forward cross-compilation arguments from the package `configure` script to libffi, allowing the wasm build to use its supplied build and host triplets.
+
 ## Internal Changes
 
 * TinyCC support now comes from `Rtinycc`; `RSimpleFFI` no longer builds or vendors its own TinyCC copy during `configure`.
