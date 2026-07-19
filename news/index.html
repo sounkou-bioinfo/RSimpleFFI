@@ -43,6 +43,7 @@
 <h3 id="bug-fixes-1-2-90000">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-2-90000"></a></h3>
 <ul><li><p>Escape non-syntactic C bit-field names in generated R bindings, including names from platform headers such as <code>_flags2</code>.</p></li>
 <li><p>Build the API-mode test library using R’s platform shared-library extension, allowing generated-package installation tests to run on Windows.</p></li>
+<li><p>Use R’s installation path for test builds and installations because <code>R CMD check</code> deliberately blocks bare <code>R</code> commands on <code>PATH</code>.</p></li>
 <li><p>Forward cross-compilation arguments from the package <code>configure</code> script to libffi, allowing the wasm build to use its supplied build and host triplets.</p></li>
 </ul></div>
 <div class="section level3">

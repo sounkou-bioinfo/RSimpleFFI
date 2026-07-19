@@ -30,6 +30,9 @@
   extension, allowing generated-package installation tests to run on
   Windows.
 
+- Use R’s installation path for test builds and installations because
+  `R CMD check` deliberately blocks bare `R` commands on `PATH`.
+
 - Forward cross-compilation arguments from the package `configure`
   script to libffi, allowing the wasm build to use its supplied build
   and host triplets.
