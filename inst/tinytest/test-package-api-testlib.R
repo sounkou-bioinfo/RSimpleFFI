@@ -13,13 +13,30 @@ test_that("API mode package generation works with testlib", {
     paste0("libtestlib", .Platform$dynlib.ext)
   )
   
-  # Build testlib if not present
+  r_cmd <- file.path(R.home("bin"), "R")
+  if (.Platform$OS.type == "windows" && !file.exists(r_cmd)) {
+    r_cmd <- paste0(r_cmd, ".exe")
+  }
+
+  # Build testlib if not present. R CMD check deliberately puts a guard
+  # executable named `R` on PATH, so pass the real R executable to make.
   if (!file.exists(lib_file)) {
-    system(sprintf("cd %s && make clean && make", testlib_dir))
+    old_r_bin <- Sys.getenv("R_BIN", unset = NA_character_)
+    Sys.setenv(R_BIN = r_cmd)
+    on.exit({
+      if (is.na(old_r_bin)) {
+        Sys.unsetenv("R_BIN")
+      } else {
+        Sys.setenv(R_BIN = old_r_bin)
+      }
+    }, add = TRUE)
+    make_args <- c("-C", shQuote(testlib_dir))
+    system2("make", c(make_args, "clean"))
+    system2("make", make_args)
   }
   
   skip_if(!file.exists(header_file), "testlib.h not found")
-  skip_if(!file.exists(lib_file), "libtestlib.so not found")
+  skip_if(!file.exists(lib_file), "testlib shared library not found")
   
   # Generate package with API mode
   pkg_dir <- tempfile()
@@ -29,7 +46,7 @@ test_that("API mode package generation works with testlib", {
     library_name = "testlib",
     output_dir = pkg_dir,
     use_api_mode = TRUE,
-    library_path = testlib_dir,
+    library_path = lib_file,
     use_system_lib = FALSE,
     authors_r = 'person("Test", "Author", email = "test@example.com", role = c("aut", "cre"))'
   )
@@ -85,7 +102,7 @@ test_that("API mode package generation works with testlib", {
   old_wd <- setwd(build_dir)
   on.exit(setwd(old_wd), add = TRUE)
   build_result <- system2(
-    "R", 
+    r_cmd,
     c("CMD", "build", shQuote(pkg_dir)),
     stdout = build_log,
     stderr = build_log
@@ -105,7 +122,7 @@ test_that("API mode package generation works with testlib", {
     dir.create(install_dir)
     
     install_result <- system2(
-      "R",
+      r_cmd,
       c("CMD", "INSTALL", paste0("--library=", shQuote(install_dir)), shQuote(tarball[1])),
       stdout = TRUE,
       stderr = TRUE
